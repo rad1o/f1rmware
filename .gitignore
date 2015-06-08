@@ -1,0 +1,7 @@
+*.org
+*.o
+*.a
+*.swp
+*.dfu
+*.map
+*.elf
