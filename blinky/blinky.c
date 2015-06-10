@@ -21,8 +21,10 @@
 
 #include <libopencm3/lpc43xx/gpio.h>
 #include <libopencm3/lpc43xx/scu.h>
+#include <libopencm3/lpc43xx/ssp.h>
 
 #include "setup.h"
+#include "display.h"
 
 #define PORT_LED1 GPIO1
 #define PIN_LED1 (1<<11)
@@ -31,12 +33,16 @@ int main(void)
 {
 	int i;
 	cpu_clock_init();
-	cpu_clock_pll1_max_speed();
-
+//	cpu_clock_pll1_max_speed();
+    // Config LED as out
 	scu_pinmux(P2_11,SCU_GPIO_NOPULL|SCU_CONF_FUNCTION0);
 	GPIO1_DIR |= PIN_LED1;
 
-	/* Blink LED1/2/3 on the board and Read BOOT0/1/2/3 pins. */
+    lcdInit();
+    lcdFill(0xff);
+	lcdDisplay();
+
+	/* Blink LED1 on the board. */
 	while (1) 
 	{
 		gpio_set(PORT_LED1, PIN_LED1); /* LED off */
@@ -47,3 +53,5 @@ int main(void)
 
 	return 0;
 }
+
+
