@@ -10,7 +10,7 @@ OCFLAGS = --strip-unneeded
 
 CFLAGS = -I../libopencm3/include/
 CFLAGS += -I../common/
-CFLAGS += -I../display/
+CFLAGS += -I../lcd/
 CFLAGS += -I./ -c -fno-common -Os -g -mcpu=cortex-m4 -mthumb -Wall -ffunction-sections -fdata-sections -fno-builtin -Wno-unused-function -ffreestanding
 CFLAGS += -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -std=c99
 LFLAGS = -TLPC4330_M4_memory.ld -nostartfiles -Wl,--gc-sections -mthumb
@@ -25,7 +25,11 @@ LIBS= -L../libopencm3/lib -Xlinker -Map=main.map -L/usr/arm-none-eabi/lib/armv7e
 OBJS = blinky.o
 
 OBJS += ../common/setup.o
-OBJS += ../display/display.o
+OBJS += ../lcd/display.o
+OBJS += ../lcd/render.o
+OBJS += ../lcd/fonts/smallfonts.o
+OBJS += ../lcd/print.o
+OBJS += ../lcd/itoa.o
 
 all: main.dfu
 

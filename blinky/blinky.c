@@ -25,9 +25,18 @@
 
 #include "setup.h"
 #include "display.h"
+#include "print.h"
+#include "itoa.h"
 
-#define PORT_LED1 GPIO1
-#define PIN_LED1 (1<<11)
+#define LED1_PIN (P4_1)
+#define LED1_FUNC (SCU_CONF_FUNCTION0)
+#define LED1_GPORT GPIO2
+#define LED1_GPIN (GPIOPIN1)
+
+#define RF_EN_PIN (P5_0)
+#define RF_EN_FUNC (SCU_CONF_FUNCTION0)
+#define RF_EN_GPORT GPIO2
+#define RF_EN_GPIN GPIOPIN9
 
 int main(void)
 {
@@ -35,19 +44,33 @@ int main(void)
 	cpu_clock_init();
 //	cpu_clock_pll1_max_speed();
     // Config LED as out
-	scu_pinmux(P2_11,SCU_GPIO_NOPULL|SCU_CONF_FUNCTION0);
-	GPIO1_DIR |= PIN_LED1;
+	scu_pinmux(RF_EN_PIN,SCU_GPIO_NOPULL|RF_EN_FUNC);
+	GPIO_DIR(RF_EN_GPORT) |= RF_EN_GPIN;
+	gpio_clear(RF_EN_GPORT, RF_EN_GPIN); /* RF off */
+
+	scu_pinmux(LED1_PIN,SCU_GPIO_NOPULL|LED1_FUNC);
+	GPIO_DIR(LED1_GPORT) |= LED1_GPIN;
 
     lcdInit();
     lcdFill(0xff);
-	lcdDisplay();
+	lcdSetPixel(5,5,3);
+	lcdSetPixel(5,15,3);
+	lcdSetPixel(5,25,3);
+	setSystemFont();
+	lcdPrintln("Hallo Welt");
+	lcdDisplay(); 
 
+	int ctr=0;
 	/* Blink LED1 on the board. */
 	while (1) 
 	{
-		gpio_set(PORT_LED1, PIN_LED1); /* LED off */
+		ctr++;
+		lcdPrint(IntToStrX(ctr,4));
+		lcdSetCrsrX(0);
+		lcdDisplay(); 
+		gpio_set(LED1_GPORT, LED1_GPIN); /* LED off */
 		delay(2000000);
-		gpio_clear(PORT_LED1, PIN_LED1); /* LED on */
+		gpio_clear(LED1_GPORT, LED1_GPIN); /* LED on */
 		delay(2000000);
 	}
 

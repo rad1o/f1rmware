@@ -62,6 +62,10 @@ static void lcdWrite(uint8_t cd, uint8_t data) {
 }
 
 void lcdInit(void) {
+	scu_pinmux(LCD_BL_PIN,SCU_GPIO_NOPULL|LCD_BL_FUNC);
+	GPIO_DIR(LCD_BL_GPORT) |= LCD_BL_GPIN;
+	gpio_set(LCD_BL_GPORT,LCD_BL_GPIN);
+
 	scu_pinmux(LCD_RESET_PIN,SCU_GPIO_NOPULL|LCD_RESET_FUNC);
 	GPIO_DIR(LCD_RESET_GPORT) |= LCD_RESET_GPIN;
 
@@ -86,8 +90,9 @@ void lcdInit(void) {
 		 */
 		0x11, 
 		0x3A, 2, 
-		0x36, 0x60, 
-		0x25, 0x3f, 
+//		0x36, 0x60, 
+		0x36, 0b11000000, // my,mx,v,lao,rgb,x,x,x
+		0x25, 0x3a, 
 		0x29,
 		0x03,
 		0x2A, 0, RESX-1, 
@@ -144,7 +149,7 @@ void lcdDisplay(void) {
 
 	for(y=0;y<RESY;y++){
 		for(x=0;x<RESX;x++){
-			lcdWrite(TYPE_DATA,lcdGetPixel(x,y));
+			lcdWrite(TYPE_DATA,lcdGetPixel(x,y)); 
 		};
 	}
     lcd_deselect();
