@@ -27,6 +27,7 @@
 #include "display.h"
 #include "print.h"
 #include "itoa.h"
+#include "keyin.h"
 
 #define LED1_PIN (P4_1)
 #define LED1_FUNC (SCU_CONF_FUNCTION0)
@@ -51,6 +52,8 @@ int main(void)
 	scu_pinmux(LED1_PIN,SCU_GPIO_NOPULL|LED1_FUNC);
 	GPIO_DIR(LED1_GPORT) |= LED1_GPIN;
 
+	inputInit();
+
     lcdInit();
     lcdFill(0xff);
 	lcdSetPixel(5,5,3);
@@ -61,6 +64,7 @@ int main(void)
 	lcdDisplay(); 
 
 	int ctr=0;
+	int k=0;
 	/* Blink LED1 on the board. */
 	while (1) 
 	{
@@ -69,9 +73,14 @@ int main(void)
 		lcdSetCrsrX(0);
 		lcdDisplay(); 
 		gpio_set(LED1_GPORT, LED1_GPIN); /* LED off */
-		delay(2000000);
+		delay(200000);
 		gpio_clear(LED1_GPORT, LED1_GPIN); /* LED on */
-		delay(2000000);
+		delay(200000);
+
+		lcdSetCrsrX(40);
+		k=getInputRaw();
+		lcdPrint(IntToStr(k,2,F_HEX));
+		lcdSetCrsrX(0);
 	}
 
 	return 0;

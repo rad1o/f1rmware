@@ -30,6 +30,7 @@ OBJS += ../lcd/render.o
 OBJS += ../lcd/fonts/smallfonts.o
 OBJS += ../lcd/print.o
 OBJS += ../lcd/itoa.o
+OBJS += keyin.o
 
 all: main.dfu
 
