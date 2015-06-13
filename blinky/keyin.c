@@ -1,8 +1,6 @@
 #include <stddef.h>
 #include "keyin.h"
 
-#define FUNC (SCU_CONF_EPD_EN_PULLDOWN|SCU_CONF_EPUN_DIS_PULLUP)
-#define FUNC (SCU_GPIO_PUP)
 #define FUNC (SCU_GPIO_PDN)
 
 void inputInit(void){

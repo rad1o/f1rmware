@@ -35,7 +35,7 @@ void lcdPrintln(const char *string){
   
 void lcdClear(){
   x=0;y=0;
-  lcdFill(0);
+  lcdFill(0xff);
 }
 
 

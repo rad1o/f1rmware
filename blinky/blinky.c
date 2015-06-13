@@ -41,14 +41,13 @@
 
 int main(void)
 {
-	int i;
 	cpu_clock_init();
 //	cpu_clock_pll1_max_speed();
-    // Config LED as out
 	scu_pinmux(RF_EN_PIN,SCU_GPIO_NOPULL|RF_EN_FUNC);
 	GPIO_DIR(RF_EN_GPORT) |= RF_EN_GPIN;
 	gpio_clear(RF_EN_GPORT, RF_EN_GPIN); /* RF off */
 
+    // Config LED as out
 	scu_pinmux(LED1_PIN,SCU_GPIO_NOPULL|LED1_FUNC);
 	GPIO_DIR(LED1_GPORT) |= LED1_GPIN;
 
@@ -56,31 +55,68 @@ int main(void)
 
     lcdInit();
     lcdFill(0xff);
-	lcdSetPixel(5,5,3);
-	lcdSetPixel(5,15,3);
-	lcdSetPixel(5,25,3);
 	setSystemFont();
-	lcdPrintln("Hallo Welt");
-	lcdDisplay(); 
+	char tu=0,td=0,tl=0,tr=0,tm=0;
+	char led=0;
+	lcdPrintln("Sec-Test v2");
+	lcdPrintln("");
 
 	int ctr=0;
 	int k=0;
 	/* Blink LED1 on the board. */
 	while (1) 
 	{
-		ctr++;
-		lcdPrint(IntToStrX(ctr,4));
-		lcdSetCrsrX(0);
+		lcdSetCrsr(0,16);
+		lcdPrint(IntToStr(tu,2,F_HEX)); lcdPrintln(" Up");
+		lcdPrint(IntToStr(td,2,F_HEX)); lcdPrintln(" Down");
+		lcdPrint(IntToStr(tl,2,F_HEX)); lcdPrintln(" Left");
+		lcdPrint(IntToStr(tr,2,F_HEX)); lcdPrintln(" Right");
+		lcdPrint(IntToStr(tm,2,F_HEX)); lcdPrintln(" Enter");
 		lcdDisplay(); 
-		gpio_set(LED1_GPORT, LED1_GPIN); /* LED off */
-		delay(200000);
-		gpio_clear(LED1_GPORT, LED1_GPIN); /* LED on */
-		delay(200000);
+		switch(getInput()){
+			case BTN_UP:
+				tu=1-tu;
+				if (tu){
+				}else{
+				};
+				break;
+			case BTN_DOWN:
+				td=1-td;
+				if (td){
+				}else{
+				};
+				break;
+			case BTN_LEFT:
+				tl=1-tl;
+				if (tl){
+				}else{
+				};
+				break;
+			case BTN_RIGHT:
+				tr=1-tr;
+				if (tr){
+				}else{
+				};
+				break;
+			case BTN_ENTER:
+				tm=1-tm;
+				if (tm){
+				}else{
+				};
+				break;
+		};
 
-		lcdSetCrsrX(40);
-		k=getInputRaw();
-		lcdPrint(IntToStr(k,2,F_HEX));
-		lcdSetCrsrX(0);
+		led=1-led;
+		if (led){
+			gpio_set(LED1_GPORT, LED1_GPIN); /* LED on */
+		}else{
+			gpio_clear(LED1_GPORT, LED1_GPIN); /* LED off */
+//			delay(200000);
+		};
+
+		ctr++;
+		lcdNl();
+		lcdPrint(IntToStrX(ctr,4));
 	}
 
 	return 0;
