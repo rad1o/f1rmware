@@ -27,6 +27,10 @@
 #define BY_MIX_FUNC                 (SCU_CONF_FUNCTION0)
 #define BY_MIX_GPORT                GPIO1
 #define BY_MIX_GPIN                 GPIOPIN12
+#define BY_MIX_N_PIN                  (P5_1)
+#define BY_MIX_N_FUNC                 (SCU_CONF_FUNCTION0)
+#define BY_MIX_N_GPORT                GPIO2
+#define BY_MIX_N_GPIN                 GPIOPIN10
  
 //right
 #define LOW_HIGH_FILT_PIN           (P5_2)
