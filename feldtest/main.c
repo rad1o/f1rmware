@@ -22,6 +22,7 @@
 #include <libopencm3/lpc43xx/gpio.h>
 #include <libopencm3/lpc43xx/scu.h>
 #include <libopencm3/lpc43xx/ssp.h>
+#include <libopencm3/lpc43xx/adc.h>
 
 #include <unistd.h>
 
@@ -49,7 +50,22 @@
 #define ON(foo) gpio_set(foo ## _GPORT,foo ## _GPIN);
 #define GET(foo) gpio_get(foo ## _GPORT,foo ## _GPIN);
 void doChrg();
+void doADC();
 void doFeld();
+
+#define _PIN(pin, func, ...) pin
+#define _FUNC(pin, func, ...) func
+#define _GPORT(pin, func, gport, gpin, ...) gport
+#define _GPIN(pin, func, gport, gpin, ...) gpin
+#define _GPIO(pin, func, gport, gpin, ...) gport,gpin
+#define _VAL(pin, func, gport, gpin, val, ...) val
+
+#define PASTER(x) gpio_ ## x
+#define WRAP(x) PASTER(x)
+#define SETUPadc(args...) scu_pinmux(_PIN(args),SCU_CONF_EPUN_DIS_PULLUP|_FUNC(args)); GPIO_DIR(_GPORT(args)) &= ~ _GPIN(args); SCU_ENAIO0|=SCU_ENAIO_ADCx_6;
+#define SETUPgin(args...) scu_pinmux(_PIN(args),_FUNC(args)); GPIO_DIR(_GPORT(args)) &= ~ _GPIN(args);
+#define SETUPgout(args...) scu_pinmux(_PIN(args),SCU_GPIO_NOPULL|_FUNC(args)); GPIO_DIR(_GPORT(args)) |= _GPIN(args); WRAP( _VAL(args) ) (_GPIO(args));
+
 
 int main(void)
 {
@@ -104,6 +120,7 @@ int main(void)
 	setSystemFont();
 
 	static const struct MENU main={ "main 1", {
+		{ "ADC", &doADC},
 		{ "feld", &doFeld},
 		{ "chrg", &doChrg},
 		{NULL,NULL}
@@ -112,19 +129,69 @@ int main(void)
 	return 0;
 }
 
+void doADC(){
+
+	int32_t vBat=0;
+	int32_t vIn=0;
+	int32_t RSSI=0;
+	int32_t LED=0;
+	int32_t MIC=0;
+	int v;
+	int df=0;
+
+#define LED_4        PB_6, SCU_CONF_FUNCTION4, GPIO5, GPIOPIN26
+	SETUPadc(LED_4);
+
+	while(1){
+		lcdClear(0xff);
+		lcdPrintln("ADC-Test v1");
+		lcdPrintln("");
+
+
+
+		lcdPrint("vBat: "); lcdPrint(IntToStr(vBat,4,F_ZEROS));lcdNl();
+		lcdPrint("vIn:  "); lcdPrint(IntToStr(vIn ,4,F_ZEROS));lcdNl();
+		lcdPrint("RSSI: "); lcdPrint(IntToStr(RSSI ,4,F_ZEROS));lcdNl();
+		lcdPrint("LED:  "); lcdPrint(IntToStr(LED ,4,F_ZEROS));lcdNl();
+		lcdPrint("Mic:  "); lcdPrint(IntToStr(MIC ,4,F_ZEROS));lcdNl();
+		df++;
+		lcdPrint("df: "); lcdPrint(IntToStr(df,4,F_ZEROS));lcdNl();
+		lcdNl();
+
+/*		lcdPrint("U ADC3/vBat");lcdNl();
+		lcdPrint("D ADC4/vIn ");lcdNl();
+		lcdPrint("L ADC0/RSSI");lcdNl();
+		lcdPrint("R ADC7/Mic ");lcdNl(); */
+		lcdDisplay(); 
+
+		vBat=adc_get_single(ADC0,ADC_CR_CH3)*2*330/1023;
+		vIn=adc_get_single(ADC0,ADC_CR_CH4)*2*330/1023;
+		RSSI=adc_get_single(ADC0,ADC_CR_CH0)*2*330/1023;
+		LED=adc_get_single(ADC0,ADC_CR_CH6)*2*330/1023;
+		MIC=adc_get_single(ADC0,ADC_CR_CH7)*2*330/1023;
+
+		switch(getInput()){
+			case BTN_UP:
+				vBat=adc_get_single(ADC0,ADC_CR_CH3)*2*330/1023;
+				break;
+			case BTN_DOWN:
+				vIn=adc_get_single(ADC0,ADC_CR_CH4)*2*330/1023;
+				break;
+			case BTN_LEFT:
+				RSSI=adc_get_single(ADC0,ADC_CR_CH0)*2*330/1023;
+				break;
+			case BTN_RIGHT:
+				LED=adc_get_single(ADC0,ADC_CR_CH6)*2*330/1023;
+				MIC=adc_get_single(ADC0,ADC_CR_CH7)*2*330/1023;
+				break;
+			case BTN_ENTER:
+				return;
+				break;
+		};
+	};
+};
+
 void doChrg(){
-#define _PIN(pin, func, gport, gpin, ...) pin
-#define _FUNC(pin, func, gport, gpin, ...) func
-#define _GPORT(pin, func, gport, gpin, ...) gport
-#define _GPIN(pin, func, gport, gpin, ...) gpin
-#define _GPIO(pin, func, gport, gpin, ...) gport,gpin
-#define _VAL(pin, func, gport, gpin, val, ...) val
-
-#define PASTER(x) gpio_ ## x
-#define WRAP(x) PASTER(x)
-#define SETUPgin(args...) scu_pinmux(_PIN(args),_FUNC(args)); GPIO_DIR(_GPORT(args)) &= ~ _GPIN(args);
-#define SETUPgout(args...) scu_pinmux(_PIN(args),SCU_GPIO_NOPULL|_FUNC(args)); GPIO_DIR(_GPORT(args)) |= _GPIN(args); WRAP( _VAL(args) ) (_GPIO(args));
-
 // Pull: SCU_GPIO_NOPULL, SCU_GPIO_PDN, SCU_GPIO_PUP
 
 	/* input */
@@ -133,7 +200,7 @@ void doChrg(){
 #define BC_CEN       PA_3,  SCU_CONF_FUNCTION0, GPIO4, GPIOPIN10, clear        // Active-Low Charger Enable Input
 #define BC_PEN2      PA_4,  SCU_CONF_FUNCTION4, GPIO5, GPIOPIN19, set          // Input Limit Control 2. (100mA/475mA)
 #define BC_USUS      PD_12, SCU_CONF_FUNCTION4, GPIO6, GPIOPIN26, clear        // (active low) USB Suspend Digital Input (disable charging)
-#define BC_THMEN     P8_8,  SCU_CONF_FUNCTION4, GPIO6, GPIOPIN26, clear        // Thermistor Enable Input
+#define BC_THMEN     P8_0,  SCU_CONF_FUNCTION0, GPIO4, GPIOPIN0,  clear        // Thermistor Enable Input
 	/* input */
 #define BC_IND       PD_11, SCU_GPIO_PUP|SCU_CONF_FUNCTION4, GPIO6, GPIOPIN25  // (active low) Charger Status Output
 #define BC_OT        P8_7,  SCU_GPIO_PUP|SCU_CONF_FUNCTION0, GPIO4, GPIOPIN7   // (active low) Battery Overtemperature Flag
@@ -180,10 +247,8 @@ char ct=0;
 //#define TOGg(x...) if (GETg(x)) {OFFg(x); }else {ONg(x);}
 		switch(getInput()){
 			case BTN_UP:
-				TOGg(BC_CEN);
 				break;
 			case BTN_DOWN:
-				TOGg(BC_PEN2);
 				break;
 			case BTN_LEFT:
 				TOGg(BC_USUS);

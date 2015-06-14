@@ -168,29 +168,29 @@ void lcdShiftH(bool right, bool wrap) {
 		if (right) {
 			tmp = lcdBuffer[yb*RESX];
 			memmove(lcdBuffer + yb*RESX,lcdBuffer + yb*RESX+1 ,RESX-1);
-            lcdBuffer[yb*RESX+(RESX-1)] = wrap?tmp:0;
+            lcdBuffer[yb*RESX+(RESX-1)] = wrap?tmp:0xff;
 		} else {
 			tmp = lcdBuffer[yb*RESX+(RESX-1)];
 			memmove(lcdBuffer + yb*RESX+1,lcdBuffer + yb*RESX ,RESX-1);
-			lcdBuffer[yb*RESX] = wrap?tmp:0;
+			lcdBuffer[yb*RESX] = wrap?tmp:0xff;
 		}
 	}
 }
 
 void lcdShiftV(bool up, bool wrap) {
 	uint8_t tmp[RESX];
-	if (!up) {
+	if (up) {
 		if (wrap)
             memmove(tmp, lcdBuffer, RESX);
         else
-            memset(tmp,0,RESX);
+            memset(tmp,0xff,RESX);
 		memmove(lcdBuffer,lcdBuffer+RESX ,RESX*(RESY-1));
 		memmove(lcdBuffer+RESX*(RESY-1),tmp,RESX);
 	} else {
 		if (wrap)
             memmove(tmp, lcdBuffer+RESX*(RESY-1), RESX);
         else
-            memset(tmp,0,RESX);
+            memset(tmp,0xff,RESX);
 		memmove(lcdBuffer+RESX,lcdBuffer ,RESX*(RESY-1));
 		memmove(lcdBuffer,tmp,RESX);
 	}
