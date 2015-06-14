@@ -32,6 +32,7 @@ OBJS += ../lcd/fonts/smallfonts.o
 OBJS += ../lcd/print.o
 OBJS += ../lcd/itoa.o
 OBJS += ../blinky/keyin.o
+OBJS += ../blinky/menu.o
 OBJS += feldtest.o
 OBJS += max2871.o
 OBJS += si5351c.o
@@ -55,10 +56,7 @@ main.elf: $(OBJS)
 	$(OBJCOPY) $(OCFLAGS) -O binary $< $@
 
 %.dfu: %.bin
-	cp $< _tmp.dfu
-	dfu-suffix --vid=0x1fc9 --pid=0x000c --did=0x0 -a _tmp.dfu
-	python2 -c "import os.path; import struct; print('0000000: da ff ' + ' '.join(map(lambda s: '%02x' % ord(s), struct.pack('<H', os.path.getsize('$<') / 512 + 1))) + 'ff ff ff ff ff ff ff ff ff ff ff ff')" | xxd -g1 -r > _header.bin
-	cat _header.bin _tmp.dfu > $@
+	./make-dfu.py $< $@
 
 program: main.dfu
 	sudo dfu-util --device 1fc9:000c --alt 0 --download main.dfu
