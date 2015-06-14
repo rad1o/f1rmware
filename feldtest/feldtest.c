@@ -35,6 +35,12 @@ GPIO_DIR(LOW_HIGH_FILT_N_GPORT) |= LOW_HIGH_FILT_N_GPIN;
 scu_pinmux(CS_VCO_PIN,FUNC|CS_VCO_FUNC);
 GPIO_DIR(CS_VCO_GPORT) |= CS_VCO_GPIN;
 
+#define SETUP(foo) scu_pinmux(foo ## _PIN,FUNC|foo ## _FUNC); \
+					GPIO_DIR(foo ## _GPORT) |= foo ## _GPIN;
+
+
+SETUP(MIXER_EN);
+
 					gpio_clear(BY_MIX_GPORT,BY_MIX_GPIN);
 
 					gpio_clear(BY_AMP_GPORT,BY_AMP_GPIN);
@@ -47,7 +53,11 @@ GPIO_DIR(CS_VCO_GPORT) |= CS_VCO_GPIN;
 					gpio_set(LOW_HIGH_FILT_N_GPORT,LOW_HIGH_FILT_N_GPIN);
 
 					gpio_clear(TX_AMP_GPORT,TX_AMP_GPIN);
-					gpio_set(RX_LNA_GPORT,RX_LNA_GPIN);
+					gpio_clear(RX_LNA_GPORT,RX_LNA_GPIN);
 
 					gpio_clear(CS_VCO_GPORT,CS_VCO_GPIN);
+
+#define OFF(foo) gpio_clear(foo ## _GPORT,foo ## _GPIN);
+					OFF(MIXER_EN);
+
 };

@@ -54,6 +54,11 @@
 #define CS_VCO_GPORT GPIO2
 #define CS_VCO_GPIN  GPIOPIN13
 
+//
+#define MIXER_EN_PIN   (P6_8)
+#define MIXER_EN_FUNC (SCU_CONF_FUNCTION4)
+#define MIXER_EN_GPORT GPIO5
+#define MIXER_EN_GPIN  GPIOPIN16
 
 
 void feldInit();

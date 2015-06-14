@@ -33,6 +33,9 @@ OBJS += ../lcd/print.o
 OBJS += ../lcd/itoa.o
 OBJS += ../blinky/keyin.o
 OBJS += feldtest.o
+OBJS += max2871.o
+OBJS += si5351c.o
+
 
 all: main.dfu
 
