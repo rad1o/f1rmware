@@ -1,6 +1,6 @@
 Required dependency:
 
-https://github.com/mossmann/libopencm3
+https://github.com/rad1o/libopencm3
 
 If you are using git, the preferred way to install libopencm3 is to use the
 submodule:
