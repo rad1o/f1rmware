@@ -5,6 +5,7 @@ AS = arm-none-eabi-as
 OBJCOPY = arm-none-eabi-objcopy
 OD = arm-none-eabi-objdump
 SIZE = arm-none-eabi-size
+DFUTOOL= ../tools/make-dfu.py
 
 OCFLAGS = --strip-unneeded
 
@@ -56,7 +57,7 @@ main.elf: $(OBJS)
 	$(OBJCOPY) $(OCFLAGS) -O binary $< $@
 
 %.dfu: %.bin
-	./make-dfu.py $< $@
+	$(DFUTOOL) $< $@
 
 program: main.dfu
 	sudo dfu-util --device 1fc9:000c --alt 0 --download main.dfu

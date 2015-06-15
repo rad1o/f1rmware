@@ -6,25 +6,28 @@ import os.path
 import getopt
 import zlib
 
-options, remainder = getopt.getopt(sys.argv[1:], 'o:w:c:r:s:v', ['offset=',
-														'window=',
-														'center=',
-														'rate=',
-														'search-depth=',
+options, remainder = getopt.getopt(sys.argv[1:], 'p:v:d:S:v', ['pid=',
+														'vid=',
+														'did=',
+														'spec=',
 														'verbose',
 														])
-center = None
-sample_rate = None
-symbols_per_second = 25000
-preamble_length = 64
-search_offset = None
-search_window = None
-search_depth = 0.007
+
+pid = 0x000c
+vid = 0x1fc9
+did = 0
+spec = 0x0100
 verbose = False
 
 for opt, arg in options:
-	if opt in ('-o', '--search-offset'):
-		search_offset = int(arg)
+	if opt in ('-p', '--pid'):
+		pid = int(arg)
+	if opt in ('-v', '--vid'):
+		vid = int(arg)
+	if opt in ('-d', '--did'):
+		did = int(arg)
+	if opt in ('-S', '--spec'):
+		spec = int(arg)
 	elif opt in ('-v', '--verbose'):
 		verbose = True
 
@@ -32,8 +35,6 @@ if len(remainder)<1:
 	in_file = "/dev/stdin"
 else:
 	in_file = remainder[0]
-
-#in = open(in_file,"rb")
 
 if len(remainder)<2:
 	out = open("/dev/stdout","wb")
@@ -56,20 +57,14 @@ infile=open(in_file,"rb").read()
 out.write( infile )
 
 suffix= ""
-suffix+= struct.pack('<H', 0x0000)  # bcdDevice
-suffix+= struct.pack('<H', 0x000c)  # idProduct
-suffix+= struct.pack('<H', 0x1fc9)  # idVendor
-suffix+= struct.pack('<H', 0x0100)  # bcdDFU
-suffix+= b'DFU'[::-1]               # (reverse DFU)
-suffix+= struct.pack('<B', 16)      # suffix length
+suffix+= struct.pack('<H', did)  # bcdDevice
+suffix+= struct.pack('<H', pid)  # idProduct
+suffix+= struct.pack('<H', vid)  # idVendor
+suffix+= struct.pack('<H', spec) # bcdDFU
+suffix+= b'DFU'[::-1]            # (reverse DFU)
+suffix+= struct.pack('<B', 16)   # suffix length
 
 out.write( suffix )
 
-checksum=zlib.crc32(header+infile+suffix)
-checksum=checksum^0xffffffff
-
-if checksum<0:
-    checksum+=pow(2,32);
-
+checksum=zlib.crc32(header+infile+suffix) & 0xffffffff ^ 0xffffffff
 out.write( struct.pack('I', checksum) ) # crc32
-
