@@ -1,3 +1,8 @@
 [submodule "libopencm3"]
 	path = libopencm3
 	url = https://github.com/rad1o/libopencm3.git
+[submodule "hackrf"]
+	path = hackrf
+	url = https://github.com/rad1o/hackrf.git
+	branch = module
+
