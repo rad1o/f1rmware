@@ -37,6 +37,8 @@ OBJS += ../blinky/menu.o
 OBJS += feldtest.o
 OBJS += max2871.o
 OBJS += si5351c.o
+CFLAGS+=-I../hackrf/firmware -Wno-unused-variable
+OBJS += ../hackrf/firmware/common/w25q80bv.o
 
 
 all: main.dfu

@@ -38,6 +38,51 @@ void delay(uint32_t duration)
 		__asm__("nop");
 }
 
+void new_clock_init(void){
+	/* initialisation according to UM10503 v1.9 sec. 13.2.1.1 */
+	CGU_BASE_M4_CLK = (CGU_BASE_M4_CLK_CLK_SEL(CGU_SRC_IRC) | CGU_BASE_M4_CLK_AUTOBLOCK(1));
+
+	CGU_XTAL_OSC_CTRL &= ~(CGU_XTAL_OSC_CTRL_HF_MASK|CGU_XTAL_OSC_CTRL_ENABLE_MASK);
+	delay(WAIT_CPU_CLOCK_INIT_DELAY); /* should be 250us / 3000 cycles @ 12MhZ*/
+
+	/* Set PLL1 up for 204 MHz */
+	CGU_PLL1_CTRL= CGU_PLL1_CTRL_CLK_SEL(CGU_SRC_XTAL)
+				| CGU_PLL1_CTRL_MSEL(17-1)
+				| CGU_PLL1_CTRL_NSEL(0)
+				| CGU_PLL1_CTRL_AUTOBLOCK(1)
+				| CGU_PLL1_CTRL_PSEL(0)
+				| CGU_PLL1_CTRL_DIRECT(1)
+				| CGU_PLL1_CTRL_FBSEL(1)
+				| CGU_PLL1_CTRL_BYPASS(0)
+				| CGU_PLL1_CTRL_PD(0)
+				;
+	while (!(CGU_PLL1_STAT & CGU_PLL1_STAT_LOCK_MASK));
+
+	CGU_IDIVB_CTRL= CGU_IDIVB_CTRL_CLK_SEL(CGU_SRC_PLL1)
+		| CGU_IDIVB_CTRL_AUTOBLOCK(1) 
+		| CGU_IDIVB_CTRL_IDIV(2-1)
+		| CGU_IDIVB_CTRL_PD(0)
+		;
+
+	CGU_BASE_M4_CLK = (CGU_BASE_M4_CLK_CLK_SEL(CGU_SRC_IDIVB) | CGU_BASE_M4_CLK_AUTOBLOCK(1));
+
+	delay(WAIT_CPU_CLOCK_INIT_DELAY); /* should be 50us / 5100 @ 102MhZ */
+};
+
+void new_clock_set(uint32_t target_mhz){ // rounds up
+	uint8_t divider= 204 / target_mhz;
+	if (divider ==0)
+		divider==1;
+	if (divider>16) /* max value of DIVB */
+		divider=16;
+
+	CGU_IDIVB_CTRL= CGU_IDIVB_CTRL_CLK_SEL(CGU_SRC_PLL1)
+		| CGU_IDIVB_CTRL_AUTOBLOCK(1) 
+		| CGU_IDIVB_CTRL_IDIV(divider-1)
+		| CGU_IDIVB_CTRL_PD(0)
+		;
+};
+
 /* clock startup for Jellybean with Lemondrop attached
 Configure PLL1 to max speed (204MHz).
 Note: PLL1 clock is used by M4/M0 core, Peripheral, APB1. */ 
@@ -48,7 +93,6 @@ void cpu_clock_init(void)
 
 	/* use IRC as clock source for APB3 */
 	CGU_BASE_APB3_CLK = CGU_BASE_APB3_CLK_CLK_SEL(CGU_SRC_IRC);
-
 
 	/* set xtal oscillator to low frequency mode */
 	CGU_XTAL_OSC_CTRL &= ~CGU_XTAL_OSC_CTRL_HF_MASK;
