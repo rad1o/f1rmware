@@ -16,19 +16,22 @@ INCLUDE_PATHS += -I$(RPATH)/hackrf/firmware
 INCLUDE_PATHS += -I$(RPATH)/r0ketlib
 INCLUDE_PATHS += -I$(RPATH)/rad1olib
 
-CFLAGS += -std=c99 -c -g -Os -Wall -Wno-unused-function
+LFLAGS += -Os -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
+
+CFLAGS += -std=c99 -c -g -Wall -Wno-unused-function
 CFLAGS += -fno-common -ffunction-sections -fdata-sections -fno-builtin -ffreestanding
 #CFLAGS += -fmessage-length=0 
-CFLAGS += -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
+CFLAGS += $(LFLAGS)
 
-LDFLAGS += --gc-sections
+LDFLAGS += -nostartfiles $(LFLAGS)
+LDFLAGS += -Wl,--gc-sections
 LDFLAGS += -T$(RPATH)/ld/LPC4330_M4_memory.ld 
 LDFLAGS += -T$(RPATH)/libopencm3/lib/libopencm3_lpc43xx.ld
 LDFLAGS += -T$(RPATH)/ld/LPC43xx_M4_M0_image_from_text.ld
-LDFLAGS += -Map=$(APP).map
+LDFLAGS += -Wl,-Map=$(APP).map
 
 LIBS += -L$(RPATH)/libopencm3/lib -lopencm3_lpc43xx
-LIBS += -L/usr/arm-none-eabi/lib/armv7e-m/fpu -Os -lc -lnosys -lm 
+LIBS += -lc
 
 OCFLAGS = --strip-unneeded
 
@@ -52,5 +55,6 @@ flash: $(APP).dfu
 	$(DFUUTIL) --device 1fc9:000c --alt 0 --download $(APP).dfu
 
 $(APP).elf: $(OBJS)
-	$(LD) $(LDFLAGS) -o $(APP).elf $(OBJS) $(LIB_PATHS) $(LIBS)
+#	$(LD) $(LDFLAGS) -o $(APP).elf $(OBJS) $(LIB_PATHS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $(APP).elf $(OBJS) $(LIB_PATHS) $(LIBS)
 	$(SIZE) $(APP).elf
