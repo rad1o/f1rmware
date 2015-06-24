@@ -30,9 +30,7 @@
 void delay(uint32_t duration);
 
 void cpu_clock_init(void);
-void new_clock_init(void);
-void new_clock_set(uint32_t target_mhz);
-void cpu_clock_pll1_low_speed(void);
-void cpu_clock_pll1_max_speed(void);
+void cpu_clock_set(uint32_t target_mhz);
+void hackrf_clock_init(void);
 
-#endif /* __HACKRF_CORE_H */
+#endif

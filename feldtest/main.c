@@ -52,6 +52,7 @@ void doADC();
 void doFeld();
 void doFlash();
 void doSpeed();
+void doLCD();
 
 #define _PIN(pin, func, ...) pin
 #define _FUNC(pin, func, ...) func
@@ -72,7 +73,7 @@ void doSpeed();
 
 int main(void)
 {
-	new_clock_init();
+	cpu_clock_init();
 
 #ifndef SI_EN
 //	i2c0_init(255); // is default here
@@ -123,6 +124,7 @@ int main(void)
 	setSystemFont();
 
 	static const struct MENU main={ "main 1", {
+		{ "LCD", &doLCD},
 		{ "speed", &doSpeed},
 		{ "flash", &doFlash},
 		{ "ADC", &doADC},
@@ -159,12 +161,11 @@ void doSpeed(){
 		switch(getInput()){
 			case BTN_UP:
 //				mhz=204;
-//				new_clock_set(mhz);
+//				cpu_clock_set(mhz);
 #define PD0_SLEEP0_HW_ENA MMIO32(0x40042000)
 #define PD0_SLEEP0_MODE   MMIO32(0x4004201C)
 
 		PD0_SLEEP0_HW_ENA = 1; 
-//		PD0_SLEEP0_MODE = 0x0030FCBA;
 		PD0_SLEEP0_MODE = 0x003000AA;
 		SCB_SCR|=SCB_SCR_SLEEPDEEP;
 
@@ -186,11 +187,17 @@ void doSpeed(){
 				break;
 			case BTN_DOWN:
 				mhz=12;
-				new_clock_set(mhz);
+				cpu_clock_set(mhz);
 				break;
 			case BTN_LEFT:
-				mhz=102;
-				new_clock_set(mhz);
+				while(1){
+					cpu_clock_set(102);
+					TOGg(LED1);
+					delay(1000);
+					cpu_clock_set(12);
+					TOGg(LED1);
+					delay(1000);
+				};
 				break;
 			case BTN_RIGHT:
 				TOGg(LCD_BL_EN);
@@ -206,7 +213,7 @@ void doSpeed(){
 							OFF(RX_LNA);
 						OFF(MIXER_EN);
 						OFF(CS_VCO);
-//				new_clock_set(mhz);
+//				cpu_clock_set(mhz);
 				break;
 			case BTN_ENTER:
 
@@ -316,7 +323,13 @@ void doFlash(){
 	scu_pinmux(P3_6, (SCU_GPIO_FAST | SCU_CONF_FUNCTION3)); // P3_6 SPIFI SPIFI_MISO IO1 => GPIO0[6]
 	scu_pinmux(P3_7, (SCU_GPIO_FAST | SCU_CONF_FUNCTION3)); // P3_7 SPIFI SPIFI_MOSI IO0 => GPIO5[10]
 	scu_pinmux(P3_8, (SCU_GPIO_FAST | SCU_CONF_FUNCTION3)); // P3_8 SPIFI SPIFI_CS => GPIO5[11]
-	CGU_BASE_SPIFI_CLK = CGU_BASE_SPIFI_CLK_CLK_SEL(CGU_SRC_PLL1);
+	CGU_IDIVC_CTRL= CGU_IDIVC_CTRL_CLK_SEL(CGU_SRC_PLL1)
+		| CGU_IDIVB_CTRL_AUTOBLOCK(1) 
+		| CGU_IDIVB_CTRL_IDIV(5-1)
+		| CGU_IDIVB_CTRL_PD(0)
+		;
+
+	CGU_BASE_SPIFI_CLK = CGU_BASE_SPIFI_CLK_CLK_SEL(CGU_SRC_IDIVC);
 
 	while(1){
 		TOGg(LED1);
@@ -339,21 +352,33 @@ void doFlash(){
 		lcdDisplay(); 
 		switch(getInput()){
 			case BTN_UP:
-				addr-=sw;
+				//addr-=sw;
 				SPIFI_CTRL = SPIFI_CTRL_TIMEOUT(0xffff)|SPIFI_CTRL_CSHIGH(0xf)|SPIFI_CTRL_FBCLK(1);
 				lcdPrint("1"); lcdDisplay();
-				SPIFI_ADDR = 0x0;
+				SPIFI_ADDR = 0x0ff;
 				lcdPrint("2"); lcdDisplay();
-				SPIFI_CMD = SPIFI_CMD_DATALEN(2) | 
+/*				SPIFI_CMD = SPIFI_CMD_DATALEN(2) | 
 					SPIFI_CMD_DOUT(0) | 
 					SPIFI_CMD_FIELDFORM(0) | // SPI single
-					SPIFI_CMD_FRAMEFORM(0x4) | 
-					SPIFI_CMD_OPCODE(0x90);
-				lcdPrint("3"); lcdDisplay();
-				while ((SPIFI_STAT | SPIFI_STAT_CMD_MASK) >0){
+					SPIFI_CMD_FRAMEFORM(0x4) |  // Opcode, three bytes
+					SPIFI_CMD_OPCODE(0x90); */
+				SPIFI_CMD = SPIFI_CMD_DATALEN(2) | 
+					SPIFI_CMD_DOUT(0) | 
+					SPIFI_CMD_FIELDFORM(2) | // SPI quad
+					SPIFI_CMD_INTLEN(2) | 
+					SPIFI_CMD_FRAMEFORM(0x5) |  // Opcode, three bytes
+					SPIFI_CMD_OPCODE(0x94);
+/*				lcdPrint("3"); lcdDisplay(); */
+/*				while(1){
+					lcdPrint(IntToStr(SPIFI_STAT,8,F_HEX));lcdNl();
+					lcdDisplay();
+				}; */
+				while ((SPIFI_STAT & SPIFI_STAT_CMD_MASK) >0){
 					lcdPrint("."); lcdNl(); lcdDisplay();
 				};
-				y = SPIFI_DATA;
+				y = SPIFI_DATA_BYTE;
+				y<<=8;
+				y|=SPIFI_DATA_BYTE;
 				lcdPrint("4"); lcdDisplay();
 				lcdPrint(IntToStr(y,8,F_HEX));
 				lcdDisplay();
@@ -403,6 +428,45 @@ void doFlash(){
 	};
 };
 
+void doLCD(){
+
+	uint8_t pwm=50;
+	lcdClear(0xff);
+	lcdPrintln("LCD-Test v1");
+	lcdDisplay(); 
+#define LCD_BL_EN   P1_1,  SCU_CONF_FUNCTION1, GPIO0, GPIOPIN8 // LCD Backlight: PWM
+
+	while(1){
+
+		OFFg(LCD_BL_EN);
+		delay(10000+pwm*100);
+		ONg(LCD_BL_EN);
+		delay(10000-pwm*100);
+
+		switch(getInput()){
+			case BTN_NONE:
+				continue;
+			case BTN_UP:
+				break;
+			case BTN_DOWN:
+				break;
+			case BTN_LEFT:
+				pwm--;
+				break;
+			case BTN_RIGHT:
+				pwm++;
+				break;
+			case BTN_ENTER:
+				return;
+				break;
+		};
+		lcdClear(0xff);
+		lcdPrintln("LCD-Test v1");
+		lcdPrintln("");
+		lcdPrint("pwm=");lcdPrint(IntToStr(pwm,3,0));lcdNl();
+		lcdDisplay(); 
+	};
+};
 void doADC(){
 
 	int32_t vBat=0;

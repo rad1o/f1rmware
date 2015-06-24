@@ -1,7 +1,5 @@
 #include "mixer.h"
-//#include "max2871.h"
-// TODO: put max2871_regs.c into the build system
-#include "max2871_regs.c"
+#include "max2871_regs.h"
 
 #include <libopencm3/lpc43xx/ssp.h>
 #include <libopencm3/lpc43xx/scu.h>

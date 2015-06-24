@@ -28,7 +28,7 @@ void delayms(uint32_t duration){ /* XXX: do me correctly */
 }
 
 
-static void lcd_select() {
+void lcd_select() {
     /* the LCD requires 9-Bit frames */
 	// XXX: make correct freqency
     // Freq About 0.0498MHz / 49.8KHz => Freq = PCLK / (CPSDVSR * [SCR+1]) with PCLK=PLL1=204MHz
@@ -48,11 +48,11 @@ static void lcd_select() {
 	gpio_clear(LCD_CS_GPORT,LCD_CS_GPIN);
 }
 
-static void lcd_deselect() {
+void lcd_deselect() {
 	gpio_set(LCD_CS_GPORT,LCD_CS_GPIN);
 }
 
-static void lcdWrite(uint8_t cd, uint8_t data) {
+void lcdWrite(uint8_t cd, uint8_t data) {
     uint16_t frame = 0x0;
 
     frame = cd << 8;
@@ -89,12 +89,12 @@ void lcdInit(void) {
 		   documentation can be found online.
 		 */
 		0x11, 
-		0x3A, 2, 
+		0x3A, 2,  // mode 8bpp
 //		0x36, 0x60, 
 		0x36, 0b11000000, // my,mx,v,lao,rgb,x,x,x
-		0x25, 0x3a, 
-		0x29,
-		0x03,
+		0x25, 0x3a,  // set contrast
+		0x29, // display on 
+		0x03, // booster voltage
 		0x2A, 0, RESX-1, 
 		0x2B, 0, RESY-1
 	};
