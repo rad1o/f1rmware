@@ -33,7 +33,7 @@ int main(void)
 {
 	int i;
 	cpu_clock_init();
-	cpu_clock_pll1_max_speed();
+	cpu_clock_set(204);
 
 	scu_pinmux(P4_2,SCU_GPIO_NOPULL|SCU_CONF_FUNCTION0);
 	GPIO2_DIR |= PIN_LED1;
