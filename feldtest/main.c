@@ -41,6 +41,8 @@
 #include "mixer.h"
 #include "si5351c.h"
 
+#include "spi-flash.h"
+
 #define LED1 P4_1, SCU_CONF_FUNCTION0, GPIO2, GPIOPIN1, clear
 #define RF_EN P5_0, SCU_CONF_FUNCTION0, GPIO2, GPIOPIN9, clear
 
@@ -53,6 +55,7 @@ void doFeld();
 void doFlash();
 void doSpeed();
 void doLCD();
+void doMSC();
 
 #define _PIN(pin, func, ...) pin
 #define _FUNC(pin, func, ...) func
@@ -124,9 +127,10 @@ int main(void)
 	setSystemFont();
 
 	static const struct MENU main={ "main 1", {
+		{ "MSC", &doMSC},
+		{ "flash", &doFlash},
 		{ "LCD", &doLCD},
 		{ "speed", &doSpeed},
-		{ "flash", &doFlash},
 		{ "ADC", &doADC},
 		{ "feld", &doFeld},
 		{ "chrg", &doChrg},
@@ -146,6 +150,10 @@ void turnoff ( volatile uint32_t *foo){
 };
 void clkoff (volatile uint32_t * foo){
 	(*foo) |= (1<<0);
+};
+
+void doMSC(){
+	dwim();
 };
 
 void doSpeed(){
@@ -306,123 +314,81 @@ clkoff(& CGU_BASE_AUDIO_CLK);
 };
 
 void doFlash(){
-	uint8_t * addr=0x0;
-	uint32_t sw=0x10000;
+	uint32_t addr=0x0;
+	uint32_t sw=0x1;
+	uint8_t data[256];
 	uint8_t x=0;
-	uint32_t y;
-//	x=w25q80bv_setup();
 
+	flash_init();
 
-	/* Reset SPIFI peripheral before to Erase/Write SPIFI memory through SPI */
-//	RESET_CTRL1 = RESET_CTRL1_SPIFI_RST;
-
-	/* Init SPIFI GPIO */
-	scu_pinmux(P3_3, (SCU_GPIO_FAST | SCU_CONF_FUNCTION3));    // P3_3 SPIFI_SCK => SSP0_SCK
-	scu_pinmux(P3_4, (SCU_GPIO_FAST | SCU_CONF_FUNCTION3)); // P3_4 SPIFI SPIFI_SIO3 IO3 => GPIO1[14]
-	scu_pinmux(P3_5, (SCU_GPIO_FAST | SCU_CONF_FUNCTION3)); // P3_5 SPIFI SPIFI_SIO2 IO2 => GPIO1[15]
-	scu_pinmux(P3_6, (SCU_GPIO_FAST | SCU_CONF_FUNCTION3)); // P3_6 SPIFI SPIFI_MISO IO1 => GPIO0[6]
-	scu_pinmux(P3_7, (SCU_GPIO_FAST | SCU_CONF_FUNCTION3)); // P3_7 SPIFI SPIFI_MOSI IO0 => GPIO5[10]
-	scu_pinmux(P3_8, (SCU_GPIO_FAST | SCU_CONF_FUNCTION3)); // P3_8 SPIFI SPIFI_CS => GPIO5[11]
-	CGU_IDIVC_CTRL= CGU_IDIVC_CTRL_CLK_SEL(CGU_SRC_PLL1)
-		| CGU_IDIVB_CTRL_AUTOBLOCK(1) 
-		| CGU_IDIVB_CTRL_IDIV(5-1)
-		| CGU_IDIVB_CTRL_PD(0)
-		;
-
-	CGU_BASE_SPIFI_CLK = CGU_BASE_SPIFI_CLK_CLK_SEL(CGU_SRC_IDIVC);
+	lcdClear(0xff);
+	lcdPrint("xxd @ "); lcdPrint(IntToStr(addr,8,F_HEX));lcdNl();
+	lcdPrint("      "); lcdPrint(IntToStr(sw,8,F_HEX));lcdNl();
+	lcdDisplay();
 
 	while(1){
 		TOGg(LED1);
-		lcdClear(0xff);
-		lcdPrint("xxd @ "); lcdPrint(IntToStr((uint32_t)addr,8,F_HEX));lcdNl();
-		lcdPrint("      "); lcdPrint(IntToStr(sw,8,F_HEX));lcdNl();
-		int ctr;
-		for (ctr=0;ctr<0x20;ctr++){
-			if (ctr%4==0){
-				lcdNl();
-				lcdPrint(IntToStr(ctr,2,F_HEX));
-				lcdPrint(":");
-			};
-			lcdPrint(" ");
-			lcdPrint(IntToStr(addr[ctr],2,F_HEX));
-		};
-		lcdNl();
-		lcdPrint("State: ");
-		lcdPrint(IntToStr(x,2,F_HEX));lcdNl();
-		lcdDisplay(); 
 		switch(getInput()){
 			case BTN_UP:
-				//addr-=sw;
-				SPIFI_CTRL = SPIFI_CTRL_TIMEOUT(0xffff)|SPIFI_CTRL_CSHIGH(0xf)|SPIFI_CTRL_FBCLK(1);
-				lcdPrint("1"); lcdDisplay();
-				SPIFI_ADDR = 0x0ff;
-				lcdPrint("2"); lcdDisplay();
-/*				SPIFI_CMD = SPIFI_CMD_DATALEN(2) | 
-					SPIFI_CMD_DOUT(0) | 
-					SPIFI_CMD_FIELDFORM(0) | // SPI single
-					SPIFI_CMD_FRAMEFORM(0x4) |  // Opcode, three bytes
-					SPIFI_CMD_OPCODE(0x90); */
-				SPIFI_CMD = SPIFI_CMD_DATALEN(2) | 
-					SPIFI_CMD_DOUT(0) | 
-					SPIFI_CMD_FIELDFORM(2) | // SPI quad
-					SPIFI_CMD_INTLEN(2) | 
-					SPIFI_CMD_FRAMEFORM(0x5) |  // Opcode, three bytes
-					SPIFI_CMD_OPCODE(0x94);
-/*				lcdPrint("3"); lcdDisplay(); */
-/*				while(1){
-					lcdPrint(IntToStr(SPIFI_STAT,8,F_HEX));lcdNl();
-					lcdDisplay();
-				}; */
-				while ((SPIFI_STAT & SPIFI_STAT_CMD_MASK) >0){
-					lcdPrint("."); lcdNl(); lcdDisplay();
-				};
-				y = SPIFI_DATA_BYTE;
-				y<<=8;
-				y|=SPIFI_DATA_BYTE;
-				lcdPrint("4"); lcdDisplay();
-				lcdPrint(IntToStr(y,8,F_HEX));
+				/* addr-=sw;
+				lcdClear(0xff);
+				lcdPrint("xxd @ "); lcdPrint(IntToStr((uint32_t)addr,8,F_HEX));lcdNl();
+				lcdPrint("      "); lcdPrint(IntToStr(sw,8,F_HEX));lcdNl();
+				lcdDisplay(); */
+				flash_write_enable();
+				lcdPrint("WE done.");
 				lcdDisplay();
-				while(getInput()==BTN_NONE)
-					;
 				break;
 			case BTN_DOWN:
 				addr+=sw;
+				lcdClear(0xff);
+				lcdPrint("xxd @ "); lcdPrint(IntToStr((uint32_t)addr,8,F_HEX));lcdNl();
+				lcdPrint("      "); lcdPrint(IntToStr(sw,8,F_HEX));lcdNl();
+				lcdDisplay();
 				break;
 			case BTN_LEFT:
-				sw<<=1;
+				/*sw<<=1;
+				lcdClear(0xff);
+				lcdPrint("xxd @ "); lcdPrint(IntToStr((uint32_t)addr,8,F_HEX));lcdNl();
+				lcdPrint("      "); lcdPrint(IntToStr(sw,8,F_HEX));lcdNl();
+				lcdDisplay(); */
+				lcdPrint(IntToStr(flash_status1(),2,F_HEX));
+				lcdPrint(" ");
+				lcdPrint(IntToStr(flash_status2(),2,F_HEX));
+				lcdNl();lcdDisplay();
 				break;
 			case BTN_RIGHT:
-				sw>>=1;
+				/*sw>>=1;
+				lcdClear(0xff);
+				lcdPrint("xxd @ "); lcdPrint(IntToStr((uint32_t)addr,8,F_HEX));lcdNl();
+				lcdPrint("      "); lcdPrint(IntToStr(sw,8,F_HEX));lcdNl();
+				lcdDisplay(); */
+				data[0]=0xff;
+				data[1]=0xfe;
+				flash_program(addr,0x2,data);
+				lcdPrint("done.");
+				lcdNl();
+				lcdDisplay(); 
 				break;
 			case BTN_ENTER:
-#define SCU_SSP0_SSEL       (P3_8) /* GPIO5[11] on P3_8 */
-#define PIN_SSP0_SSEL  (BIT11) /* GPIO5[11] on P3_8 */
-#define PORT_SSP0_SSEL (GPIO5)
-				gpio_clear(PORT_SSP0_SSEL, PIN_SSP0_SSEL);
-				x = ssp_transfer(SSP0_NUM, 0x90);
-				lcdPrint(IntToStr(x,2,F_HEX));
-				lcdPrint(" ");
-				x = ssp_transfer(SSP0_NUM, 0x00);
-				lcdPrint(IntToStr(x,2,F_HEX));
-				x = ssp_transfer(SSP0_NUM, 0x00);
-				lcdPrint(IntToStr(x,2,F_HEX));
-				x = ssp_transfer(SSP0_NUM, 0x00);
-				lcdPrint(IntToStr(x,2,F_HEX));
-				lcdPrint(" ");
+				lcdClear(0xff);
+				lcdPrint("xxd @ "); lcdPrint(IntToStr(addr,8,F_HEX));lcdNl();
+				lcdPrint("      "); lcdPrint(IntToStr(sw,8,F_HEX));lcdNl();
+
+				flash_read(addr,0x100,data);
+
+				int ctr;
+				for (ctr=0x00;ctr<0x024;ctr++){
+					if (ctr%4==0){
+						lcdNl();
+						lcdPrint(IntToStr(ctr,2,F_HEX));
+						lcdPrint(":");
+					};
+					lcdPrint(" ");
+					lcdPrint(IntToStr(data[ctr],2,F_HEX));
+				};
 				lcdNl();
-				x = ssp_transfer(SSP0_NUM, 0xff);
-				lcdPrint(IntToStr(x,2,F_HEX));
-				x = ssp_transfer(SSP0_NUM, 0xff);
-				lcdPrint(IntToStr(x,2,F_HEX));
-				x = ssp_transfer(SSP0_NUM, 0xff);
-				lcdPrint(IntToStr(x,2,F_HEX));
-				x = ssp_transfer(SSP0_NUM, 0xff);
-				lcdPrint(IntToStr(x,2,F_HEX));
-				gpio_set(PORT_SSP0_SSEL, PIN_SSP0_SSEL);
-//				x=w25q80bv_get_status();
-				lcdDisplay();
-				while(getInput()==BTN_NONE)
-					;
+				lcdDisplay(); 
 				break;
 		};
 	};
@@ -434,7 +400,7 @@ void doLCD(){
 	lcdClear(0xff);
 	lcdPrintln("LCD-Test v1");
 	lcdDisplay(); 
-#define LCD_BL_EN   P1_1,  SCU_CONF_FUNCTION1, GPIO0, GPIOPIN8 // LCD Backlight: PWM
+// #define LCD_BL_EN   P1_1,  SCU_CONF_FUNCTION1, GPIO0, GPIOPIN8 // LCD Backlight: PWM
 
 	while(1){
 

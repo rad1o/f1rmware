@@ -90,10 +90,8 @@ void cpu_clock_set(uint32_t target_mhz){ // rounds up
 		;
 }
 
-/* rest of hackrf clock startup
-Configure PLL1 to max speed (204MHz).
-Note: PLL1 clock is used by M4/M0 core, Peripheral, APB1. */ 
-void hackrf_clock_init(void)
+/* setup USB clock */ 
+void usb_clock_init(void)
 {
 	/* use XTAL_OSC as clock source for PLL0USB */
 	CGU_PLL0USB_CTRL = CGU_PLL0USB_CTRL_PD(1)
@@ -117,7 +115,13 @@ void hackrf_clock_init(void)
 	/* use PLL0USB as clock source for USB0 */
 	CGU_BASE_USB0_CLK = CGU_BASE_USB0_CLK_AUTOBLOCK(1)
 			| CGU_BASE_USB0_CLK_CLK_SEL(CGU_SRC_PLL0USB);
+}
 
+/* rest of hackrf clock startup
+Configure PLL1 to max speed (204MHz).
+Note: PLL1 clock is used by M4/M0 core, Peripheral, APB1. */ 
+void hackrf_clock_init(void)
+{
 	/* Switch peripheral clock over to use PLL1 (204MHz) */
 	CGU_BASE_PERIPH_CLK = CGU_BASE_PERIPH_CLK_AUTOBLOCK(1)
 			| CGU_BASE_PERIPH_CLK_CLK_SEL(CGU_SRC_PLL1);

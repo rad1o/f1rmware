@@ -31,6 +31,7 @@ void delay(uint32_t duration);
 
 void cpu_clock_init(void);
 void cpu_clock_set(uint32_t target_mhz);
+void usb_clock_init(void);
 void hackrf_clock_init(void);
 
 #endif
