@@ -36,7 +36,7 @@
 /*****************************************************************************
  * Private types/enumerations/variables
  ****************************************************************************/
-static uint8_t *g_memDiskArea = (uint8_t *) MSC_MEM_DISK_BASE;
+//static uint8_t *g_memDiskArea = (uint8_t *) MSC_MEM_DISK_BASE;
 static const uint8_t g_InquiryStr[] = {'N', 'X', 'P', ' ', ' ', ' ', ' ', ' ',	   \
 									   'L', 'P', 'C', ' ', 'M', 'e', 'm', ' ',	   \
 									   'D', 'i', 's', 'k', ' ', ' ', ' ', ' ',	   \
@@ -44,33 +44,46 @@ static const uint8_t g_InquiryStr[] = {'N', 'X', 'P', ' ', ' ', ' ', ' ', ' ',	 
 /*****************************************************************************
  * Public types/enumerations/variables
  ****************************************************************************/
+static uint8_t *disk_buffer = (uint8_t *) BUFFER_BASE;
 
 /*****************************************************************************
  * Private functions
  ****************************************************************************/
 
+#include <spi-flash.h>
+#define ASSERT(x)
 /* USB device mass storage class read callback routine */
 static void translate_rd(uint32_t offset, uint8_t * *buff_adr, uint32_t length, uint32_t hi_offset)
 {
-	*buff_adr =  &g_memDiskArea[(((uint64_t) offset) | (((uint64_t) hi_offset) << 32))];
+	ASSERT(hi_offset==0);
+
+//	flash_read(offset,length,disk_buffer); *buff_adr = disk_buffer;
+	flash_read(offset,length,*buff_adr);
 }
 
 /* USB device mass storage class write callback routine */
 static void translate_wr(uint32_t offset, uint8_t * *buff_adr, uint32_t length, uint32_t hi_offset)
 {
-	*buff_adr =  &g_memDiskArea[(((uint64_t) offset) | (((uint64_t) hi_offset) << 32)) + length];
+	ASSERT(hi_offset==0);
+
+	flash_random_write(offset, length, *buff_adr);
 }
 
 /* USB device mass storage class get write buffer callback routine */
 static void translate_GetWrBuf(uint32_t offset, uint8_t * *buff_adr, uint32_t length, uint32_t hi_offset)
 {
-	*buff_adr =  &g_memDiskArea[(((uint64_t) offset) | (((uint64_t) hi_offset) << 32))];
+	ASSERT(hi_offset==0);
+	; // NOP
 }
 
 /* USB device mass storage class verify callback routine */
 static ErrorCode_t translate_verify(uint32_t offset, uint8_t *src, uint32_t length, uint32_t hi_offset)
 {
-	if (memcmp((void *) &g_memDiskArea[(((uint64_t) offset) | (((uint64_t) hi_offset) << 32))], src, length)) {
+	ASSERT(hi_offset==0);
+
+	flash_read(offset,length,disk_buffer);
+
+	if (memcmp((void *) disk_buffer, src, length)) {
 		return ERR_FAILED;
 	}
 

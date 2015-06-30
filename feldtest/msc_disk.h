@@ -45,11 +45,11 @@ extern "C"
 
 /* MSC Disk Image Definitions */
 /* Mass Storage Memory Layout */
-#define MSC_MEM_DISK_BASE               0x20004000
-#define MSC_MEM_DISK_SIZE               ((uint32_t) (32 * 1024))
+#define BUFFER_BASE               0x20004000
+#define MSC_MEM_DISK_SIZE               ((uint32_t) (1024*1024))
 #define MSC_MEM_DISK_BLOCK_SIZE         512
 #define MSC_MEM_DISK_BLOCK_COUNT        (MSC_MEM_DISK_SIZE / MSC_MEM_DISK_BLOCK_SIZE)
-#define MSC_USB_DISK_BLOCK_SIZE         512
+//#define MSC_USB_DISK_BLOCK_SIZE         512
 
 /**
  * @brief	MSC disk init routine

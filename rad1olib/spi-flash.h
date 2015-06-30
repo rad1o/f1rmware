@@ -29,4 +29,6 @@ void flash_program(uint32_t addr, uint32_t len, uint8_t * data);
 void flash_program4(uint32_t addr, uint32_t len, uint32_t * data);
 void flash_erase(uint32_t addr); /* erase 4k sector */
 void flash_write_sector(uint32_t addr, uint16_t len, uint32_t * data);
+void flash_write(uint32_t addr, uint16_t len, uint8_t * data);
+void flash_random_write(uint32_t addr, uint16_t len, uint8_t * data);
 void flash_wait_write();

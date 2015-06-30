@@ -134,12 +134,17 @@ USB_INTERFACE_DESCRIPTOR *find_IntfDesc(const uint8_t *pDesc, uint32_t intfClass
 #include "setup.h"
 #include "display.h"
 #include "print.h"
+
+#include <spi-flash.h>
+
 int dwim(void)
 {
 	USBD_API_INIT_PARAM_T usb_param;
 	USB_CORE_DESCS_T desc;
 	ErrorCode_t ret = LPC_OK;
 	USB_CORE_CTRL_T *pCtrl;
+
+	flash_init();
 
 	/* Initialize board and chip */
 //	SystemCoreClockUpdate();
@@ -170,7 +175,7 @@ int dwim(void)
 	/* enable USB0 phy */
 //	Chip_CREG_EnableUSB0Phy();
 // is actually        LPC_CREG->CREG0 &= ~(1 << 5);
-	usb_phy_enable();
+	//usb_phy_enable();
 
 
 	/* Init USB API structure */

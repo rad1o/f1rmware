@@ -160,6 +160,22 @@ void flash_program(uint32_t addr, uint32_t len, uint8_t * data){
 	};
 };
 
+#define FLASH_PROGRAM_SIZE 256
+
+void flash_big_program(uint32_t addr, uint32_t len, uint8_t * data){
+	uint16_t cut=0;
+	uint16_t offset = addr &  (FLASH_PROGRAM_SIZE-1);
+	while (offset+len> FLASH_PROGRAM_SIZE){
+		cut=FLASH_PROGRAM_SIZE-offset;
+		flash_program(addr,cut,data);
+		addr+=cut;
+		offset=0;
+		len-=cut;
+		data+=cut;
+	};
+	flash_program(addr,cut,data);
+};
+
 void flash_program4(uint32_t addr, uint32_t len, uint32_t * data){
 	uint32_t idx=0;
 
@@ -183,11 +199,11 @@ void flash_program4(uint32_t addr, uint32_t len, uint32_t * data){
 
 void flash_erase(uint32_t addr){ /* erase 4k sector */
 	flash_write_enable();
-	SPIFI_ADDR = addr>>12;          /* sector number */
+	SPIFI_ADDR = addr;//>>12;          /* sector number */
 	SPIFI_CMD = SPIFI_CMD_DATALEN(0) | 
 		SPIFI_CMD_FIELDFORM(0) |    /* serial */
 		SPIFI_CMD_INTLEN(0) |       /* no intermediates*/
-		SPIFI_CMD_FRAMEFORM(0x1) |  /* Opcode, followed by 3-byte Address */
+		SPIFI_CMD_FRAMEFORM(0x4) |  /* Opcode, followed by 3-byte Address */
 		SPIFI_CMD_OPCODE(0x20);
 
 	while ((SPIFI_STAT & SPIFI_STAT_CMD_MASK) >0){
@@ -219,6 +235,7 @@ void flash_write_sector(uint32_t addr, uint16_t len, gran * data){
 		};
 	};
 	if (erase_needed){
+		program_needed=0;
 		flash_erase(addr);
 		for(idx=0;idx<FLASH_SECTOR_SIZE/sizeof(gran);idx++){
 			if(idx>=offset && idx <offset+len){
@@ -239,8 +256,65 @@ void flash_write_sector(uint32_t addr, uint16_t len, gran * data){
 		};
 	};
 };
+#undef gran
 
+void flash_write(uint32_t addr, uint16_t len, uint8_t * data){
+	/* assumes buffer does not straddle sector boundary */
+	uint8_t cache[FLASH_SECTOR_SIZE]; /* maybe Assert SP */
+	uint16_t offset = addr&(FLASH_SECTOR_SIZE-1);
+	uint16_t idx;
+	uint8_t program_needed=0;
+	uint8_t erase_needed=0;
 
+	addr &= ~(FLASH_SECTOR_SIZE-1);
+
+	flash_read(addr,FLASH_SECTOR_SIZE,cache);
+
+	for(idx=0;idx<len;idx++){
+		if (~cache[idx+offset] & data[idx]){
+			erase_needed=1;
+			break;
+		};
+		if (cache[idx+offset] != data[idx]){
+			program_needed=1;
+		};
+	};
+	if(erase_needed||program_needed){
+	};
+	if (erase_needed){
+		program_needed=0;
+		flash_erase(addr);
+		for(idx=0;idx<FLASH_SECTOR_SIZE;idx++){
+			if(idx>=offset && idx <offset+len){
+				cache[idx]=data[idx-offset];
+			};
+			if (cache[idx]!= ~((uint8_t)0)){
+				program_needed=1;
+			};
+		};
+		flash_wait_write();
+		if(program_needed){
+			flash_big_program(addr, FLASH_SECTOR_SIZE, cache);
+			flash_wait_write();
+		};
+	}else{
+		if(program_needed){
+			flash_big_program(addr+offset,len,data);
+			flash_wait_write();
+		};
+	};
+};
+
+void flash_random_write(uint32_t addr, uint16_t len, uint8_t * data){
+	uint16_t offset = addr&(FLASH_SECTOR_SIZE-1);
+	if(offset+len > FLASH_SECTOR_SIZE){
+		uint16_t cut=FLASH_SECTOR_SIZE-offset;
+		flash_write(addr,cut,data);
+		flash_write(addr+cut,len-cut,data+cut);
+	}else{
+		flash_write(addr,len,data);
+	};
+};
 
 void flash_wait_write(){
 	while (flash_status1()&S1_BUSY){
