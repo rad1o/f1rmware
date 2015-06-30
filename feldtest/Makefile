@@ -14,11 +14,16 @@ OBJS += ../r0ketlib/menu.o
 OBJS += ../rad1olib/max2871.o
 OBJS += ../rad1olib/max2871_regs.o
 OBJS += ../rad1olib/spi-flash.o
+OBJS += ../rad1olib/assert.o
 OBJS += msc_desc.o
 OBJS += msc_main.o
 OBJS += msc_ram.o
 OBJS += ../hackrf/firmware/common/si5351c.o
 OBJS += ../hackrf/firmware/common/usb.o
+OBJS += ../fatfs/diskio.o
+OBJS += ../fatfs/ff.o
+OBJS += ../r0ketlib/select.o
+OBJS += ../r0ketlib/idle.o
 
 INCLUDE_PATHS+=-I../hackrf/firmware/common
 CFLAGS=-Wno-unused-variable -DRAD1O -DLPC43XX_M4

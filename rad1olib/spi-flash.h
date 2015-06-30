@@ -19,16 +19,17 @@
 #define S2_CMP  (1<<6)  /* Complement Protect */
 #define S2_SUS  (1<<7)  /* Erase/Program Suspent Status (volatile) */
 
+void flash_wait_write();
 uint8_t flash_status1(void);
 uint8_t flash_status2(void);
 void flash_init(void);
 void flash_read(uint32_t addr, uint32_t len, uint8_t * data);
 void flash_read_sector(uint32_t addr, uint32_t * data);
 void flash_write_enable(void);
-void flash_program(uint32_t addr, uint32_t len, uint8_t * data);
-void flash_program4(uint32_t addr, uint32_t len, uint32_t * data);
+void flash_program(uint32_t addr, uint32_t len, const uint8_t * data);
+void flash_random_program(uint32_t addr, uint32_t len, const uint8_t * data);
+void flash_program4(uint32_t addr, uint16_t len, const uint32_t * data);
+void flash_usb_program(uint32_t addr, uint16_t len, const uint8_t * data);
 void flash_erase(uint32_t addr); /* erase 4k sector */
-void flash_write_sector(uint32_t addr, uint16_t len, uint32_t * data);
-void flash_write(uint32_t addr, uint16_t len, uint8_t * data);
-void flash_random_write(uint32_t addr, uint16_t len, uint8_t * data);
-void flash_wait_write();
+void flash_write(uint32_t addr, uint16_t len, const uint8_t * data);
+void flash_random_write(uint32_t addr, uint16_t len, const uint8_t * data);

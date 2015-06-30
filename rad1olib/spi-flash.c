@@ -1,46 +1,89 @@
 #include <spi-flash.h>
+#include <pins.h>
+#include <setup.h>
+#include <assert.h>
 #include <libopencm3/lpc43xx/rgu.h>
 #include <libopencm3/lpc43xx/cgu.h>
 #include <libopencm3/lpc43xx/scu.h>
 #include <libopencm3/lpc43xx/spifi.h>
-#include "pins.h"
-#include "setup.h"
+#include <print.h>
+#include <itoa.h>
 
 #define FLASH_SECTOR_SIZE 4096
+
+/*                        opc   datalen, dout, fieldform, intlen, frameform  */
+/*                                             0: serial          1: op only */
+/*                                             1: q data          2: op + 1  */
+/*                                             2: op serial       3: op + 2  */
+/*                                                                4: op + 3  */
+
+#define OP_WRITE_ENABLE   0x06, 0,       0,    0,         0,      1
+
+#define OP_READ_S1        0x05, 1,       0,    0,         0,      1
+#define OP_READ_S2        0x35, 1,       0,    0,         0,      1
+#define OP_WRITE_ST       0x01, 2,       1,    0,         0,      1
+
+#define OP_READ           0x0B, /*x*/0,  0,    0,         1,      1+3
+#define OP_QREAD          0xEB, /*x*/0,  0,    2,         3,      1+3
+#define OP_QREAD_2        0xE7, /*x*/0,  0,    2,         2,      1+3
+#define OP_QREAD_8        0xE3, /*x*/0,  0,    2,         1,      1+3
+
+#define OP_PROGRAM        0x02, /*x*/0,  1,    0,         0,      1+3
+#define OP_QPROGRAM       0x32, /*x*/0,  1,    1,         0,      1+3
+
+#define OP_SECT_ERASE_4K  0x20, 0,       0,    0,         0,      1+3
+#define OP_SECT_ERASE_32K 0x52, 0,       0,    0,         0,      1+3
+#define OP_SECT_ERASE_64K 0xD8, 0,       0,    0,         0,      1+3
+#define OP_CHIP_ERASE     0xC7, 0,       0,    0,         0,      1
+
+#define OP_DEVICE_ID      0x92, 2,       0,    0,         1,      1+3
+#define OP_DEVICE_ID_Q    0x94, 2,       0,    2,         3,      1+3
+#define OP_UNIQUE_ID      0x4B, 8,       0,    0,         4,      1
+#define OP_JEDEC_ID       0x9F, 3,       0,    0,         0,      1
+
+#define MK_SPIFI_CMD_2(opcode,datalen,dout,fieldform,intlen,frameform) \
+	SPIFI_CMD_DATALEN(datalen)     | \
+	SPIFI_CMD_DOUT(dout)           | \
+	SPIFI_CMD_FIELDFORM(fieldform) | \
+	SPIFI_CMD_INTLEN(intlen)       | \
+	SPIFI_CMD_FRAMEFORM(frameform) | \
+	SPIFI_CMD_OPCODE(opcode)
+
+#define MK_SPIFI_CMD(args...) MK_SPIFI_CMD_2(args)
+
+static void wait_spifi(void){
+	while ((SPIFI_STAT & SPIFI_STAT_CMD_MASK) >0){
+		delay(10); //_WFI();
+	};
+}
+
+void flash_wait_write(){
+	while (flash_status1() & S1_BUSY){
+		delay(10); // _WFI();
+	};
+}
 
 uint8_t flash_status1(void){
 	uint8_t data;
 
-	SPIFI_CMD = SPIFI_CMD_DATALEN(1) | 
-		SPIFI_CMD_DOUT(0) |         /* We read data */
-		SPIFI_CMD_FIELDFORM(0) |    /* all serial */
-		SPIFI_CMD_INTLEN(0) |       /* no. of Intermediate bytes */
-		SPIFI_CMD_FRAMEFORM(0x1) |  /* Opcode only */
-		SPIFI_CMD_OPCODE(0x05);
+	SPIFI_CMD = MK_SPIFI_CMD(OP_READ_S1);
 
 	data = SPIFI_DATA_BYTE;
 
-	while ((SPIFI_STAT & SPIFI_STAT_CMD_MASK) >0){
-		delay(10); //_WFI();
-	};
+	wait_spifi();
+
 	return data;
-};
+}
 
 uint8_t flash_status2(void){
 	uint8_t data;
 
-	SPIFI_CMD = SPIFI_CMD_DATALEN(1) | 
-		SPIFI_CMD_DOUT(0) |         /* We read data */
-		SPIFI_CMD_FIELDFORM(0) |    /* all serial */
-		SPIFI_CMD_INTLEN(0) |       /* no. of Intermediate bytes */
-		SPIFI_CMD_FRAMEFORM(0x1) |  /* Opcode only */
-		SPIFI_CMD_OPCODE(0x35);
+	SPIFI_CMD = MK_SPIFI_CMD(OP_READ_S2);
 
 	data = SPIFI_DATA_BYTE;
 
-	while ((SPIFI_STAT & SPIFI_STAT_CMD_MASK) >0){
-		delay(10); //_WFI();
-	};
+	wait_spifi();
+
 	return data;
 };
 
@@ -69,147 +112,113 @@ void flash_init(void){
 
 	if (!(flash_status2()&S2_QE)){ /* make sure Quad Enable is set */
 		flash_write_enable();
-		SPIFI_CMD = SPIFI_CMD_DATALEN(2) | 
-			SPIFI_CMD_DOUT(1) |         /* We write data */
-			SPIFI_CMD_FIELDFORM(0) |    /* serial */
-			SPIFI_CMD_INTLEN(0) |       /* no intermediates */
-			SPIFI_CMD_FRAMEFORM(0x1) |  /* Opcode only */
-			SPIFI_CMD_OPCODE(0x01);
+		SPIFI_CMD = MK_SPIFI_CMD(OP_WRITE_ST);
 
 		SPIFI_DATA_BYTE = 0;      /* S1 */
 		SPIFI_DATA_BYTE = S2_QE;  /* S2 */
 
-		while ((SPIFI_STAT & SPIFI_STAT_CMD_MASK) >0){
-			delay(10); //_WFI();
-		};
+		wait_spifi();
 	};
-};
+}
 
 void flash_read(uint32_t addr, uint32_t len, uint8_t * data){
 	uint32_t idx=0;
 
 	SPIFI_ADDR = addr;
 //	SPIFI_IDATA= 0x0;  /* We actually don't care about these bits */
-	SPIFI_CMD = SPIFI_CMD_DATALEN(len) | 
-		SPIFI_CMD_DOUT(0) |         /* We read data */
-		SPIFI_CMD_FIELDFORM(2) |    /* opcode normal, rest quad */
-		SPIFI_CMD_INTLEN(3) |       /* no. of Intermediate bytes 1+2 */
-		SPIFI_CMD_FRAMEFORM(0x4) |  /* Opcode, followed by 3-byte Address */
-		SPIFI_CMD_OPCODE(0xeb);
+	SPIFI_CMD = MK_SPIFI_CMD(OP_QREAD) | SPIFI_CMD_DATALEN(len);
 
 	while (idx<len){
 		data[idx++] = SPIFI_DATA_BYTE;
 	}
 
-	while ((SPIFI_STAT & SPIFI_STAT_CMD_MASK) >0){
-		delay(10); //_WFI();
-	};
+	wait_spifi();
 };
 
 void flash_read_sector(uint32_t addr, uint32_t * data){
 	uint32_t idx=0;
 
 	SPIFI_ADDR = addr & ~(FLASH_SECTOR_SIZE-1);
-//	SPIFI_IDATA= 0x0;  /* We actually don't care about these bits */
-	SPIFI_CMD = SPIFI_CMD_DATALEN(FLASH_SECTOR_SIZE) | 
-		SPIFI_CMD_DOUT(0) |         /* We read data */
-		SPIFI_CMD_FIELDFORM(2) |    /* opcode normal, rest quad */
-		SPIFI_CMD_INTLEN(1) |       /* no. of Intermediate bytes 1 */
-		SPIFI_CMD_FRAMEFORM(0x4) |  /* Opcode, followed by 3-byte Address */
-		SPIFI_CMD_OPCODE(0xe3);
+	SPIFI_CMD = MK_SPIFI_CMD(OP_QREAD_8) | SPIFI_CMD_DATALEN(FLASH_SECTOR_SIZE);
 
 	while (idx<FLASH_SECTOR_SIZE/sizeof(uint32_t)){
 		data[idx++] = SPIFI_DATA;
 	}
 
-	while ((SPIFI_STAT & SPIFI_STAT_CMD_MASK) >0){
-		delay(10); //_WFI();
-	};
-};
+	wait_spifi();
+}
 
 void flash_write_enable(void){
-	SPIFI_CMD = SPIFI_CMD_DATALEN(0) | 
-		SPIFI_CMD_FIELDFORM(0) |    /* all serial */
-		SPIFI_CMD_INTLEN(0) |       /* no. of Intermediate bytes */
-		SPIFI_CMD_FRAMEFORM(0x1) |  /* Opcode only */
-		SPIFI_CMD_OPCODE(0x06);
-
-	while ((SPIFI_STAT & SPIFI_STAT_CMD_MASK) >0){
-		delay(10); //_WFI();
-	};
+	SPIFI_CMD = MK_SPIFI_CMD(OP_WRITE_ENABLE);
+	wait_spifi();
 };
 
-void flash_program(uint32_t addr, uint32_t len, uint8_t * data){
+void flash_program(uint32_t addr, uint32_t len, const uint8_t * data){
 	uint32_t idx=0;
 
 	flash_write_enable();
 	SPIFI_ADDR = addr;
-	SPIFI_CMD = SPIFI_CMD_DATALEN(len) | 
-		SPIFI_CMD_DOUT(1) |         /* We write data */
-		SPIFI_CMD_FIELDFORM(1) |    /* opcode/address normal, data quad */
-		SPIFI_CMD_INTLEN(0) |       /* no. of Intermediate bytes 1+2 */
-		SPIFI_CMD_FRAMEFORM(0x4) |  /* Opcode, followed by 3-byte Address */
-		SPIFI_CMD_OPCODE(0x32);
+	SPIFI_CMD = MK_SPIFI_CMD(OP_QPROGRAM)|SPIFI_CMD_DATALEN(len);
 
 	while (idx<len){
 		SPIFI_DATA_BYTE = data[idx++];
 	}
 
-	while ((SPIFI_STAT & SPIFI_STAT_CMD_MASK) >0){
-		delay(10); //_WFI();
-	};
-};
+	wait_spifi();
+}
 
 #define FLASH_PROGRAM_SIZE 256
 
-void flash_big_program(uint32_t addr, uint32_t len, uint8_t * data){
+void flash_random_program(uint32_t addr, uint32_t len, const uint8_t * data){
 	uint16_t cut=0;
 	uint16_t offset = addr &  (FLASH_PROGRAM_SIZE-1);
+
 	while (offset+len> FLASH_PROGRAM_SIZE){
 		cut=FLASH_PROGRAM_SIZE-offset;
 		flash_program(addr,cut,data);
+		flash_wait_write();
 		addr+=cut;
 		offset=0;
 		len-=cut;
 		data+=cut;
 	};
 	flash_program(addr,cut,data);
-};
+	flash_wait_write();
+}
 
-void flash_program4(uint32_t addr, uint32_t len, uint32_t * data){
+void flash_program4(uint32_t addr, uint16_t len, const uint32_t * data){
 	uint32_t idx=0;
 
 	flash_write_enable();
 	SPIFI_ADDR = addr;
-	SPIFI_CMD = SPIFI_CMD_DATALEN(len) | 
-		SPIFI_CMD_DOUT(1) |         /* We write data */
-		SPIFI_CMD_FIELDFORM(1) |    /* opcode/address normal, data quad */
-		SPIFI_CMD_INTLEN(0) |       /* no. of Intermediate bytes 1+2 */
-		SPIFI_CMD_FRAMEFORM(0x4) |  /* Opcode, followed by 3-byte Address */
-		SPIFI_CMD_OPCODE(0x32);
+	SPIFI_CMD = MK_SPIFI_CMD(OP_QPROGRAM)|SPIFI_CMD_DATALEN(len);
 
 	while (idx<len){
 		SPIFI_DATA = data[idx++];
 	}
+	wait_spifi();
+};
 
-	while ((SPIFI_STAT & SPIFI_STAT_CMD_MASK) >0){
-		delay(10); //_WFI();
-	};
+void flash_usb_program(uint32_t addr, uint16_t len, const uint8_t * data){
+	ASSERT(addr%FLASH_PROGRAM_SIZE==0);
+	ASSERT(((uintptr_t)data)%4==0);
+	ASSERT(len==512);
+
+	flash_program4(addr,
+			FLASH_PROGRAM_SIZE/sizeof(uint32_t),
+			(uint32_t *)data);
+	flash_program4(addr+FLASH_PROGRAM_SIZE,
+			FLASH_PROGRAM_SIZE/sizeof(uint32_t),
+			(uint32_t *)(data+FLASH_PROGRAM_SIZE));
 };
 
 void flash_erase(uint32_t addr){ /* erase 4k sector */
 	flash_write_enable();
-	SPIFI_ADDR = addr;//>>12;          /* sector number */
-	SPIFI_CMD = SPIFI_CMD_DATALEN(0) | 
-		SPIFI_CMD_FIELDFORM(0) |    /* serial */
-		SPIFI_CMD_INTLEN(0) |       /* no intermediates*/
-		SPIFI_CMD_FRAMEFORM(0x4) |  /* Opcode, followed by 3-byte Address */
-		SPIFI_CMD_OPCODE(0x20);
+	SPIFI_ADDR = addr;
+	SPIFI_CMD = MK_SPIFI_CMD(OP_SECT_ERASE_4K);
 
-	while ((SPIFI_STAT & SPIFI_STAT_CMD_MASK) >0){
-		delay(10); //_WFI();
-	};
-};
+	wait_spifi();
+}
 
 #define gran uint32_t
 /* read/modify/write a FLASH_SECTOR_SIZE sector. len should be multiple of 256 */
@@ -248,6 +257,7 @@ void flash_write_sector(uint32_t addr, uint16_t len, gran * data){
 		flash_wait_write();
 		if(program_needed){
 			flash_program4(addr, FLASH_SECTOR_SIZE/sizeof(gran), cache);
+			flash_wait_write();
 		};
 	}else{
 		if(program_needed){
@@ -255,10 +265,10 @@ void flash_write_sector(uint32_t addr, uint16_t len, gran * data){
 			flash_wait_write();
 		};
 	};
-};
+}
 #undef gran
 
-void flash_write(uint32_t addr, uint16_t len, uint8_t * data){
+void flash_write(uint32_t addr, uint16_t len, const uint8_t * data){
 	/* assumes buffer does not straddle sector boundary */
 	uint8_t cache[FLASH_SECTOR_SIZE]; /* maybe Assert SP */
 	uint16_t offset = addr&(FLASH_SECTOR_SIZE-1);
@@ -279,8 +289,6 @@ void flash_write(uint32_t addr, uint16_t len, uint8_t * data){
 			program_needed=1;
 		};
 	};
-	if(erase_needed||program_needed){
-	};
 	if (erase_needed){
 		program_needed=0;
 		flash_erase(addr);
@@ -294,30 +302,27 @@ void flash_write(uint32_t addr, uint16_t len, uint8_t * data){
 		};
 		flash_wait_write();
 		if(program_needed){
-			flash_big_program(addr, FLASH_SECTOR_SIZE, cache);
+			flash_random_program(addr, FLASH_SECTOR_SIZE, cache);
 			flash_wait_write();
 		};
 	}else{
 		if(program_needed){
-			flash_big_program(addr+offset,len,data);
+			flash_random_program(addr+offset,len,data);
 			flash_wait_write();
 		};
 	};
-};
+}
 
-void flash_random_write(uint32_t addr, uint16_t len, uint8_t * data){
+void flash_random_write(uint32_t addr, uint16_t len, const uint8_t * data){
 	uint16_t offset = addr&(FLASH_SECTOR_SIZE-1);
-	if(offset+len > FLASH_SECTOR_SIZE){
-		uint16_t cut=FLASH_SECTOR_SIZE-offset;
+	uint16_t cut;
+	while(offset+len > FLASH_SECTOR_SIZE){
+		cut=FLASH_SECTOR_SIZE-offset;
 		flash_write(addr,cut,data);
-		flash_write(addr+cut,len-cut,data+cut);
-	}else{
-		flash_write(addr,len,data);
+		addr+=cut;
+		offset=0;
+		len-=cut;
+		data+=cut;
 	};
-};
-
-void flash_wait_write(){
-	while (flash_status1()&S1_BUSY){
-		delay(10); // _WFI();
-	};
+	flash_write(addr,len,data);
 };

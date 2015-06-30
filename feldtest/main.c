@@ -28,6 +28,7 @@
 #include <libopencm3/lpc43xx/rgu.h>
 #include <libopencm3/lpc43xx/ccu.h>
 #include <libopencm3/cm3/scb.h>
+#include <libopencm3/cm3/systick.h>
 
 #include <unistd.h>
 
@@ -56,6 +57,7 @@ void doFlash();
 void doSpeed();
 void doLCD();
 void doMSC();
+void doFS();
 
 #define _PIN(pin, func, ...) pin
 #define _FUNC(pin, func, ...) func
@@ -73,10 +75,21 @@ void doMSC();
 #define OFFg(x...) gpio_clear(_GPIO(x))
 #define ONg(x...) gpio_set(_GPIO(x))
 
+static uint16_t counter=0;
+
+void sys_tick_handler(void){
+	counter++;
+};
+
 
 int main(void)
 {
 	cpu_clock_init();
+
+	systick_set_reload(208000);
+	systick_set_clocksource(0);
+	systick_interrupt_enable();
+	systick_counter_enable();
 
 #ifndef SI_EN
 //	i2c0_init(255); // is default here
@@ -127,6 +140,7 @@ int main(void)
 	setSystemFont();
 
 	static const struct MENU main={ "main 1", {
+		{ "FS", &doFS},
 		{ "MSC", &doMSC},
 		{ "flash", &doFlash},
 		{ "LCD", &doLCD},
@@ -152,7 +166,25 @@ void clkoff (volatile uint32_t * foo){
 	(*foo) |= (1<<0);
 };
 
+#include <select.h>
+#include "../fatfs/ff.h"
+
+void doFS(){
+	char filename[FLEN]; // ???
+	FATFS FatFs;
+
+	int res;
+	lcdPrint("Mount:");
+	res=f_mount(&FatFs,"/",0);
+	lcdPrintln(IntToStr(res,3,0));
+
+	lcdDisplay();
+
+	selectFile(filename,"TXT");
+};
+
 void doMSC(){
+//	cpu_clock_set(204);
 	dwim();
 };
 
@@ -363,8 +395,8 @@ void doFlash(){
 				lcdPrint("xxd @ "); lcdPrint(IntToStr((uint32_t)addr,8,F_HEX));lcdNl();
 				lcdPrint("      "); lcdPrint(IntToStr(sw,8,F_HEX));lcdNl();
 				lcdDisplay(); */
-				data[0]=0xff;
-				data[1]=0xfe;
+				data[0]=0xfe;
+				data[1]=0xf8;
 				flash_program(addr,0x2,data);
 				lcdPrint("done.");
 				lcdNl();
@@ -460,6 +492,7 @@ void doADC(){
 		lcdPrint("Mic:  "); lcdPrint(IntToStr(MIC ,4,F_ZEROS));lcdNl();
 		df++;
 		lcdPrint("df: "); lcdPrint(IntToStr(df,4,F_ZEROS));lcdNl();
+		lcdPrint("ctr: "); lcdPrint(IntToStr(counter,6,0));lcdNl();
 		lcdNl();
 
 /*		lcdPrint("U ADC3/vBat");lcdNl();
@@ -472,17 +505,20 @@ void doADC(){
 		vIn=adc_get_single(ADC0,ADC_CR_CH4)*2*330/1023;
 		RSSI=adc_get_single(ADC0,ADC_CR_CH0)*2*330/1023;
 		LED=adc_get_single(ADC0,ADC_CR_CH6)*2*330/1023;
-		MIC=adc_get_single(ADC0,ADC_CR_CH7)*2*330/1023;
+		MIC=adc_get_single(ADC0,ADC_CR_CH7)*2*330/1023; 
 
 		switch(getInput()){
 			case BTN_UP:
 				vBat=adc_get_single(ADC0,ADC_CR_CH3)*2*330/1023;
+				cpu_clock_set(204);
 				break;
 			case BTN_DOWN:
 				vIn=adc_get_single(ADC0,ADC_CR_CH4)*2*330/1023;
+				cpu_clock_set(102);
 				break;
 			case BTN_LEFT:
 				RSSI=adc_get_single(ADC0,ADC_CR_CH0)*2*330/1023;
+				cpu_clock_set(12);
 				break;
 			case BTN_RIGHT:
 				LED=adc_get_single(ADC0,ADC_CR_CH6)*2*330/1023;

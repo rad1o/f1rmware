@@ -19,6 +19,8 @@
 #define ONg(x...)  gpio_set(_GPIO(x))
 #define GETg(x...) gpio_get(_GPIO(x))
 
+#define TOGGLE(x)    gpio_toggle(_GPIO(x))
+
 // Pull: SCU_GPIO_NOPULL, SCU_GPIO_PDN, SCU_GPIO_PUP
 
 #define LCD_BL_EN   P1_1,  SCU_CONF_FUNCTION0, GPIO0, GPIOPIN8,  set          // LCD Backlight

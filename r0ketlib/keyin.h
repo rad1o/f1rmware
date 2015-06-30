@@ -11,6 +11,10 @@
 uint8_t getInputRaw(void);
 uint8_t getInput(void);
 void inputInit(void);
+uint8_t getInputWait(void);
+uint8_t getInputWaitTimeout(int timeout);
+uint8_t getInputWaitRepeat(void);
+void getInputWaitRelease(void);
 
 /* XXX: probably should be in central header file */
 #define KEY_DOWN_PIN     (PB_0)
