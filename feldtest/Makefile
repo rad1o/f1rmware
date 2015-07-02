@@ -29,5 +29,6 @@ INCLUDE_PATHS+=-I../hackrf/firmware/common
 CFLAGS=-Wno-unused-variable -DRAD1O -DLPC43XX_M4
 OBJS += ../hackrf/firmware/common/w25q80bv.o
 
+LDSCRIPT=app.ld
 RPATH=..
 include ../Makefile.inc
