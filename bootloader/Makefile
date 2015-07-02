@@ -26,12 +26,6 @@ CFLAGS=-Wno-unused-variable -DRAD1O -DLPC43XX_M4
 OBJS += ../hackrf/firmware/common/w25q80bv.o
 
 RPATH=..
+LDSCRIPT=boot.ld
 include ../Makefile.inc
-
-LDFLAGS =
-LDFLAGS += -nostartfiles $(LFLAGS)
-LDFLAGS += -Wl,--gc-sections
-LDFLAGS += -T$(RPATH)/ld/LPC4330_M4_memory.ld 
-LDFLAGS += -Tboot.ld
-LDFLAGS += -Wl,-Map=$(APP).map
 

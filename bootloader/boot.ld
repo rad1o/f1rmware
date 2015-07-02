@@ -42,7 +42,7 @@ SECTIONS
 		. = ALIGN(4);
 	} >shadow
 
-	.stext (NOLOAD) : {
+	.stext (NOLOAD) : { /* hack to advance ">ram_local2" to the current offset */
 		_reloc_ep = .;
  		. += SIZEOF(.text);
 	} >ram_local2
@@ -119,8 +119,14 @@ SECTIONS
 	/DISCARD/ : { *(.eh_frame) }
 
 	. = ALIGN(4);
-	end = .;
-	_size = end - _reloc_ep;
+
+	_end = .;
+	_size = _end - _reloc_ep;
+
+	.dummy : {
+		_text_end  = .;
+		_text_size = (. - _text_start);
+	} > shadow
 
 	/* Leave room above stack for IAP to run. */
 	__StackTop = ORIGIN(ram_local2) + LENGTH(ram_local2) - 32;

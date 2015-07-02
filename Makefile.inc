@@ -23,11 +23,12 @@ CFLAGS += -fno-common -ffunction-sections -fdata-sections -fno-builtin -ffreesta
 #CFLAGS += -fmessage-length=0 
 CFLAGS += $(LFLAGS)
 
+LDSCRIPT?=$(RPATH)/libopencm3/lib/libopencm3_lpc43xx.ld
+
 LDFLAGS += -nostartfiles $(LFLAGS)
 LDFLAGS += -Wl,--gc-sections
 LDFLAGS += -T$(RPATH)/ld/LPC4330_M4_memory.ld 
-LDFLAGS += -T$(RPATH)/libopencm3/lib/libopencm3_lpc43xx.ld
-LDFLAGS += -T$(RPATH)/ld/LPC43xx_M4_M0_image_from_text.ld
+LDFLAGS += -T$(LDSCRIPT)
 LDFLAGS += -Wl,-Map=$(APP).map
 
 LIBS += -L$(RPATH)/libopencm3/lib -lopencm3_lpc43xx
@@ -54,7 +55,7 @@ program: flash
 flash: $(APP).dfu
 	$(DFUUTIL) --device 1fc9:000c --alt 0 --download $(APP).dfu
 
-$(APP).elf: $(OBJS)
+$(APP).elf: $(OBJS) $(LDSCRIPT)
 #	$(LD) $(LDFLAGS) -o $(APP).elf $(OBJS) $(LIB_PATHS) $(LIBS)
 	$(CC) $(LDFLAGS) -o $(APP).elf $(OBJS) $(LIB_PATHS) $(LIBS)
 	$(SIZE) $(APP).elf
