@@ -26,7 +26,7 @@
 #define LCD_BL_EN   P1_1,  SCU_CONF_FUNCTION0, GPIO0, GPIOPIN8,  set          // LCD Backlight
 #define LCD_BL_EN_  P1_1,  SCU_CONF_FUNCTION1, GPIO0, GPIOPIN8				  // LCD Backlight: PWM
 
-#define RF_EN_VDD   P5_0,  SCU_CONF_FUNCTION0, GPIO2, GPIOPIN9,  clear        // RF Power
+#define EN_VDD      P5_0,  SCU_CONF_FUNCTION0, GPIO2, GPIOPIN9,  clear        // RF Power
 #define EN_1V8      P6_10, SCU_CONF_FUNCTION0, GPIO3, GPIOPIN6,  clear        // CPLD Power
 
 #define LED1        P4_1,  SCU_CONF_FUNCTION0, GPIO2, GPIOPIN1,  clear
