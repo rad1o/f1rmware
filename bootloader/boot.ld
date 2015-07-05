@@ -125,10 +125,12 @@ SECTIONS
 
 	.dummy : {
 		_text_end  = .;
-		_text_size = (. - _text_start);
 	} > shadow
+
+	_text_size = (_text_end - _text_start);
 
 	/* Leave room above stack for IAP to run. */
 	__StackTop = ORIGIN(ram_local2) + LENGTH(ram_local2) - 32;
 	PROVIDE(_stack = __StackTop);
+	_app_start = ORIGIN(ram_local1);
 }
