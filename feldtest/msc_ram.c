@@ -58,7 +58,7 @@ static void translate_rd(uint32_t offset, uint8_t * *buff_adr, uint32_t length, 
 	ASSERT(hi_offset==0);
 
 //	flash_read(offset,length,disk_buffer); *buff_adr = disk_buffer;
-	flash_read(offset,length,*buff_adr);
+	flash_read(FLASHFS_OFFSET+offset,length,*buff_adr);
 }
 
 /* USB device mass storage class write callback routine */
@@ -66,7 +66,7 @@ static void translate_wr(uint32_t offset, uint8_t * *buff_adr, uint32_t length, 
 {
 	ASSERT(hi_offset==0);
 
-	flash_random_write(offset, length, *buff_adr);
+	flash_random_write(FLASHFS_OFFSET+offset, length, *buff_adr);
 }
 
 /* USB device mass storage class get write buffer callback routine */
@@ -81,7 +81,7 @@ static ErrorCode_t translate_verify(uint32_t offset, uint8_t *src, uint32_t leng
 {
 	ASSERT(hi_offset==0);
 
-	flash_read(offset,length,disk_buffer);
+	flash_read(FLASHFS_OFFSET+offset,length,disk_buffer);
 
 	if (memcmp((void *) disk_buffer, src, length)) {
 		return ERR_FAILED;

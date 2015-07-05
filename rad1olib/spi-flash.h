@@ -1,5 +1,7 @@
 #include <stdint.h>
 
+#define FLASHFS_OFFSET (512*1024)
+#define FLASHFS_LENGTH (512*1024)
 
 #define S1_BUSY (1<<0)  /* Busy (volatile) */
 #define S1_WEL  (1<<1)  /* Write Enable Latch (volatile) */

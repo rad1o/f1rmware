@@ -93,7 +93,7 @@ DRESULT disk_read (
 	switch (pdrv) {
 	case FLASH :
 #endif
-		flash_read(sector*512,count*512,buff);
+		flash_read(FLASHFS_OFFSET+sector*512,count*512,buff);
 		return RES_OK;
 
 #ifdef CFG_HAVE_SD
@@ -131,7 +131,7 @@ DRESULT disk_write (
 	switch (pdrv) {
 	case FLASH :
 #endif
-		flash_random_write(sector*512,count*512,buff);
+		flash_random_write(FLASHFS_OFFSET+sector*512,count*512,buff);
 
 		return RES_OK;
 
