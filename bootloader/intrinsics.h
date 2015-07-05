@@ -6,6 +6,7 @@ static inline uint32_t get_sp(void){
 
 
 static inline void boot(const void * vtable){
+	systick_interrupt_disable(); /* TODO: maybe disable all interrupts? */
 	// Set new Vtable
 	SCB_VTOR = (uintptr_t) vtable;  
 
