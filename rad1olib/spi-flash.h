@@ -1,3 +1,6 @@
+#ifndef _SPI_FLASH_H
+#define _SPI_FLASH_H 1
+
 #include <stdint.h>
 
 #define FLASHFS_OFFSET (512*1024)
@@ -35,3 +38,5 @@ void flash_usb_program(uint32_t addr, uint16_t len, const uint8_t * data);
 void flash_erase(uint32_t addr); /* erase 4k sector */
 void flash_write(uint32_t addr, uint16_t len, const uint8_t * data);
 void flash_random_write(uint32_t addr, uint16_t len, const uint8_t * data);
+
+#endif /* _SPI_FLASH_H */

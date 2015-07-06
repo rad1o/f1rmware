@@ -32,17 +32,21 @@ extern void * _text_start;
 
 extern unsigned _bss, _ebss;
 
-int main(void);
+int main(uint32_t);
 
 void __attribute__ ((naked)) reset_handler(void) {
 	volatile unsigned *dest;
 	volatile uint32_t idx;
+	static uint32_t startloc=-1; /* initialize so it is not in BSS */
 
 	if ((void *)CREG_M4MEMMAP != &_reloc_ep){
 		/* Move ourselves to _reloc_ep and restart there */
 		for (idx=0; idx < ((uintptr_t)& _text_size)/sizeof(uint32_t); idx++){
 			((uint32_t*)&_reloc_ep)[idx]= ((uint32_t *)&_text_start)[idx];
 		};
+		/* remember where we started. Needs to be done after the copy of data */
+		startloc=CREG_M4MEMMAP;
+		/* set shadow area to new code loction, so boot() still works */
 		CREG_M4MEMMAP = (uintptr_t)&_reloc_ep;
 		boot(&_reloc_ep);
 	};
@@ -53,5 +57,5 @@ void __attribute__ ((naked)) reset_handler(void) {
 	}
 
 	/* Call the application's entry point. */
-	main();
+	main(startloc);
 }

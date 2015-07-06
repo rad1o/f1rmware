@@ -40,7 +40,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include "fonts.h"
+#include <r0ketlib/fonts.h>
 
 /* Partially based on original code for the KS0108 by Stephane Rey */
 /* Current version by Kevin Townsend */

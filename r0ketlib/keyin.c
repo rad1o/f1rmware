@@ -1,6 +1,6 @@
 #include <stddef.h>
-#include "keyin.h"
-#include "idle.h"
+#include <r0ketlib/keyin.h>
+#include <r0ketlib/idle.h>
 
 #define FUNC (SCU_GPIO_PDN)
 

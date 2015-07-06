@@ -1,3 +1,5 @@
+#ifndef _PIN_H
+#define _PIN_H 1
 
 #define _PIN(pin, func, ...) pin
 #define _FUNC(pin, func, ...) func
@@ -83,3 +85,5 @@
 #define SPIFI_MISO		P3_6,  SCU_GPIO_FAST|SCU_CONF_FUNCTION3
 #define SPIFI_MOSI		P3_7,  SCU_GPIO_FAST|SCU_CONF_FUNCTION3
 #define SPIFI_CS		P3_8,  SCU_GPIO_FAST|SCU_CONF_FUNCTION3
+
+#endif /* _PIN_H */

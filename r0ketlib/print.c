@@ -1,8 +1,8 @@
-#include <display.h>
-#include <render.h>
-#include <fonts.h>
-#include <print.h>
-#include <fonts/smallfonts.h>
+#include <r0ketlib/print.h>
+#include <r0ketlib/display.h>
+#include <r0ketlib/render.h>
+#include <r0ketlib/fonts.h>
+#include <r0ketlib/fonts/smallfonts.h>
 
 int x=0;
 int y=0;

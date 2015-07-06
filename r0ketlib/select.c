@@ -1,17 +1,17 @@
 #include <string.h>
-#include <keyin.h>
+#include <r0ketlib/keyin.h>
 //#include "lcd/lcd.h"
 //#include "lcd/fonts/smallfonts.h"
-#include <print.h>
-#include "../fatfs/ff.h"
+#include <r0ketlib/print.h>
+#include <fatfs/ff.h>
 //#include "basic/basic.h"
 
 #define FLEN 13
 
-#include <display.h>
-#include <print.h>
-#include <itoa.h>
-#include <keyin.h>
+#include <r0ketlib/display.h>
+#include <r0ketlib/print.h>
+#include <r0ketlib/itoa.h>
+#include <r0ketlib/keyin.h>
 
 /* if count is 0xff (-1) do not fill files and return the count instead */
 int getFiles(char files[][FLEN], uint8_t count, uint16_t skip, const char *ext)

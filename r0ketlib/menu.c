@@ -1,10 +1,10 @@
 #include <unistd.h>
 #include <stdint.h>
 
-#include "menu.h"
-#include "keyin.h"
-#include <print.h>
-#include <display.h>
+#include <r0ketlib/menu.h>
+#include <r0ketlib/keyin.h>
+#include <r0ketlib/print.h>
+#include <r0ketlib/display.h>
 
 /**************************************************************************/
 

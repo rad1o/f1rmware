@@ -1,7 +1,7 @@
 /* for memmove etc.*/
 #include <string.h>
 
-#include "display.h"
+#include <r0ketlib/display.h>
 #include <libopencm3/lpc43xx/ssp.h>
 #include <libopencm3/lpc43xx/gpio.h>
 #include <libopencm3/lpc43xx/scu.h>

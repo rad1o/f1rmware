@@ -20,37 +20,32 @@
  */
 
 #include <libopencm3/lpc43xx/gpio.h>
-#include <libopencm3/lpc43xx/scu.h>
-#include <libopencm3/lpc43xx/ssp.h>
-#include <libopencm3/lpc43xx/adc.h>
-#include <libopencm3/lpc43xx/spifi.h>
-#include <libopencm3/lpc43xx/cgu.h>
-#include <libopencm3/lpc43xx/rgu.h>
-#include <libopencm3/lpc43xx/ccu.h>
 #include <libopencm3/cm3/scb.h>
 #include <libopencm3/cm3/systick.h>
 #include <libopencm3/lpc43xx/creg.h>
 
 #include <unistd.h>
+#include <string.h>
 
-#include "setup.h"
-#include "display.h"
-#include "print.h"
-#include "itoa.h"
-#include "keyin.h"
-#include "menu.h"
-#include "mixer.h"
-#include "si5351c.h"
+#include <r0ketlib/fs_util.h>
+#include <rad1olib/setup.h>
+#include <r0ketlib/display.h>
+#include <r0ketlib/print.h>
+#include <r0ketlib/itoa.h>
+#include <r0ketlib/keyin.h>
+#include <r0ketlib/menu.h>
 
-#include "spi-flash.h"
+#include <rad1olib/spi-flash.h>
 
-#include <select.h>
-#include "../fatfs/ff.h"
-#include <pins.h>
-#include <keyin.h>
+#include <r0ketlib/select.h>
+#include <fatfs/ff.h>
+#include <rad1olib/pins.h>
 #include "intrinsics.h"
 
+#define BOOTCFG "BOOT.CFG"
+
 extern uint8_t  _app_start;
+void bootFile(const char * filename, uint8_t write);
 
 void doFlash(){
 	uint32_t addr = 0;
@@ -90,15 +85,6 @@ void doExec(){
 	FATFS FatFs;
 
 	FRESULT res;
-	lcdPrint("Mount:");
-	res=f_mount(&FatFs,"/",0);
-	if(res){
-		lcdPrintln("MOUNT ERROR");
-		lcdPrintln(IntToStr(res,3,0));
-		lcdDisplay();
-		getInputWait();
-		return;
-	};
 	if(selectFile(filename,"BIN")){
 		lcdPrintln("Select ERROR");
 		lcdDisplay();
@@ -108,53 +94,20 @@ void doExec(){
 	lcdPrintln("Loading:");
 	lcdPrintln(filename);
 	lcdDisplay();
+	bootFile(filename,1);
 
-	FIL file;
-	UINT readbytes;
-
-	res=f_open(&file, filename, FA_OPEN_EXISTING|FA_READ);
-	if(res!=F_OK){
-		lcdPrintln("FOPEN ERROR");
-		lcdPrintln(IntToStr(res,3,0));
-		lcdDisplay();
-		getInputWait();
-	};
-	uint8_t * destination=&_app_start;
-#define BLOCK 1024 * 128
-	do {
-		res=f_read(&file, destination, BLOCK, &readbytes); 
-		destination+=readbytes;
-/*		lcdPrint("Read:");
-		lcdPrint(IntToStr(res,3,0));
-		lcdPrint(" ");
-		lcdPrint(IntToStr(readbytes,6,0));
-		lcdNl(); */
-	}while(res==F_OK && readbytes==BLOCK);
-
-	lcdDisplay();
-	if(res!=F_OK){
-		lcdPrint("Read Error:");
-		lcdPrintln(IntToStr(res,3,0));
-		lcdDisplay();
-		getInputWait();
-		return;
-	};
-	lcdPrintln("Length:");
-	lcdPrintln(IntToStr(destination-&_app_start,8,0));
-	lcdDisplay();
-	getInputWait();
-	boot((void*)&_app_start);
 };
 
 void doMSC(){
 //	cpu_clock_set(204);
-	dwim();
+	//dwim();
 };
 
 extern void * _text_end;
 extern void * _end;
 
 volatile uint32_t global=42;
+uint32_t sli;
 
 void doInfo(){
 	lcdClear(0xff);
@@ -167,26 +120,64 @@ void doInfo(){
 	lcdPrint("size:    "); lcdPrint(IntToStr((uintptr_t)&_text_size,8,F_HEX));lcdNl();
 	lcdPrint("reloc_ep:"); lcdPrint(IntToStr((uintptr_t)&_reloc_ep,8,F_HEX));lcdNl();
 	lcdPrint("end:     "); lcdPrint(IntToStr((uintptr_t)&_end,8,F_HEX));lcdNl();
+	lcdPrint("startloc:"); lcdPrint(IntToStr(sli,8,F_HEX));lcdNl();
 	lcdDisplay();
 
 	getInputWait();
-
-	boot((void*)0);
-
-	while(1){
-		delay(1000*1000);
-		TOGGLE(LED1);
-	};
 };
 
 extern uint32_t _timectr;
 
 void sys_tick_handler(void){
 	_timectr++;
-	TOGGLE(LED1);
 };
 
-int main(void) {
+void bootFile(const char * filename, uint8_t write){
+	FIL file;
+	UINT readbytes;
+	FRESULT res;
+
+	res=f_open(&file, filename, FA_OPEN_EXISTING|FA_READ);
+	if(res!=F_OK){
+		lcdPrintln("FOPEN ERROR");
+		lcdPrintln(f_get_rc_string(res));
+		lcdDisplay();
+		getInputWait();
+		return;
+	};
+	uint8_t *destination=&_app_start;
+#define BLOCK 1024 * 128
+	do {
+		res=f_read(&file, destination, BLOCK, &readbytes); 
+		destination+=readbytes;
+	}while(res==F_OK && readbytes==BLOCK);
+
+	lcdDisplay();
+	if(res!=F_OK){
+		lcdPrint("Read Error:");
+		lcdPrintln(f_get_rc_string(res));
+		lcdDisplay();
+		getInputWait();
+		return;
+	};
+	if(write){
+		res=writeFile(BOOTCFG, filename, strlen(filename)+1);
+		if(res<0){
+			lcdPrint("write Error:");
+			lcdPrintln(f_get_rc_string(-res));
+			lcdDisplay();
+			getInputWait();
+		};
+		lcdPrint("write Done:");
+		lcdPrintln(IntToStr(res,3,0));
+		lcdPrintln(IntToStr(strlen(filename),3,0));
+		lcdDisplay();
+		getInputWait();
+	};
+	boot((void*)&_app_start);
+};
+
+int main(uint32_t startloc) {
 	cpu_clock_init();
 	systick_set_reload(208000);
 	systick_set_clocksource(0);
@@ -206,10 +197,22 @@ int main(void) {
 	flash_init();
 
     lcdInit();
+	fsInit();
     lcdFill(0xff); /* Display BL Image here */
 	setSystemFont();
 
-	static const struct MENU main={ "main 1", {
+	sli=startloc;
+
+	if (startloc != (uintptr_t)&_app_start){ /* not booted via DFU, do autoboot */ 
+		if (getInputRaw()!=BTN_LEFT){
+			char filename[FLEN];
+			readTextFile(BOOTCFG, filename, FLEN);
+			lcdPrintln("Fname");
+			lcdPrintln(filename);
+			bootFile(filename,0);
+		};
+	};
+	static const struct MENU main={ "Bootloader", {
 		{ "Info", &doInfo},
 		{ "Exec", &doExec},
 		{ "Flash", &doFlash},

@@ -1,13 +1,14 @@
 #include <string.h>
 
-#include <render.h>
+#include <r0ketlib/render.h>
 //#include <decoder.h>
-#include <fonts.h>
+#include <r0ketlib/fonts.h>
 // #include "basic/basic.h"
-#include "fonts/smallfonts.h"
+#include "r0ketlib/fonts/smallfonts.h"
 
 // #include "filesystem/ff.h"
-#include "render.h"
+#include <r0ketlib/render.h>
+#include <r0ketlib/display.h>
 
 /* Global Variables */
 const struct FONT_DEF * font = NULL;

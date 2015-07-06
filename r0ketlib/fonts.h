@@ -1,6 +1,8 @@
 #ifndef __FONTS_H_
 #define __FONTS_H_
 
+#include <stdint.h>
+
 /* Partially based on original code for the KS0108 by Stephane Rey */
 /* Based on code code by Kevin Townsend */
 

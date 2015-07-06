@@ -1,8 +1,7 @@
 #ifndef __RENDER_H_
 #define __RENDER_H_
 
-#include "display.h"
-#include "fonts.h"
+#include <r0ketlib/fonts.h>
 
 // ARM supports byte flip natively. Yay!
 #define flip(byte) \

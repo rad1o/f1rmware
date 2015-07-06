@@ -1,3 +1,6 @@
+#ifndef _MENU_H
+#define _MENU_H 1
+
 struct MENU_DEF {
     const char *text;
     void (*callback)(void);
@@ -13,6 +16,6 @@ struct MENU {
 #define MENU_BIG      (1<<2)
 extern uint8_t menuflags;
 
-
 void handleMenu(const struct MENU *the_menu);
 
+#endif /* _MENU_H */

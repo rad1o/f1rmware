@@ -1,13 +1,13 @@
-#include <spi-flash.h>
-#include <pins.h>
-#include <setup.h>
-#include <assert.h>
+#include <rad1olib/spi-flash.h>
+#include <rad1olib/pins.h>
+#include <rad1olib/setup.h>
+#include <rad1olib/assert.h>
 #include <libopencm3/lpc43xx/rgu.h>
 #include <libopencm3/lpc43xx/cgu.h>
 #include <libopencm3/lpc43xx/scu.h>
 #include <libopencm3/lpc43xx/spifi.h>
-#include <print.h>
-#include <itoa.h>
+#include <r0ketlib/print.h>
+#include <r0ketlib/itoa.h>
 
 #define FLASH_SECTOR_SIZE 4096
 
@@ -173,6 +173,19 @@ void flash_random_program(uint32_t addr, uint32_t len, const uint8_t * data){
 	uint16_t cut=0;
 	uint16_t offset = addr &  (FLASH_PROGRAM_SIZE-1);
 
+	/*
+	lcdPrint("p:");
+	lcdPrint(IntToStr(addr,8,F_HEX));
+	lcdPrint(" ");
+	lcdPrint(IntToStr(len,4,F_HEX));
+	lcdPrintln(" ");
+	lcdPrint("-:");
+	lcdPrint(IntToStr(data,8,F_HEX));
+	lcdPrint(" ");
+	lcdPrint(IntToStr(data[0],2,F_HEX));
+	lcdPrintln(" ");
+	lcdDisplay(); */
+
 	while (offset+len> FLASH_PROGRAM_SIZE){
 		cut=FLASH_PROGRAM_SIZE-offset;
 		flash_program(addr,cut,data);
@@ -289,6 +302,17 @@ void flash_write(uint32_t addr, uint16_t len, const uint8_t * data){
 			program_needed=1;
 		};
 	};
+/*	lcdPrint("P:");
+	lcdPrint(IntToStr(addr,8,F_HEX));
+	lcdPrint(" ");
+	lcdPrint(IntToStr(len,4,F_HEX));
+	lcdPrintln(" ");
+	lcdPrint("+:");
+	lcdPrint(IntToStr(data,8,F_HEX));
+	lcdPrint(" ");
+	lcdPrint(IntToStr(data[0],2,F_HEX));
+	lcdPrintln(" ");
+	lcdDisplay(); */
 	if (erase_needed){
 		program_needed=0;
 		flash_erase(addr);

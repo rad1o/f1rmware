@@ -1,3 +1,6 @@
+#ifndef _KEYIN_H
+#define _KEYIN_H 1
+
 #include <libopencm3/lpc43xx/scu.h>
 #include <libopencm3/lpc43xx/gpio.h>
 
@@ -42,3 +45,4 @@ void getInputWaitRelease(void);
 #define KEY_ENTER_GPORT   GPIO5
 #define KEY_ENTER_GPIN    GPIOPIN24
 
+#endif /* _KEYIN_H */

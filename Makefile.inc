@@ -13,8 +13,7 @@ DFUUTIL= dfu-util
 
 INCLUDE_PATHS += -I$(RPATH)/libopencm3/include
 INCLUDE_PATHS += -I$(RPATH)/hackrf/firmware
-INCLUDE_PATHS += -I$(RPATH)/r0ketlib
-INCLUDE_PATHS += -I$(RPATH)/rad1olib
+INCLUDE_PATHS += -I$(RPATH)
 
 LFLAGS += -Os -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
@@ -45,7 +44,7 @@ OCFLAGS = --strip-unneeded
 %.dfu: %.bin
 	$(DFUTOOL) $< $@
 
-all: $(APP).dfu
+all: $(APP).dfu $(APP).bin
 
 clean::
 	-rm -f $(OBJS) $(APP).elf $(APP).bin $(APP).dfu $(APP).map

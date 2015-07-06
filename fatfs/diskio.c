@@ -8,7 +8,7 @@
 /*-----------------------------------------------------------------------*/
 
 #include "diskio.h"		/* FatFs lower layer API */
-#include <spi-flash.h>
+#include <rad1olib/spi-flash.h>
 
 /* Definitions of physical drive number for each drive */
 #define FLASH	0	/* Example: Map ATA harddisk to physical drive 0 */

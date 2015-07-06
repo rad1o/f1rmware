@@ -21,7 +21,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "setup.h"
+#include <rad1olib/setup.h>
 #include <libopencm3/lpc43xx/i2c.h>
 #include <libopencm3/lpc43xx/cgu.h>
 #include <libopencm3/lpc43xx/gpio.h>
