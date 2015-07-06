@@ -1,8 +1,11 @@
 # rad1o
 
+This is the f1rmware of the CCCamp 2015 radio badge.
+
 ## Project Infrastructure
 Website: http://rad1o.badge.events.ccc.de/software
-IRC channel: darkfasel/#rad1o
+
+IRC channel: irc://irc.darkfasel.net/#rad1o (Port 6697 oder 9999, TLS-only, IPv6 Support)
 
 ## required software
 * arm-gcc: https://launchpad.net/gcc-arm-embedded
