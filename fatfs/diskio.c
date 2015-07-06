@@ -172,7 +172,8 @@ DRESULT disk_ioctl (
 #endif
 
 		// Process of the command for the ATA drive
-#error "notimpl"
+		if(cmd==CTRL_SYNC)
+			res=RES_OK;
 		return res;
 
 #ifdef CFG_HAVE_SD
