@@ -15,4 +15,3 @@ To build blinky:
 $ cd blinky
 $ make
 $ make program
-
