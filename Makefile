@@ -23,10 +23,10 @@ $(APP)/main.bin:
 $(APP)/main.dfu:
 	$(MAKE) -C $(APP) main.dfu
 	
-$(APP).bin: $(APP)/main.bin
+$(APP).bin: $(APP)/feldtest.bin
 	cp $< $@
 
-$(APP).dfu: $(APP)/main.dfu
+$(APP).dfu: $(APP)/feldtest.dfu
 	cp $< $@
 
 clean:
