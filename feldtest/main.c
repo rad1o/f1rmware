@@ -43,13 +43,12 @@
 #include <common/si5351c.h>
 
 #include <rad1olib/spi-flash.h>
+#include <rad1olib/pins.h>
+#include <common/w25q80bv.h>
 
-#define LED1 P4_1, SCU_CONF_FUNCTION0, GPIO2, GPIOPIN1, clear
-#define RF_EN P5_0, SCU_CONF_FUNCTION0, GPIO2, GPIOPIN9, clear
+#include <r0ketlib/select.h>
+#include <fatfs/ff.h>
 
-#define OFF(foo) gpio_clear(foo ## _GPORT,foo ## _GPIN);
-#define ON(foo) gpio_set(foo ## _GPORT,foo ## _GPIN);
-#define GET(foo) gpio_get(foo ## _GPORT,foo ## _GPIN);
 void doChrg();
 void doADC();
 void doFeld();
@@ -59,28 +58,11 @@ void doLCD();
 void doMSC();
 void doFS();
 
-#define _PIN(pin, func, ...) pin
-#define _FUNC(pin, func, ...) func
-#define _GPORT(pin, func, gport, gpin, ...) gport
-#define _GPIN(pin, func, gport, gpin, ...) gpin
-#define _GPIO(pin, func, gport, gpin, ...) gport,gpin
-#define _VAL(pin, func, gport, gpin, val, ...) val
-
-#define PASTER(x) gpio_ ## x
-#define WRAP(x) PASTER(x)
-#define SETUPadc(args...) scu_pinmux(_PIN(args),SCU_CONF_EPUN_DIS_PULLUP|_FUNC(args)); GPIO_DIR(_GPORT(args)) &= ~ _GPIN(args); SCU_ENAIO0|=SCU_ENAIO_ADCx_6;
-#define SETUPgin(args...) scu_pinmux(_PIN(args),_FUNC(args)); GPIO_DIR(_GPORT(args)) &= ~ _GPIN(args);
-#define SETUPgout(args...) scu_pinmux(_PIN(args),SCU_CONF_EPUN_DIS_PULLUP|_FUNC(args)); GPIO_DIR(_GPORT(args)) |= _GPIN(args); WRAP( _VAL(args) ) (_GPIO(args));
-#define TOGg(x) gpio_toggle(_GPIO(x))
-#define OFFg(x...) gpio_clear(_GPIO(x))
-#define ONg(x...) gpio_set(_GPIO(x))
-
-static uint16_t counter=0;
+static uint16_t _timectr=0;
 
 void sys_tick_handler(void){
-	counter++;
+	_timectr++;
 };
-
 
 int main(void)
 {
@@ -125,7 +107,7 @@ int main(void)
 
 //	cpu_clock_pll1_max_speed();
 
-	SETUPgout(RF_EN);
+	SETUPgout(EN_VDD);
 //	ONg(RF_EN);
 
     // Config LED as out
@@ -136,7 +118,7 @@ int main(void)
 
     lcdInit();
     lcdFill(0xff);
-	OFF(MIXER_EN);
+	SETUPgout(MIXER_EN);
 	setSystemFont();
 
 	static const struct MENU main={ "main 1", {
@@ -154,10 +136,6 @@ int main(void)
 	return 0;
 }
 
-#include "common/w25q80bv.h"
-#define LCD_BL_EN   P1_1,  SCU_CONF_FUNCTION0, GPIO0, GPIOPIN8, clear        // LCD Backlight
-#define EN_1V8   P6_10,  SCU_CONF_FUNCTION0, GPIO3, GPIOPIN6, clear        // CPLD Power
-#define LED_4   PB_6,  SCU_CONF_FUNCTION4, GPIO5, GPIOPIN26, clear        // LED 4
 void turnoff ( volatile uint32_t *foo){
 	(*foo)|= (1<<1); // AUTO = 1
 	(*foo)&= ~(1<<0); // RUN=0
@@ -165,9 +143,6 @@ void turnoff ( volatile uint32_t *foo){
 void clkoff (volatile uint32_t * foo){
 	(*foo) |= (1<<0);
 };
-
-#include <r0ketlib/select.h>
-#include <fatfs/ff.h>
 
 void doFS(){
 	char filename[FLEN]; // ???
@@ -191,10 +166,10 @@ void doMSC(){
 void doSpeed(){
 	SETUPgout(LCD_BL_EN);
 	SETUPgout(EN_1V8);
-	SETUPgout(LED_4);
+	SETUPgout(LED4);
 	int mhz=102;
 	while(1){
-		TOGg(LED1);
+		TOGGLE(LED1);
 		lcdClear(0xff);
 		lcdPrint("speed: "); lcdPrint(IntToStr(mhz,3,0));lcdNl();
 		lcdDisplay(); 
@@ -209,7 +184,7 @@ void doSpeed(){
 		PD0_SLEEP0_MODE = 0x003000AA;
 		SCB_SCR|=SCB_SCR_SLEEPDEEP;
 
-		ONg(LED1);
+		ON(LED1);
 		CGU_BASE_M4_CLK = (CGU_BASE_M4_CLK_CLK_SEL(CGU_SRC_IRC) | CGU_BASE_M4_CLK_AUTOBLOCK(1));
 		CGU_PLL1_CTRL= CGU_PLL1_CTRL_PD(1);
 		CGU_PLL0USB_CTRL= CGU_PLL1_CTRL_PD(1);
@@ -221,7 +196,7 @@ void doSpeed(){
 
 #define __WFI() __asm__("wfi")
 		while(1){
-			TOGg(LED1);
+			TOGGLE(LED1);
 			__WFI();
 		};
 				break;
@@ -232,15 +207,15 @@ void doSpeed(){
 			case BTN_LEFT:
 				while(1){
 					cpu_clock_set(102);
-					TOGg(LED1);
+					TOGGLE(LED1);
 					delay(1000);
 					cpu_clock_set(12);
-					TOGg(LED1);
+					TOGGLE(LED1);
 					delay(1000);
 				};
 				break;
 			case BTN_RIGHT:
-				TOGg(LCD_BL_EN);
+				TOGGLE(LCD_BL_EN);
 						OFF(BY_MIX_N);
 						OFF(BY_MIX);
 						OFF(BY_AMP_N);
@@ -252,7 +227,7 @@ void doSpeed(){
 							OFF(TX_AMP);
 							OFF(RX_LNA);
 						OFF(MIXER_EN);
-						OFF(CS_VCO);
+						OFF(CE_VCO);
 //				cpu_clock_set(mhz);
 				break;
 			case BTN_ENTER:
@@ -359,7 +334,7 @@ void doFlash(){
 	lcdDisplay();
 
 	while(1){
-		TOGg(LED1);
+		TOGGLE(LED1);
 		switch(getInput()){
 			case BTN_UP:
 				/* addr-=sw;
@@ -436,9 +411,9 @@ void doLCD(){
 
 	while(1){
 
-		OFFg(LCD_BL_EN);
+		OFF(LCD_BL_EN);
 		delay(10000+pwm*100);
-		ONg(LCD_BL_EN);
+		ON(LCD_BL_EN);
 		delay(10000-pwm*100);
 
 		switch(getInput()){
@@ -475,8 +450,8 @@ void doADC(){
 	int v;
 	int df=0;
 
-//#define LED_4        PB_6, SCU_CONF_FUNCTION4, GPIO5, GPIOPIN26
-	SETUPadc(LED_4);
+//#define LED4        PB_6, SCU_CONF_FUNCTION4, GPIO5, GPIOPIN26
+	SETUPadc(LED4);
 
 	while(1){
 		lcdClear(0xff);
@@ -492,7 +467,7 @@ void doADC(){
 		lcdPrint("Mic:  "); lcdPrint(IntToStr(MIC ,4,F_ZEROS));lcdNl();
 		df++;
 		lcdPrint("df: "); lcdPrint(IntToStr(df,4,F_ZEROS));lcdNl();
-		lcdPrint("ctr: "); lcdPrint(IntToStr(counter,6,0));lcdNl();
+		lcdPrint("ctr: "); lcdPrint(IntToStr(_timectr,6,0));lcdNl();
 		lcdNl();
 
 /*		lcdPrint("U ADC3/vBat");lcdNl();
@@ -532,23 +507,6 @@ void doADC(){
 };
 
 void doChrg(){
-// Pull: SCU_GPIO_NOPULL, SCU_GPIO_PDN, SCU_GPIO_PUP
-
-	/* input */
-#define BC_DONE      PD_16, SCU_GPIO_PUP|SCU_CONF_FUNCTION4, GPIO6, GPIOPIN30  // Charge Complete Output (active low)
-	/*output */
-#define BC_CEN       PA_3,  SCU_CONF_FUNCTION0, GPIO4, GPIOPIN10, clear        // Active-Low Charger Enable Input
-#define BC_PEN2      PA_4,  SCU_CONF_FUNCTION4, GPIO5, GPIOPIN19, set          // Input Limit Control 2. (100mA/475mA)
-#define BC_USUS      PD_12, SCU_CONF_FUNCTION4, GPIO6, GPIOPIN26, clear        // (active low) USB Suspend Digital Input (disable charging)
-/* in the future // #define BC_THMEN     P4_0,  SCU_CONF_FUNCTION0, GPIO2, GPIOPIN0,  clear        // Thermistor Enable Input */
-#define BC_THMEN     P7_1,  SCU_CONF_FUNCTION0, GPIO3, GPIOPIN9,  clear        // Thermistor Enable Input
-	/* input */
-#define BC_IND       PD_11, SCU_GPIO_PUP|SCU_CONF_FUNCTION4, GPIO6, GPIOPIN25  // (active low) Charger Status Output
-#define BC_OT        P8_7,  SCU_GPIO_PUP|SCU_CONF_FUNCTION0, GPIO4, GPIOPIN7   // (active low) Battery Overtemperature Flag
-#define BC_DOK       P8_6,  SCU_GPIO_PUP|SCU_CONF_FUNCTION0, GPIO4, GPIOPIN6   // (active low) DC Power-OK Output
-#define BC_UOK       P8_5,  SCU_GPIO_PUP|SCU_CONF_FUNCTION0, GPIO4, GPIOPIN5   // (active low) USB Power-OK Output
-#define BC_FLT       P8_4,  SCU_GPIO_PUP|SCU_CONF_FUNCTION0, GPIO4, GPIOPIN4   // (active low) Fault Output
-
 SETUPgin(BC_DONE);
 SETUPgout(BC_CEN);
 SETUPgout(BC_PEN2);
@@ -589,22 +547,18 @@ char ct=0;
 		lcdPrint("vBat: "); lcdPrint(IntToStr(vBat,4,F_ZEROS));lcdNl();
 		lcdPrint("vIn:  "); lcdPrint(IntToStr(vIn ,4,F_ZEROS));lcdNl();
 		lcdDisplay(); 
-#define TOGg(x) gpio_toggle(_GPIO(x))
-#define OFFg(x...) gpio_clear(_GPIO(x))
-#define ONg(x...) gpio_set(_GPIO(x))
-//#define TOGg(x...) if (GETg(x)) {OFFg(x); }else {ONg(x);}
 		switch(getInput()){
 			case BTN_UP:
-				TOGg(BC_CEN);
+				TOGGLE(BC_CEN);
 				break;
 			case BTN_DOWN:
-				TOGg(BC_PEN2);
+				TOGGLE(BC_PEN2);
 				break;
 			case BTN_LEFT:
-				TOGg(BC_USUS);
+				TOGGLE(BC_USUS);
 				break;
 			case BTN_RIGHT:
-				TOGg(BC_THMEN);
+				TOGGLE(BC_THMEN);
 				break;
 			case BTN_ENTER:
 				return;
@@ -748,8 +702,8 @@ void doFeld(){
 
 		}else if (page==2){
 			lcdPrint("SF: ");lcdPrint(IntToStr(sf,4,F_ZEROS)); lcdPrintln(" MHz");
-			tl3=GET(CS_VCO);
-			lcdPrint(IntToStr(tl3,1,F_HEX)); lcdPrint(" "); lcdPrintln(" Lt CS_VCO");
+			tl3=GET(CE_VCO);
+			lcdPrint(IntToStr(tl3,1,F_HEX)); lcdPrint(" "); lcdPrintln(" Lt CE_VCO");
 			lcdPrint("  "); lcdPrintln(" Rt ");
 			lcdPrintln("Enter for next page");
 			lcdDisplay(); 
@@ -765,11 +719,11 @@ void doFeld(){
 				case BTN_LEFT:
 					tl3=1-tl3;
 					if (tl3){
-						ON(CS_VCO);
+						ON(CE_VCO);
 						mixer_setup();
 						mixer_set_frequency(sf);
 					}else{
-						OFF(CS_VCO);
+						OFF(CE_VCO);
 					};
 					break;
 				case BTN_RIGHT:
@@ -788,9 +742,9 @@ void doFeld(){
 		};
 		if (page>2){page=0;}
 
-		ONg(LED1);
+		ON(LED1);
 		delay(200000);
-		OFFg(LED1);
+		OFF(LED1);
 		delay(200000);
 
 		ctr++;

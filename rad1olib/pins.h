@@ -14,14 +14,13 @@
 #define SETUPadc(args...)  scu_pinmux(_PIN(args),SCU_CONF_EPUN_DIS_PULLUP|_FUNC(args)); GPIO_DIR(_GPORT(args)) &= ~ _GPIN(args); SCU_ENAIO0|=SCU_ENAIO_ADCx_6;
 #define SETUPgin(args...)  scu_pinmux(_PIN(args),_FUNC(args)); GPIO_DIR(_GPORT(args)) &= ~ _GPIN(args);
 #define SETUPgout(args...) scu_pinmux(_PIN(args),SCU_CONF_EPUN_DIS_PULLUP|_FUNC(args)); GPIO_DIR(_GPORT(args)) |= _GPIN(args); WRAP( _VAL(args) ) (_GPIO(args));
-#define SETUPpin(args...) scu_pinmux(_PIN(args),_FUNC(args))
+#define SETUPpin(args...)  scu_pinmux(_PIN(args),_FUNC(args))
 
-#define TOGg(x)    gpio_toggle(_GPIO(x))
-#define OFFg(x...) gpio_clear(_GPIO(x))
-#define ONg(x...)  gpio_set(_GPIO(x))
-#define GETg(x...) gpio_get(_GPIO(x))
+#define TOGGLE(x) gpio_toggle(_GPIO(x))
+#define OFF(x...) gpio_clear(_GPIO(x))
+#define ON(x...)  gpio_set(_GPIO(x))
+#define GET(x...) gpio_get(_GPIO(x))
 
-#define TOGGLE(x)    gpio_toggle(_GPIO(x))
 
 // Pull: SCU_GPIO_NOPULL, SCU_GPIO_PDN, SCU_GPIO_PUP
 
