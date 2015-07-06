@@ -32,8 +32,8 @@ int getFiles(char files[][FLEN], uint8_t count, uint16_t skip, const char *ext)
         if(len<extlen)
             continue;
 
-//        if( strcmp(Finfo.fname+len-extlen, ext) != 0)
-//            continue;
+        if( strcmp(Finfo.fname+len-extlen, ext) != 0)
+            continue;
 
         if (Finfo.fattrib & AM_DIR)
             continue;
