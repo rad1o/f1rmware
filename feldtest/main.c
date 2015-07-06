@@ -32,17 +32,17 @@
 
 #include <unistd.h>
 
-#include "setup.h"
-#include "display.h"
-#include "print.h"
-#include "itoa.h"
-#include "keyin.h"
+#include <rad1olib/setup.h>
+#include <r0ketlib/display.h>
+#include <r0ketlib/print.h>
+#include <r0ketlib/itoa.h>
+#include <r0ketlib/keyin.h>
 #include "feldtest.h"
-#include "menu.h"
-#include "mixer.h"
-#include "si5351c.h"
+#include <r0ketlib/menu.h>
+#include <common/mixer.h>
+#include <common/si5351c.h>
 
-#include "spi-flash.h"
+#include <rad1olib/spi-flash.h>
 
 #define LED1 P4_1, SCU_CONF_FUNCTION0, GPIO2, GPIOPIN1, clear
 #define RF_EN P5_0, SCU_CONF_FUNCTION0, GPIO2, GPIOPIN9, clear
@@ -166,8 +166,8 @@ void clkoff (volatile uint32_t * foo){
 	(*foo) |= (1<<0);
 };
 
-#include <select.h>
-#include "../fatfs/ff.h"
+#include <r0ketlib/select.h>
+#include <fatfs/ff.h>
 
 void doFS(){
 	char filename[FLEN]; // ???
@@ -795,7 +795,7 @@ void doFeld(){
 
 		ctr++;
 		lcdNl();
-		lcdPrint(IntToStrX(ctr,4));
+		lcdPrint(IntToStr(ctr,4,F_HEX));
 	}
 };
 

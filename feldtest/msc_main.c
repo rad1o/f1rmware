@@ -85,7 +85,7 @@ ErrorCode_t EP0_patch(USBD_HANDLE_T hUsb, void *data, uint32_t event)
  * @brief	Handle interrupt from USB0
  * @return	Nothing
  */
-#include "pins.h"
+#include <rad1olib/pins.h>
 #include <libopencm3/lpc43xx/gpio.h>
 #include <libopencm3/lpc43xx/scu.h>
 void USB0_IRQHandler(void)
@@ -129,13 +129,12 @@ USB_INTERFACE_DESCRIPTOR *find_IntfDesc(const uint8_t *pDesc, uint32_t intfClass
  * @brief	main routine for blinky example
  * @return	Function should not exit.
  */
-#include <setup.h>
-#include <usb.h>
-#include "setup.h"
-#include "display.h"
-#include "print.h"
+#include <rad1olib/setup.h>
+#include <common/usb.h>
+#include <r0ketlib/display.h>
+#include <r0ketlib/print.h>
 
-#include <spi-flash.h>
+#include <rad1olib/spi-flash.h>
 
 int dwim(void)
 {

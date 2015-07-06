@@ -50,7 +50,7 @@ static uint8_t *disk_buffer = (uint8_t *) BUFFER_BASE;
  * Private functions
  ****************************************************************************/
 
-#include <spi-flash.h>
+#include <rad1olib/spi-flash.h>
 #define ASSERT(x)
 /* USB device mass storage class read callback routine */
 static void translate_rd(uint32_t offset, uint8_t * *buff_adr, uint32_t length, uint32_t hi_offset)
