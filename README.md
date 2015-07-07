@@ -37,11 +37,8 @@ prerequisite: rad1o is connected to USB
 
 ## MAC OS X Setup:
 
-install homebrew if you haven't already
-
+    #install homebrew if you haven't already
     ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-
-
     brew tap PX4/homebrew-px4
     brew update
     brew install gcc-arm-none-eabi-49
