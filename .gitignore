@@ -5,3 +5,4 @@
 *.dfu
 *.map
 *.elf
+*.bin
