@@ -96,8 +96,8 @@ SECTIONS
 	} >ram_local2 AT >ram_local1
 	_data_loadaddr = LOADADDR(.data);
 
-	_data_rom = LOADADDR (.data) + ORIGIN(rom);
-	_edata_rom = _data_rom + SIZEOF (.data);
+/*	_data_rom = LOADADDR (.data) + ORIGIN(rom);
+	_edata_rom = _data_rom + SIZEOF (.data); */
 
 	.bss : {
 		_bss = .;

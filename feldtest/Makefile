@@ -22,6 +22,7 @@ OBJS += ../fatfs/diskio.o
 OBJS += ../fatfs/ff.o
 OBJS += ../r0ketlib/select.o
 OBJS += ../r0ketlib/idle.o
+OBJS += ../r0ketlib/fs_util.o
 
 CFLAGS=-Wno-unused-variable -DRAD1O -DLPC43XX_M4
 OBJS += ../hackrf/firmware/common/w25q80bv.o

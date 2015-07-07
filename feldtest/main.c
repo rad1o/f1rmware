@@ -47,6 +47,7 @@
 #include <common/w25q80bv.h>
 
 #include <r0ketlib/select.h>
+#include <r0ketlib/fs_util.h>
 #include <fatfs/ff.h>
 
 void doChrg();
@@ -58,24 +59,14 @@ void doLCD();
 void doMSC();
 void doFS();
 
-static uint16_t _timectr=0;
+extern uint16_t _timectr;
 
 void sys_tick_handler(void){
 	_timectr++;
 };
 
-int main(void)
-{
-	cpu_clock_init();
-	ssp_clock_init();
-
-	systick_set_reload(208000);
-	systick_set_clocksource(0);
-	systick_interrupt_enable();
-	systick_counter_enable();
-
-#ifndef SI_EN
-//	i2c0_init(255); // is default here
+void si_en(){
+	//	i2c0_init(255); // is default here
 	si5351c_disable_all_outputs();
 	si5351c_disable_oeb_pin_control();
 	si5351c_power_down_all_clocks();
@@ -89,8 +80,8 @@ int main(void)
 
 	/* MS4/CLK4 is the source for the RFFC5071 mixer. */
 	si5351c_configure_multisynth(4, 16*128-512, 0, 1, 0); /* 800/16 = 50MHz */
- 
- 	/* MS5/CLK5 is the source for the MAX2837 clock input. */
+
+	/* MS5/CLK5 is the source for the MAX2837 clock input. */
 	si5351c_configure_multisynth(5, 20*128-512, 0, 1, 0); /* 800/20 = 40MHz */
 
 	/* MS6/CLK6 is unused. */
@@ -103,24 +94,33 @@ int main(void)
 	uint8_t resetdata[] = { 177, 0xac };
 	si5351c_write(resetdata, sizeof(resetdata));
 	si5351c_enable_clock_outputs();
-#endif
+};
 
+int main(void) {
+	cpu_clock_init();
+	ssp_clock_init();
+
+	systick_set_reload(208000);
+	systick_set_clocksource(0);
+	systick_interrupt_enable();
+	systick_counter_enable();
 
 //	cpu_clock_pll1_max_speed();
 
 	SETUPgout(EN_VDD);
-//	ONg(RF_EN);
+	SETUPgout(MIXER_EN);
 
-    // Config LED as out
 	SETUPgout(LED1);
+	SETUPgout(LED2);
+	SETUPgout(LED3);
+	SETUPgout(LED4);
 
 	inputInit();
 	feldInit();
 
     lcdInit();
+	fsInit(); 
     lcdFill(0xff);
-	SETUPgout(MIXER_EN);
-	setSystemFont();
 
 	static const struct MENU main={ "main 1", {
 		{ "FS", &doFS},
