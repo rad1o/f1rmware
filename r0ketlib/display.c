@@ -1,12 +1,10 @@
-/* for memmove etc.*/
 #include <string.h>
 
+#include <rad1olib/pins.h>
 #include <r0ketlib/display.h>
 #include <libopencm3/lpc43xx/ssp.h>
 #include <libopencm3/lpc43xx/gpio.h>
 #include <libopencm3/lpc43xx/scu.h>
-
-
 
 /**************************************************************************/
 /* Utility routines to manage nokia display */
@@ -30,12 +28,14 @@ void delayms(uint32_t duration){ /* XXX: do me correctly */
 
 void lcd_select() {
     /* the LCD requires 9-Bit frames */
-	// XXX: make correct freqency
-    // Freq About 0.0498MHz / 49.8KHz => Freq = PCLK / (CPSDVSR * [SCR+1]) with PCLK=PLL1=204MHz
-    uint8_t serial_clock_rate = 21;
+    // Freq = PCLK / (CPSDVSR * [SCR+1])
+	/* we want 120ns / bit -> 8.3 MHz. */
+	/* SPI1 BASE CLOCK should be 40.8 MHz, CPSDVSR minimum is 2 */
+	/* so we run at SCR=1 => =~ 10MHz */
+    uint8_t serial_clock_rate = 1;
     uint8_t clock_prescale_rate = 2;
 
-    ssp_init(SSP1_NUM,
+    ssp_init(LCD_SSP,
             SSP_DATA_9BITS,
             SSP_FRAME_SPI,
             SSP_CPOL_0_CPHA_0,
@@ -45,11 +45,11 @@ void lcd_select() {
             SSP_MASTER,
             SSP_SLAVE_OUT_ENABLE);
 	
-	gpio_clear(LCD_CS_GPORT,LCD_CS_GPIN);
+	OFF(LCD_CS);
 }
 
 void lcd_deselect() {
-	gpio_set(LCD_CS_GPORT,LCD_CS_GPIN);
+	ON(LCD_CS);
 }
 
 void lcdWrite(uint8_t cd, uint8_t data) {
@@ -62,25 +62,19 @@ void lcdWrite(uint8_t cd, uint8_t data) {
 }
 
 void lcdInit(void) {
-	scu_pinmux(LCD_BL_PIN,SCU_GPIO_NOPULL|LCD_BL_FUNC);
-	GPIO_DIR(LCD_BL_GPORT) |= LCD_BL_GPIN;
-	gpio_set(LCD_BL_GPORT,LCD_BL_GPIN);
+	SETUPgout(LCD_BL_EN);
+	SETUPgout(LCD_RESET);
+	SETUPgout(LCD_CS);
 
-	scu_pinmux(LCD_RESET_PIN,SCU_GPIO_NOPULL|LCD_RESET_FUNC);
-	GPIO_DIR(LCD_RESET_GPORT) |= LCD_RESET_GPIN;
-
-	scu_pinmux(LCD_CS_PIN,SCU_GPIO_NOPULL|LCD_CS_FUNC);
-	GPIO_DIR(LCD_CS_GPORT) |= LCD_CS_GPIN;
-
-	scu_pinmux(LCD_MOSI_PIN,LCD_MOSI_FUNC);
-	scu_pinmux(LCD_SCK_PIN,LCD_SCK_FUNC);
+	/* prepare SPI */
+	SETUPpin(LCD_MOSI);
+	SETUPpin(LCD_SCK);
 
 	// Reset the display
-    delayms(100);
-    gpio_clear(LCD_RESET_GPORT,LCD_RESET_GPORT);
-    delayms(100);
-    gpio_set(LCD_RESET_GPORT,LCD_RESET_GPORT);
-    delayms(100);
+    OFF(LCD_RESET);
+    delayms(100); /* 1 ms */
+    ON(LCD_RESET);
+    delayms(100); /* 5 ms */
 
     lcd_select();
 
@@ -88,13 +82,12 @@ void lcdInit(void) {
 		/* The controller is a PCF8833 -
 		   documentation can be found online.
 		 */
-		0x11, 
-		0x3A, 2,  // mode 8bpp
-//		0x36, 0x60, 
-		0x36, 0b11000000, // my,mx,v,lao,rgb,x,x,x
-		0x25, 0x3a,  // set contrast
-		0x29, // display on 
-		0x03, // booster voltage
+		0x11,              // SLEEP_OUT  (wake up)
+		0x3A, 2,           // mode 8bpp  (2= 8bpp, 3= 12bpp, 5= 16bpp)
+		0x36, 0b11000000,  // my,mx,v,lao,rgb,x,x,x
+		0x25, 0x3a,        // set contrast
+		0x29,              // display on 
+		0x03,              // BSTRON (booster voltage)
 		0x2A, 0, RESX-1, 
 		0x2B, 0, RESY-1
 	};
@@ -118,6 +111,7 @@ void lcdInit(void) {
 		initseq_c = initseq_c >> 1;
 	}
     lcd_deselect();
+	lcdFill(0xff); /* Clear display buffer */
 }
 
 void lcdFill(char f){
@@ -145,7 +139,7 @@ void lcdDisplay(void) {
 
 	uint16_t x,y;
 
-	lcdWrite(TYPE_CMD,0x2C);
+	lcdWrite(TYPE_CMD,0x2C); // memory write (RAMWR)
 
 	for(y=0;y<RESY;y++){
 		for(x=0;x<RESX;x++){

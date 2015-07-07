@@ -179,6 +179,7 @@ void bootFile(const char * filename, uint8_t write){
 
 int main(uint32_t startloc) {
 	cpu_clock_init();
+	ssp_clock_init();
 	systick_set_reload(208000);
 	systick_set_clocksource(0);
 	systick_interrupt_enable();

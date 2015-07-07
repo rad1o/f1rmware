@@ -73,6 +73,18 @@ void cpu_clock_init(void) {
 	delay(WAIT_CPU_CLOCK_INIT_DELAY); /* should be 50us / 5100 @ 102MhZ */
 };
 
+void ssp_clock_init(void) {
+	/* set DIV C to 40.8 MHz */
+	CGU_IDIVC_CTRL= CGU_IDIVC_CTRL_CLK_SEL(CGU_SRC_PLL1)
+		| CGU_IDIVC_CTRL_AUTOBLOCK(1) 
+		| CGU_IDIVC_CTRL_IDIV(5-1)
+		| CGU_IDIVC_CTRL_PD(0)
+		;
+
+	/* use DIV C as SSP1 base clock */
+	CGU_BASE_SSP1_CLK = (CGU_BASE_SSP1_CLK_CLK_SEL(CGU_SRC_IDIVC) | CGU_BASE_SSP1_CLK_AUTOBLOCK(1));
+};
+
 /* Warning: changing from < 102MHz to >102 MHz in one step hangs */
 void cpu_clock_set(uint32_t target_mhz){ // rounds up
 	uint8_t divider= 204 / target_mhz;
