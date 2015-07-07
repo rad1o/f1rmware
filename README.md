@@ -37,15 +37,19 @@ prerequisite: rad1o is connected to USB
 
 ## MAC OS X Setup:
 
+    #install homebrew if you haven't already
     ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+    
     brew tap PX4/homebrew-px4
     brew update
     brew install gcc-arm-none-eabi-49
     brew install dfu-util
-    brew install python
-    which python # should be /usr/local/bin/python, otherwise change $PATH
+   brew install python
+   which python # should be /usr/local/bin/python, otherwise add export PATH=/usr/local/bin/:$PATH to your shell startup file, e.g, .zlogin or .bash_profile
     pip install pyaml
-    # goto your projects folder
+    # goto your projects folder, for example:
+    mkdir $HOME/rad1o
+    cd $HOME/rad1o
     git clone https://github.com/rad1o/f1rmware.git
     cd f1rmware/
     make
