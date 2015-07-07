@@ -77,7 +77,6 @@ int main(void)
     lcdInit();
     lcdFill(0xff);
 	OFF(MIXER_EN);
-	setSystemFont();
 
 	static const struct MENU main={ "img test", {
 		{ "LCD", &doLCD},

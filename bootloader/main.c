@@ -200,7 +200,6 @@ int main(uint32_t startloc) {
     lcdInit();
 	fsInit();
     lcdFill(0xff); /* Display BL Image here */
-	setSystemFont();
 
 	sli=startloc;
 

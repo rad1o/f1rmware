@@ -2,6 +2,7 @@
 
 #include <rad1olib/pins.h>
 #include <r0ketlib/display.h>
+#include <r0ketlib/print.h>
 #include <libopencm3/lpc43xx/ssp.h>
 #include <libopencm3/lpc43xx/gpio.h>
 #include <libopencm3/lpc43xx/scu.h>
@@ -112,6 +113,7 @@ void lcdInit(void) {
 	}
     lcd_deselect();
 	lcdFill(0xff); /* Clear display buffer */
+	setSystemFont();
 }
 
 void lcdFill(char f){

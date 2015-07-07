@@ -67,6 +67,7 @@ void sys_tick_handler(void){
 int main(void)
 {
 	cpu_clock_init();
+	ssp_clock_init();
 
 	systick_set_reload(208000);
 	systick_set_clocksource(0);
