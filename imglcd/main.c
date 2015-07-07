@@ -26,13 +26,13 @@
 
 #include <unistd.h>
 
-#include "setup.h"
-#include "display.h"
-#include "print.h"
-#include "itoa.h"
-#include "keyin.h"
+#include <rad1olib/setup.h>
+#include <r0ketlib/display.h>
+#include <r0ketlib/print.h>
+#include <r0ketlib/itoa.h>
+#include <r0ketlib/keyin.h>
 #include "feldtest.h"
-#include "menu.h"
+#include <r0ketlib/menu.h>
 
 #define TYPE_CMD    0
 #define TYPE_DATA   1
@@ -70,6 +70,7 @@ void doLCD();
 int main(void)
 {
 	cpu_clock_init();
+	ssp_clock_init();
 
 	inputInit();
 
@@ -78,16 +79,16 @@ int main(void)
 	OFF(MIXER_EN);
 	setSystemFont();
 
-	static const struct MENU main={ "main 1", {
+	static const struct MENU main={ "img test", {
 		{ "LCD", &doLCD},
-		{ "chrg", &doChrg},
 		{NULL,NULL}
 	}};
 	handleMenu(&main);
 	return 0;
 }
 
-#include "fairy2-12.lcd"
+//#include "fairy2-12.lcd"
+#include "camp.lcd"
 #include "fairy2-16.lcd"
 void lcd_select();
 void lcd_deselect();
@@ -111,7 +112,6 @@ void doLCD(){
 				lcd_select();
 				lcdWrite(TYPE_CMD,0x3a); lcdWrite(TYPE_DATA,5);
 				lcdWrite(TYPE_CMD,0x2C);
-
 				for (i=0;i<img16_len;i++){
 					lcdWrite(TYPE_DATA,img16_raw[i]);
 				};
@@ -147,4 +147,3 @@ void doLCD(){
 		};
 	};
 };
-
