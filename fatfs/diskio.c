@@ -58,7 +58,7 @@ DSTATUS disk_initialize (
 	switch (pdrv) {
 	case FLASH :
 #endif
-		flash_init();
+		flashInit();
 		return RES_OK;
 
 #ifdef CFG_HAVE_SD

@@ -27,7 +27,7 @@
 void flash_wait_write();
 uint8_t flash_status1(void);
 uint8_t flash_status2(void);
-void flash_init(void);
+void flashInit(void);
 void flash_read(uint32_t addr, uint32_t len, uint8_t * data);
 void flash_read_sector(uint32_t addr, uint32_t * data);
 void flash_write_enable(void);

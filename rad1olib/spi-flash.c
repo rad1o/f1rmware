@@ -87,7 +87,7 @@ uint8_t flash_status2(void){
 	return data;
 };
 
-void flash_init(void){
+void flashInit(void){
 	RESET_CTRL1 = RESET_CTRL1_SPIFI_RST;
 
 	/* Init SPIFI */

@@ -194,7 +194,7 @@ int main(uint32_t startloc) {
 	SETUPgout(LED3);
 	SETUPgout(LED4);
 	inputInit();
-	flash_init();
+	flashInit();
 
     lcdInit();
 	fsInit();

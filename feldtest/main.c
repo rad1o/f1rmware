@@ -326,7 +326,7 @@ void doFlash(){
 	uint8_t data[256];
 	uint8_t x=0;
 
-	flash_init();
+	flashInit();
 
 	lcdClear(0xff);
 	lcdPrint("xxd @ "); lcdPrint(IntToStr(addr,8,F_HEX));lcdNl();

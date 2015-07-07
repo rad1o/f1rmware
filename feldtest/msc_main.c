@@ -143,7 +143,7 @@ int dwim(void)
 	ErrorCode_t ret = LPC_OK;
 	USB_CORE_CTRL_T *pCtrl;
 
-	flash_init();
+	flashInit();
 
 	/* Initialize board and chip */
 //	SystemCoreClockUpdate();
