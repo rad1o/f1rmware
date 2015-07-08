@@ -35,7 +35,7 @@ prerequisite: rad1o is connected to USB
     cd feldtest
     sudo make flash
 
-## MAC OS X Setup:
+## OS X setup:
 
     #install homebrew if you haven't already
     ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
