@@ -98,7 +98,7 @@ int selectFile(char *filename, const char *extension)
                 files[i][dot]='.';
         }
         lcdDisplay();
-        key=getInputWaitRepeat();
+        key=getInput();
         switch(key){
             case BTN_DOWN:
                 if( selected < count-1 ){
@@ -127,12 +127,12 @@ int selectFile(char *filename, const char *extension)
                 }
                 break;
             case BTN_LEFT:
-                getInputWaitRelease();
+                getInput();
                 return -1;
             case BTN_ENTER:
             case BTN_RIGHT:
                 strcpy(filename, files[selected]);
-                getInputWaitRelease();
+                getInput();
                 return 0;
         }
     }
