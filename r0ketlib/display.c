@@ -89,8 +89,8 @@ void lcdInit(void) {
 		0x25, 0x3a,        // set contrast
 		0x29,              // display on 
 		0x03,              // BSTRON (booster voltage)
-		0x2A, 0, RESX-1, 
-		0x2B, 0, RESY-1
+		0x2A, 1, RESX,
+		0x2B, 1, RESY
 	};
 	uint16_t initseq_c = ~  (  /* commands: 1, data: 0 */
 			(1<< 0) |

@@ -3,8 +3,8 @@
 
 #include <libopencm3/cm3/common.h>
 
-#define RESX 132
-#define RESY 132
+#define RESX 130
+#define RESY 130
 
 /* Display buffer */
 extern uint8_t lcdBuffer[RESX*RESY];
