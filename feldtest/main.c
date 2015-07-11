@@ -44,6 +44,7 @@
 
 #include <rad1olib/spi-flash.h>
 #include <rad1olib/pins.h>
+#include <rad1olib/systick.h>
 #include <common/w25q80bv.h>
 
 #include <r0ketlib/select.h>
@@ -59,10 +60,8 @@ void doLCD();
 void doMSC();
 void doFS();
 
-extern uint16_t _timectr;
-
 void sys_tick_handler(void){
-	_timectr++;
+	incTimer();
 };
 
 void si_en(){
@@ -100,10 +99,7 @@ int main(void) {
 	cpu_clock_init();
 	ssp_clock_init();
 
-	systick_set_reload(208000);
-	systick_set_clocksource(0);
-	systick_interrupt_enable();
-	systick_counter_enable();
+	systickInit();
 
 //	cpu_clock_pll1_max_speed();
 

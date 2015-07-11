@@ -13,6 +13,7 @@ OBJS += ../r0ketlib/keyin.o
 OBJS += ../r0ketlib/menu.o
 OBJS += ../rad1olib/spi-flash.o
 OBJS += ../rad1olib/assert.o
+OBJS += ../rad1olib/systick.o
 OBJS += msc_desc.o
 OBJS += msc_main.o
 OBJS += msc_ram.o
