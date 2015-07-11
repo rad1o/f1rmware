@@ -119,7 +119,7 @@ SECTIONS
 	/DISCARD/ : { *(.eh_frame) }
 
 	. = ALIGN(4);
-	end = .;
+	_end = .;
 
 	/* Leave room above stack for IAP to run. */
 	__StackTop = ORIGIN(ram_local2) + LENGTH(ram_local2) - 32;
