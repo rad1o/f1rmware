@@ -22,13 +22,17 @@
  */
 
 #include <rad1olib/setup.h>
+#include <rad1olib/systick.h>
 #include <libopencm3/lpc43xx/i2c.h>
 #include <libopencm3/lpc43xx/cgu.h>
 #include <libopencm3/lpc43xx/gpio.h>
 #include <libopencm3/lpc43xx/scu.h>
 #include <libopencm3/lpc43xx/ssp.h>
+#include <stdint.h>
 
 #define WAIT_CPU_CLOCK_INIT_DELAY   (10000)
+
+uint8_t _cpu_speed=0;
 
 void delay(uint32_t duration)
 {
@@ -66,8 +70,13 @@ void cpu_clock_init(void) {
 		| CGU_IDIVB_CTRL_IDIV(2-1)
 		| CGU_IDIVB_CTRL_PD(0)
 		;
+	_cpu_speed=102;
 
 	/* use DIV B as main clock */
+	/* This means, that possible speeds in MHz are:
+	 * 204 102 68 51 40.8 34 29.14 25.5 22.66 20.4 18.54 17 15.69 14.57 13.6 12.75
+	 */
+
 	CGU_BASE_M4_CLK = (CGU_BASE_M4_CLK_CLK_SEL(CGU_SRC_IDIVB) | CGU_BASE_M4_CLK_AUTOBLOCK(1));
 
 	delay(WAIT_CPU_CLOCK_INIT_DELAY); /* should be 50us / 5100 @ 102MhZ */
@@ -86,8 +95,9 @@ void ssp_clock_init(void) {
 };
 
 /* Warning: changing from < 102MHz to >102 MHz in one step hangs */
+#define MAX_MHZ 204
 void cpu_clock_set(uint32_t target_mhz){ // rounds up
-	uint8_t divider= 204 / target_mhz;
+	uint8_t divider= MAX_MHZ / target_mhz;
 
 	if (divider==0)
 		divider=1;
@@ -95,11 +105,18 @@ void cpu_clock_set(uint32_t target_mhz){ // rounds up
 	if (divider>16) /* max value of DIVB */
 		divider=16;
 
+	if(divider==1 && _cpu_speed<102){ // Do not go to 204 in one step
+		cpu_clock_set(102);
+		delay(WAIT_CPU_CLOCK_INIT_DELAY);
+	};
+
 	CGU_IDIVB_CTRL= CGU_IDIVB_CTRL_CLK_SEL(CGU_SRC_PLL1)
 		| CGU_IDIVB_CTRL_AUTOBLOCK(1) 
 		| CGU_IDIVB_CTRL_IDIV(divider-1)
 		| CGU_IDIVB_CTRL_PD(0)
 		;
+	_cpu_speed=MAX_MHZ/divider; /* target_mhz might've been rounded down */
+//	systickAdjustFreq(MAX_MHZ*1000000/divider);
 }
 
 /* setup USB clock */ 

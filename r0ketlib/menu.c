@@ -51,7 +51,7 @@ void handleMenu(const struct MENU *the_menu) {
         }
         lcdDisplay();
 
-        switch (/* getInputWaitTimeout((menuflags&MENU_TIMEOUT)?15000:0)*/ getInput()) {
+        switch (getInputWaitTimeout((menuflags&MENU_TIMEOUT)?15000:0)) {
             case BTN_UP:
                 menuselection--;
                 if (menuselection < current_offset) {
@@ -77,20 +77,7 @@ void handleMenu(const struct MENU *the_menu) {
             case BTN_LEFT:
                 return;
             case BTN_RIGHT:
-                if (the_menu->entries[menuselection].callback!=NULL)
-                    the_menu->entries[menuselection].callback();
-
-                setSystemFont();
-				
-				if (menuflags&MENU_JUSTONCE)
-					return;
-				
-                break;
             case BTN_ENTER:
-                lcdClear();
-//                lcdPrintln("Called...");
-//                lcdRefresh();
-//                getInputWaitRelease();
                 if (the_menu->entries[menuselection].callback!=NULL)
                     the_menu->entries[menuselection].callback();
                 lcdDisplay();
@@ -98,18 +85,15 @@ void handleMenu(const struct MENU *the_menu) {
 				
 				if (menuflags&MENU_JUSTONCE)
 					return;
-
-//                getInputWait();
-
                 break;
+
             case BTN_NONE: /* timeout */
-				break;
                 return;
             default:
                 /* NOTREACHED */
                 break;
         }
-//        getInputWaitRelease();
+        getInputWaitRelease();
     }
     return;
 }

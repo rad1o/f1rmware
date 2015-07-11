@@ -1,9 +1,6 @@
-#define SYSTICKSPEED 1
-
 #include <stdint.h>
+#include <rad1olib/systick.h>
 #include <libopencmsis/core_cm3.h>
-
-volatile uint32_t _timectr=0;
 
 /**************************************************************************/
 
@@ -12,7 +9,6 @@ void work_queue(void){
 	__WFI();
 	return;
 }
-
 
 uint8_t delayms_queue_plus(uint32_t ms, uint8_t final){
     int ret=0;

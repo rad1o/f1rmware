@@ -27,6 +27,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+extern uint8_t _cpu_speed;
 void delay(uint32_t duration);
 
 void cpu_clock_init(void);
