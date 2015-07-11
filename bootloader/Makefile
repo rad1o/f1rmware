@@ -12,6 +12,7 @@ OBJS += ../r0ketlib/keyin.o
 OBJS += ../r0ketlib/menu.o
 OBJS += ../rad1olib/spi-flash.o
 OBJS += ../rad1olib/assert.o
+OBJS += ../rad1olib/systick.o
 OBJS += ../fatfs/diskio.o
 OBJS += ../fatfs/ff.o
 OBJS += ../r0ketlib/select.o
