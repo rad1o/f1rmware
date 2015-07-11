@@ -30,6 +30,6 @@ OBJS += ../hackrf/firmware/common/w25q80bv.o
 OBJS += ../hackrf/firmware/common/max2871.o
 #OBJS += ../hackrf/firmware/common/max2871_regs.o
 
-LDSCRIPT=app.ld
+LDSCRIPT=../ld/app.ld
 RPATH=..
 include ../Makefile.inc
