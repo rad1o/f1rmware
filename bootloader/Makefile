@@ -17,6 +17,10 @@ OBJS += ../fatfs/ff.o
 OBJS += ../r0ketlib/select.o
 OBJS += ../r0ketlib/idle.o
 OBJS += ../r0ketlib/fs_util.o
+OBJS += ../lpcapi/msc/msc_main.o
+OBJS += ../lpcapi/msc/msc_ram.o
+OBJS += ../lpcapi/msc/msc_desc.o
+OBJS += ../hackrf/firmware/common/usb.o
 
 CFLAGS=-Wno-unused-variable -DRAD1O -DLPC43XX_M4
 OBJS += ../hackrf/firmware/common/w25q80bv.o

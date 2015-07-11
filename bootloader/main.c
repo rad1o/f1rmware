@@ -23,9 +23,11 @@
 #include <libopencm3/cm3/scb.h>
 #include <libopencm3/cm3/systick.h>
 #include <libopencm3/lpc43xx/creg.h>
+#include <libopencmsis/core_cm3.h>
 
 #include <unistd.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include <r0ketlib/fs_util.h>
 #include <rad1olib/setup.h>
@@ -41,6 +43,8 @@
 #include <fatfs/ff.h>
 #include <rad1olib/pins.h>
 #include "intrinsics.h"
+
+#include <lpcapi/msc/msc_main.h>
 
 #define BOOTCFG "BOOT.CFG"
 
@@ -99,8 +103,18 @@ void doExec(){
 };
 
 void doMSC(){
-//	cpu_clock_set(204);
-	//dwim();
+	MSCenable();
+	lcdPrintln("MSC enabled.");
+	while(getInputRaw()!=BTN_ENTER){
+		if(getInputRaw()==BTN_RIGHT)
+			lcdPrintln(".");
+		lcdDisplay();
+		__WFI();
+	};
+	lcdPrintln("disconnect");
+	lcdDisplay();
+	MSCdisable();
+	getInputWaitRelease();
 };
 
 extern void * _text_end;
@@ -216,6 +230,7 @@ int main(uint32_t startloc) {
 		{ "Info", &doInfo},
 		{ "Exec", &doExec},
 		{ "Flash", &doFlash},
+		{ "MSC", &doMSC},
 		{NULL,NULL}
 	}};
 	handleMenu(&main);
