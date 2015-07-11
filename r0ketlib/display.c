@@ -14,9 +14,6 @@
 uint8_t lcdBuffer[RESX*RESY];
 uint8_t displayType;
 
-#define TYPE_CMD    0
-#define TYPE_DATA   1
-
 void delayms(uint32_t duration){ /* XXX: do me correctly */
 	uint32_t i;
 

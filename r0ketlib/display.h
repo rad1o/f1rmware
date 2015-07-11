@@ -6,6 +6,9 @@
 #define RESX 130
 #define RESY 130
 
+#define TYPE_CMD    0
+#define TYPE_DATA   1
+
 /* Display buffer */
 extern uint8_t lcdBuffer[RESX*RESY];
 
@@ -16,4 +19,9 @@ void lcdSetPixel(char x, char y, uint8_t f);
 uint8_t lcdGetPixel(char x, char y);
 void lcdShift(int x, int y, bool wrap);
 void lcdSetContrast(int c);
+
+void lcd_select();
+void lcd_deselect();
+void lcdWrite(uint8_t cd, uint8_t data);
+
 #endif
