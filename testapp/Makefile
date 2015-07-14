@@ -19,6 +19,10 @@ OBJS += ../fatfs/ff.o
 OBJS += ../r0ketlib/select.o
 OBJS += ../r0ketlib/idle.o
 OBJS += ../r0ketlib/fs_util.o
+OBJS += ../lpcapi/msc/msc_desc.o
+OBJS += ../lpcapi/msc/msc_main.o
+OBJS += ../lpcapi/msc/msc_ram.o
+OBJS += ../hackrf/firmware/common/usb.o
 
 SRCS = $(wildcard *.c)
 SOBJS = $(foreach mod,$(SRCS),$(subst .c,.o,$(mod)))
