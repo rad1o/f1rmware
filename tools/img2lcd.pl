@@ -48,6 +48,9 @@ my $image = GD::Image->new($in);
 my $w=$image->width;
 my $h=$image->height;
 
+$w=130;
+$h=130;
+
 if($verbose){
 	print STDERR "$in: ${w}x$h\n\n";
 };
@@ -87,16 +90,17 @@ for my $y (0..$h-1){
 
 print "Size:",scalar(@img),"\n" if ($verbose);
 
-open(F,">",$out)||die "open: $!";
+open(Q,">",$out)||die "open: $!";
+open(F,">",$out.".h")||die "open: $!";
 
 print F "unsigned int img${mode}_len = ",scalar(@img),";\n";
 print F "const unsigned char img${mode}_raw[] = {\n";
 
 my $le;
 if($mode==12){
-	$le=132*1.5;
+	$le=130*1.5;
 }elsif($mode==16){
-	$le=132*2;
+	$le=130*2;
 }else{
 	die;
 };
@@ -104,6 +108,7 @@ my $ctr=0;
 for (@img){
 #		printf F "%c",$img[$w-$x-1][$hb-$y];
 	printf F "0x%02x, ",$_;
+	printf Q "%c",$_;
 	if (++$ctr%$le ==0) {
 		print F "\n";
 	};
@@ -111,3 +116,4 @@ for (@img){
 print F "};\n";
 
 close(F);
+close(Q);
