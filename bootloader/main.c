@@ -195,7 +195,7 @@ int main(uint32_t startloc) {
 	ssp_clock_init();
 	systickInit();
 
-	cpu_clock_set(204);
+//	cpu_clock_set(204);
 
 	SETUPgout(EN_VDD);
 	SETUPgout(MIXER_EN);
@@ -229,6 +229,8 @@ int main(uint32_t startloc) {
 		{ "MSC", &doMSC},
 		{NULL,NULL}
 	}};
-	handleMenu(&main);
-	return 0;
+	do {
+		getInputWaitRelease();
+		handleMenu(&main);
+	}while(1);
 }
