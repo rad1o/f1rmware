@@ -5,6 +5,7 @@
 #include <rad1olib/pins.h>
 
 #include <rad1olib/setup.h>
+#include <libopencm3/lpc43xx/cgu.h>
 
 void init_speed(){
 };
@@ -55,6 +56,21 @@ void speed_menu(){
 		lcdPrint("Speed:");
 		lcdPrint(IntToStr(_cpu_speed,4,F_LONG));
 		lcdNl();
+		lcdPrint("STK_CALIB:");
+		lcdPrint(IntToStr(STK_CALIB,8,F_HEX));
+		lcdNl();
+		lcdDisplay();
+
+		CGU_FREQ_MON = (0x0D << 24) | (1 << 23) | (256 << 0);
+		while(CGU_FREQ_MON & (1 << 23));
+
+		lcdPrint("FREQ_MON:");
+		lcdPrint(IntToStr(CGU_FREQ_MON,8,F_HEX));
+		lcdNl();
+
+		uint32_t freq = ((CGU_FREQ_MON >> 9) & 0x3fFF) * 12e6 / 256.;
+		lcdPrint("Measured:");
+		lcdPrint(IntToStr(freq/1e6,4,F_LONG));
 		lcdDisplay();
 	};
 };
