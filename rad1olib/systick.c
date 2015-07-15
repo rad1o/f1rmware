@@ -7,14 +7,14 @@
 volatile uint32_t _timectr=0;
 
 void systickInit(){
-	systick_set_reload(SYSTICKSPEED*208);
 	systick_set_clocksource(0);
+	systick_set_reload(12e6/SYSTICKSPEED);
 	systick_interrupt_enable();
 	systick_counter_enable();
 };
 
 void systickAdjustFreq(uint32_t hz){
-	systick_set_reload(SYSTICKSPEED*hz/1000000);
+	systick_set_reload(hz/SYSTICKSPEED);
 };
 
 void systickDisable(){
