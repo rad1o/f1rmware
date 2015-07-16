@@ -2,7 +2,7 @@
 #include <lpcapi/usbd.h>
 #include <lpcapi/usbd_core.h>
 #include <lpcapi/usbd_rom_api.h>
-#define NOEXTERN 
+#define NOEXTERN
 #include <lpcapi/usbd_common.h>
 #undef NOEXTERN
 
