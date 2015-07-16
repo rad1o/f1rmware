@@ -22,6 +22,7 @@ OBJS += ../r0ketlib/fs_util.o
 OBJS += ../lpcapi/msc/msc_desc.o
 OBJS += ../lpcapi/msc/msc_main.o
 OBJS += ../lpcapi/msc/msc_ram.o
+OBJS += ../lpcapi/usbd_common.o # MUST be before hackrf usb.o, because of USB0_IRQ selection
 OBJS += ../hackrf/firmware/common/usb.o
 
 SRCS = $(wildcard *.c)
