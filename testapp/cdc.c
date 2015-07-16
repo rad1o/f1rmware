@@ -15,26 +15,25 @@ void cdc_menu(){
     static uint8_t g_rxBuff[256];
     CDCenable();
     lcdPrintln("CDC enabled.");
+    lcdDisplay();
     getInputWaitRelease();
 
     while(getInputRaw()!=BTN_ENTER){
 	if(getInputRaw()==BTN_RIGHT){
-	    lcdPrint("vc:");
-	    lcdPrint(IntToStr(g_vCOM.tx_flags,3,F_LONG));
-	    lcdPrintln(".");
-	    lcdPrint("pt:");
-	    lcdPrint(IntToStr(prompt,3,F_LONG));
+	    lcdPrint("status:");
+	    lcdPrint(IntToStr(g_vCOM.tx_flags,3,F_HEX));
+	    lcdPrint(", ");
+	    lcdPrint("c=");
+	    lcdPrint(IntToStr(prompt,1,F_LONG));
 	    lcdPrintln(".");
 	    lcdDisplay();
 	    getInputWaitRelease();
 	};
 	if(getInputRaw()==BTN_LEFT){
-	    vcom_write((uint8_t *)"Hello World!!\r\n", 15);
-	    prompt=1;
+	    vcom_write((uint8_t *)"Hello World!\r\n", 14);
 	    getInputWaitRelease();
 	};
 	if ((vcom_connected() != 0) && (prompt == 0)) {
-	    vcom_write((uint8_t *)"Hello World!\r\n", 14);
 	    prompt = 1;
 	}
 	/* If VCOM port is opened echo whatever we receive back to host. */
@@ -42,9 +41,9 @@ void cdc_menu(){
 	    rdCnt = vcom_bread(&g_rxBuff[0], 256);
 	    if (rdCnt) {
 		vcom_write((uint8_t*)"[", 1);
-		while(g_vCOM.tx_flags & VCOM_TX_BUSY) __WFI();
+		while(g_vCOM.tx_flags & VCOM_TX_BUSY) __WFI(); // Wait for buffer emtpy
 		vcom_write(&g_rxBuff[0], rdCnt);
-		while(g_vCOM.tx_flags & VCOM_TX_BUSY) __WFI();
+		while(g_vCOM.tx_flags & VCOM_TX_BUSY) __WFI(); // Wait for buffer emtpy
 		vcom_write((uint8_t*)"]", 1);
 	    }
 	}

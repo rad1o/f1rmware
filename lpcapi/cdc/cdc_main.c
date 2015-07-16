@@ -46,8 +46,6 @@
  */
 #include <hackrf/firmware/common/usb.h>
 #include <rad1olib/setup.h>
-#include <r0ketlib/display.h>
-#include <r0ketlib/print.h>
 
 void CDCenable(void) {
 	USBD_API_INIT_PARAM_T usb_param;
@@ -55,7 +53,6 @@ void CDCenable(void) {
 	ErrorCode_t ret = LPC_OK;
 	USB_CORE_CTRL_T *pCtrl;
 	/* Initialize board and chip */
-	lcdPrint("enter");lcdNl();lcdDisplay();
 
 	usb_clock_init();
 
@@ -80,8 +77,6 @@ void CDCenable(void) {
 	/* USB Initialization */
 	ret = USBD_API->hw->Init(&g_hUsb, &desc, &usb_param);
 	if (ret == LPC_OK) {
-		lcdPrint("hw_init=ok");lcdNl();lcdDisplay();
-
 		/*	WORKAROUND for artf45032 ROM driver BUG:
 		    Due to a race condition there is the chance that a second NAK event will
 		    occur before the default endpoint0 handler has completed its preparation
@@ -96,13 +91,10 @@ void CDCenable(void) {
 		/* Init VCOM interface */
 		ret = vcom_init(g_hUsb, &desc, &usb_param);
 		if (ret == LPC_OK) {
-			lcdPrint("vcom_init=ok");lcdNl();lcdDisplay();
 			/*  enable USB interrupts */
 			nvic_enable_irq(NVIC_USB0_IRQ);
-			lcdPrint("irq_en");lcdNl();lcdDisplay();
 			/* now connect */
 			USBD_API->hw->Connect(g_hUsb, 1);
-			lcdPrint("connected");lcdNl();lcdDisplay();
 		}
 	}
 }
