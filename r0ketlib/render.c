@@ -303,7 +303,7 @@ int DoChar(int sx, int sy, int c){
     sx+=preblank;
 
 	/* per line */
-	for(int y=hoff;y<=height*8;y++){
+	for(int y=hoff;y<height*8;y++){
         if(sy+y>=RESY)
             continue;
 
