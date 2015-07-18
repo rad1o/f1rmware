@@ -98,7 +98,7 @@ int selectFile(char *filename, const char *extension)
                 files[i][dot]='.';
         }
         lcdDisplay();
-        key=getInput();
+        key=getInputWaitRepeat();
         switch(key){
             case BTN_DOWN:
                 if( selected < count-1 ){
