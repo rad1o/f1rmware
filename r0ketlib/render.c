@@ -1,12 +1,12 @@
 #include <string.h>
 
 #include <r0ketlib/render.h>
-//#include <decoder.h>
+#include <r0ketlib/decoder.h>
 #include <r0ketlib/fonts.h>
 // #include "basic/basic.h"
 #include "r0ketlib/fonts/smallfonts.h"
 
-// #include "filesystem/ff.h"
+#include <fatfs/ff.h>
 #include <r0ketlib/render.h>
 #include <r0ketlib/display.h>
 
@@ -15,9 +15,7 @@ const struct FONT_DEF * font = NULL;
 
 struct EXTFONT efont;
 
-#ifdef NOFILE
 static FIL file; /* current font file */
-#endif
 
 /* Exported Functions */
 
@@ -43,7 +41,6 @@ int getFontHeight(void){
     return 8; // XXX: Should be done right.
 }
 
-#ifdef NOFILE
 static uint8_t read_byte (void)
 {
   UINT    readbytes;
@@ -147,8 +144,6 @@ int _getFontData(int type, int offset){
     return 0;
 }
 
-#endif
-
 static int _getIndex(int c){
 #define ERRCHR (font->u8FirstChar+1)
     /* Does this font provide this character? */
@@ -159,7 +154,6 @@ static int _getIndex(int c){
 
     if(c>font->u8LastChar && (efont.type==FONT_EXTERNAL || font->charExtra != NULL)){
         if(efont.type==FONT_EXTERNAL){
-#ifdef NOFILE
             _getFontData(SEEK_EXTRAS,0);
             int cc=0;
             int cache;
@@ -169,7 +163,6 @@ static int _getIndex(int c){
                 c=ERRCHR;
             else
                 c=font->u8LastChar+cc+1;
-#endif
         }else{
             int cc=0;
             while( font->charExtra[cc] < c)
@@ -192,7 +185,6 @@ int DoChar(int sx, int sy, int c){
     if(font==NULL){
         if(efont.type==FONT_INTERNAL){
             font=&efont.def;
-#ifdef NOFILE
         }else if (efont.type==FONT_EXTERNAL){
             UINT res;
             res=f_open(&file, efont.name, FA_OPEN_EXISTING|FA_READ);
@@ -203,14 +195,16 @@ int DoChar(int sx, int sy, int c){
                 _getFontData(START_FONT,0);
                 font=&efont.def;
             };
-#endif
         }else{
             font=&Font_7x8;
         };
     };
 
 	/* how many bytes is it high? */
-	char height=(font->u8Height);
+//	char height=(font->u8Height);
+    char height=(font->u8Height-1)/8+1;
+    char hoff=(8-(font->u8Height%8))%8;
+
 
 	const uint8_t * data;
     int width,preblank=0,postblank=0; 
@@ -223,7 +217,6 @@ int DoChar(int sx, int sy, int c){
 
         if(font->u8Width==0){
             if(efont.type == FONT_EXTERNAL){
-#ifdef NOFILE
                 _getFontData(SEEK_WIDTH,0);
                 for(int y=0;y<c;y++)
                     toff+=_getFontData(GET_WIDTH,0);
@@ -238,7 +231,6 @@ int DoChar(int sx, int sy, int c){
                 if(res != FR_OK || readbytes<width*height)
                     return sx;
                 data=charBuf;
-#endif
             }else{
                 for(int y=0;y<c;y++)
                     toff+=font->charInfo[y].widthBits;
@@ -248,7 +240,6 @@ int DoChar(int sx, int sy, int c){
                 data=&font->au8FontTable[toff];
             };
             postblank=1;
-#ifdef NOFILE
         }else if(font->u8Width==1){ // NEW CODE
             if(efont.type == FONT_EXTERNAL){
                 _getFontData(SEEK_WIDTH,0);
@@ -290,9 +281,8 @@ int DoChar(int sx, int sy, int c){
                 }
             };
 
-#endif
         }else{
-            toff=(c)*font->u8Width*1; // XXX: actually height/8 instead of 1
+            toff=(c)*font->u8Width*1;
             width=font->u8Width;
             data=&font->au8FontTable[toff];
         };
@@ -300,7 +290,7 @@ int DoChar(int sx, int sy, int c){
     }while(0);
 
 #define xy_(x,y) ((y)*RESX+(x))
-#define gPx(x,y) (data[x]&(1<<y))
+#define gPx(x,y) (data[x*height+(height-y/8-1)]&(1<<(y%8)))
 
 	int x=0;
 
@@ -308,12 +298,12 @@ int DoChar(int sx, int sy, int c){
 //    sy+=RESY%8;
 
     /* Fonts may not be byte-aligned, shift up so the top matches */
-//    sy-=hoff;
+    sy-=hoff;
 
     sx+=preblank;
 
 	/* per line */
-	for(int y=0;y<=height;y++){
+	for(int y=hoff;y<=height*8;y++){
         if(sy+y>=RESY)
             continue;
 
@@ -328,7 +318,7 @@ int DoChar(int sx, int sy, int c){
             if(sx+x>=RESX)
                 continue;
 			if (gPx(x,y)){
-				lcdBuffer[xy_(sx+x,sy+y)]=0b00000011;
+				lcdBuffer[xy_(sx+x,sy+y)]=0b00000000;
 			}else{
 				lcdBuffer[xy_(sx+x,sy+y)]=0xff;
 			};
