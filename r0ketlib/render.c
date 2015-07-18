@@ -29,10 +29,17 @@ void setExtFont(const char *fname){
     if(strlen(fname)>8+4)
         return;
     strcpy(efont.name,fname);
-//    memcpy(efont.name+strlen(fname),".f0n",5);
-
     efont.type=FONT_EXTERNAL;
     font=NULL;
+    UINT res;
+    res=f_open(&file, efont.name, FA_OPEN_EXISTING|FA_READ);
+    if(res){
+	efont.type=0;
+	font=&Font_7x8;
+    }else{
+	_getFontData(START_FONT,0);
+	font=&efont.def;
+    };
 }
 
 int getFontHeight(void){
