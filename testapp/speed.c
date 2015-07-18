@@ -6,6 +6,7 @@
 
 #include <rad1olib/setup.h>
 #include <libopencm3/lpc43xx/cgu.h>
+#include <libopencm3/cm3/systick.h>
 
 void init_speed(){
 };
