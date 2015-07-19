@@ -9,6 +9,7 @@
 #include <fatfs/ff.h>
 #include <r0ketlib/render.h>
 #include <r0ketlib/display.h>
+#include <rad1olib/assert.h>
 
 /* Global Variables */
 const struct FONT_DEF * font = NULL;
@@ -33,7 +34,7 @@ void setExtFont(const char *fname){
     font=NULL;
     UINT res;
     res=f_open(&file, efont.name, FA_OPEN_EXISTING|FA_READ);
-    if(res){
+    if(res!=FR_OK){
 	efont.type=0;
 	font=&Font_7x8;
     }else{
@@ -52,7 +53,11 @@ static uint8_t read_byte (void)
 {
   UINT    readbytes;
   uint8_t byte;
-  f_read(&file, &byte, sizeof(uint8_t), &readbytes);
+  UINT res;
+  res=f_read(&file, &byte, sizeof(uint8_t), &readbytes);
+  if(res!=FR_OK || readbytes!=1){
+    ASSERT(0) ;
+  };
   return byte;
 }
 
@@ -71,6 +76,7 @@ int _getFontData(int type, int offset){
         efont.def.u8FirstChar = read_byte ();
         efont.def.u8LastChar = read_byte ();
         res = f_read(&file, &extras, sizeof(uint16_t), &readbytes);
+        ASSERT(res==FR_OK);
         return 0;
     };
     if (type == SEEK_EXTRAS){
@@ -80,6 +86,7 @@ int _getFontData(int type, int offset){
     if(type == GET_EXTRAS){
         uint16_t word;
         res = f_read(&file, &word, sizeof(uint16_t), &readbytes);
+        ASSERT(res==FR_OK);
         return word;
     };
     if (type == SEEK_WIDTH){
@@ -188,27 +195,11 @@ uint8_t charBuf[MAXCHR];
 
 int DoChar(int sx, int sy, int c){
 
-//    font=NULL;
     if(font==NULL){
-        if(efont.type==FONT_INTERNAL){
-            font=&efont.def;
-        }else if (efont.type==FONT_EXTERNAL){
-            UINT res;
-            res=f_open(&file, efont.name, FA_OPEN_EXISTING|FA_READ);
-            if(res){
-                efont.type=0;
-                font=&Font_7x8;
-            }else{
-                _getFontData(START_FONT,0);
-                font=&efont.def;
-            };
-        }else{
-            font=&Font_7x8;
-        };
+	font=&Font_7x8;
     };
 
 	/* how many bytes is it high? */
-//	char height=(font->u8Height);
     char height=(font->u8Height-1)/8+1;
     char hoff=(8-(font->u8Height%8))%8;
 
@@ -296,7 +287,7 @@ int DoChar(int sx, int sy, int c){
 
     }while(0);
 
-#define xy_(x,y) ((y)*RESX+(x))
+#define xy_(x,y) ((x<0||y<0||x>=RESX||y>=RESY)?0:(y)*RESX+(x))
 #define gPx(x,y) (data[x*height+(height-y/8-1)]&(1<<(y%8)))
 
 	int x=0;
