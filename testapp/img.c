@@ -73,7 +73,7 @@ void img_menu() {
 	getInputWaitRelease();
 
 	while(1){
-		switch(getInput()){
+		switch(getInputWaitRepeat()){
 			case BTN_UP:
 				lcd_select();
 				lcdWrite(TYPE_CMD,0x3a); lcdWrite(TYPE_DATA,2);

@@ -29,7 +29,7 @@ void lcd_menu(){
 		               RGB(0,0xff,0xff),RGB(0xff,0,0xff),RGB(0xff,0xff,0),
 					   RGB(0xff,0xff,0xff),0};
 	while(1){
-		switch(getInputWait()){
+		switch(getInputWaitRepeat()){
 			case BTN_DOWN:
 				lcd_select();
 				lcdWrite(TYPE_CMD,0x3a); lcdWrite(TYPE_DATA,5);
