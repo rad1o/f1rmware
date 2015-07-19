@@ -106,10 +106,9 @@ void doExec(){
 void doMSC(){
 	MSCenable();
 	lcdPrintln("MSC enabled.");
-	while(getInputRaw()!=BTN_ENTER){
-		if(getInputRaw()==BTN_RIGHT)
-			lcdPrintln(".");
-		lcdDisplay();
+	lcdDisplay();
+	getInputWaitRelease();
+	while(getInputWait()!=BTN_ENTER){
 		__WFI();
 	};
 	lcdPrintln("disconnect");
@@ -207,9 +206,9 @@ int main(uint32_t startloc) {
 	inputInit();
 	flashInit();
 
-    lcdInit();
+	lcdInit();
 	fsInit();
-    lcdFill(0xff); /* Display BL Image here */
+	lcdFill(0xff); /* Display BL Image here */
 
 	sli=startloc;
 
