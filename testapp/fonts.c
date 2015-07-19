@@ -6,11 +6,13 @@
 #include <r0ketlib/fonts/ubuntu18.h>
 #include <r0ketlib/fonts/smallfonts.h>
 #include <r0ketlib/render.h>
+#include <r0ketlib/select.h>
 #include <rad1olib/pins.h>
 
 #include <rad1olib/setup.h>
 
 const char * txt="The quick brown fx";
+char filename[13];
 
 //# MENU fonts
 void fonts_menu(){
@@ -26,10 +28,17 @@ void fonts_menu(){
 		setIntFont(&Font_Orbitron14pt);
 		break;
 	    case BTN_DOWN:
-		setIntFont(&Font_Ubuntu18pt);
+		getInputWaitRelease();
+		setIntFont(&Font_7x8);
+		if(selectFile(filename,"F0N")){
+		    lcdPrintln("Select ERROR");
+		    lcdDisplay();
+		    getInputWait();
+		    return;
+		};
+		setExtFont(filename);
 		break;
 	    case BTN_LEFT:
-		setIntFont(&Font_8x8);
 		break;
 	    case BTN_RIGHT:
 		setIntFont(&Font_8x8Thin);
