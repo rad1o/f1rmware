@@ -78,13 +78,14 @@ void handleMenu(const struct MENU *the_menu) {
                 return;
             case BTN_RIGHT:
             case BTN_ENTER:
+		getInputWaitRelease();
                 if (the_menu->entries[menuselection].callback!=NULL)
                     the_menu->entries[menuselection].callback();
                 lcdDisplay();
                 setSystemFont();
-				
-				if (menuflags&MENU_JUSTONCE)
-					return;
+		if (menuflags&MENU_JUSTONCE)
+		    return;
+		getInputWait();
                 break;
 
             case BTN_NONE: /* timeout */
