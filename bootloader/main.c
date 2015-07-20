@@ -100,20 +100,22 @@ void doRealExec(int silent){
 	    };
 	    return;
 	};
-	lcdPrintln("set as default:");
-	res=writeFile(BOOTCFG, filename, strlen(filename)+1);
-	if(res<0){
-	    lcdPrint("write Error:");
-	    lcdPrintln(IntToStr(-res,3,0));
-	    lcdPrintln(f_get_rc_string(res));
-	    lcdDisplay();
-	    getInputWait();
-	}else{
-	    lcdPrint("wrote ");
-	    lcdPrint(IntToStr(res,3,0));
-	    lcdPrintln(" bytes.");
-	    lcdDisplay();
-	    getInputWait();
+	if(sres==0){
+	    lcdPrintln("set as default:");
+	    res=writeFile(BOOTCFG, filename, strlen(filename)+1);
+	    if(res<0){
+		lcdPrint("write Error:");
+		lcdPrintln(IntToStr(-res,3,0));
+		lcdPrintln(f_get_rc_string(res));
+		lcdDisplay();
+		getInputWait();
+	    }else{
+		lcdPrint("wrote ");
+		lcdPrint(IntToStr(res,3,0));
+		lcdPrintln(" bytes.");
+		lcdDisplay();
+		getInputWait();
+	    };
 	};
 	lcdPrintln("Loading:");
 	lcdPrintln(filename);
