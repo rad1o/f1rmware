@@ -191,6 +191,8 @@ void bootFile(const char * filename){
 		getInputWait();
 		return;
 	};
+
+	systick_interrupt_disable(); /* TODO: maybe disable all interrupts? */
 	boot((void*)&_app_start);
 };
 
@@ -240,4 +242,3 @@ int main(uint32_t startloc) {
 		handleMenu(&main);
 	}while(1);
 }
-

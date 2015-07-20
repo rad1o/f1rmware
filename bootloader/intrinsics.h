@@ -4,10 +4,9 @@ static inline uint32_t get_sp(void){
 	return result;
 };
 
-
 static inline void boot(const void * vtable){
-	systick_interrupt_disable(); /* TODO: maybe disable all interrupts? */
 	// Set new Vtable
+	CREG_M4MEMMAP = (uintptr_t)vtable;
 	SCB_VTOR = (uintptr_t) vtable;  
 
 	// Reset stack pointer & branch to the new reset vector.  
@@ -34,7 +33,7 @@ extern unsigned _bss, _ebss;
 
 int main(uint32_t);
 
-void __attribute__ ((naked)) reset_handler(void) {
+void __attribute__ ((naked)) __attribute((section(".reset")))reset_handler(void) {
 	volatile unsigned *dest;
 	volatile uint32_t idx;
 	static uint32_t startloc=-1; /* initialize so it is not in BSS */

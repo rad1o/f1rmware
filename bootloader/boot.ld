@@ -34,18 +34,24 @@ ENTRY(reset_handler)
 /* Define sections. */
 SECTIONS
 {
-	.text : {
+	.vtors : {
 		_text_start = .;
 		. = ALIGN(0x400);
 		*(.vectors)	/* Vector table */
-		*(.text*)	/* Program code */
-		. = ALIGN(4);
+		*(.reset)	/* reset hdlr */
+		. = ALIGN(32);  /* XXX: needs to match alignment of .text */
 	} >shadow
 
 	.stext (NOLOAD) : { /* hack to advance ">ram_local2" to the current offset */
 		_reloc_ep = .;
- 		. += SIZEOF(.text);
+		. += SIZEOF(.vtors);
 	} >ram_local2
+
+	.text : {
+		*(.text*)	/* Program code */
+		. = ALIGN(4);
+	} >ram_local2 AT >shadow
+
 
 	.rodata : {
 		*(.rodata*)	/* Read-only data */
