@@ -1,3 +1,5 @@
+#include <libopencm3/cm3/cortex.h>
+
 static inline uint32_t get_sp(void){
 	register uint32_t result;
 	__asm volatile ("MRS %0, msp\n" : "=r" (result) );
@@ -6,8 +8,10 @@ static inline uint32_t get_sp(void){
 
 static inline void boot(const void * vtable){
 	// Set new Vtable
+	cm_disable_interrupts();
 	CREG_M4MEMMAP = (uintptr_t)vtable;
 	SCB_VTOR = (uintptr_t) vtable;  
+	cm_enable_interrupts();
 
 	// Reset stack pointer & branch to the new reset vector.  
 	__asm(  "mov r0, %0\n"  
