@@ -26,7 +26,7 @@ static inline uint32_t get_pc(void){
 	return result;
 };
 
-extern void * _text_size;
+extern void * _bin_size;
 extern void * _reloc_ep;
 extern void * _text_start;
 
@@ -41,7 +41,7 @@ void __attribute__ ((naked)) reset_handler(void) {
 
 	if ((void *)CREG_M4MEMMAP != &_reloc_ep){
 		/* Move ourselves to _reloc_ep and restart there */
-		for (idx=0; idx < ((uintptr_t)& _text_size)/sizeof(uint32_t); idx++){
+		for (idx=0; idx < ((uintptr_t)& _bin_size)/sizeof(uint32_t); idx++){
 			((uint32_t*)&_reloc_ep)[idx]= ((uint32_t *)&_text_start)[idx];
 		};
 		/* remember where we started. Needs to be done after the copy of data */

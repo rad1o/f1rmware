@@ -124,10 +124,10 @@ SECTIONS
 	_size = _end - _reloc_ep;
 
 	.dummy : {
-		_text_end  = .;
+		_bin_end  = .;
 	} > shadow
 
-	_text_size = (_text_end - _text_start);
+	_bin_size = (_bin_end - _text_start);
 
 	/* Leave room above stack for IAP to run. */
 	__StackTop = ORIGIN(ram_local2) + LENGTH(ram_local2) - 32;
