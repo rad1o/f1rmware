@@ -30,7 +30,7 @@ void fonts_menu(){
 	    case BTN_DOWN:
 		getInputWaitRelease();
 		setIntFont(&Font_7x8);
-		if(selectFile(filename,"F0N")){
+		if(selectFile(filename,"F0N")<0){
 		    lcdPrintln("Select ERROR");
 		    lcdDisplay();
 		    getInputWait();

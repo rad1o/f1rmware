@@ -88,9 +88,11 @@ void doFlash(){
 void doRealExec(int silent){
 	char filename[FLEN];
 	FATFS FatFs;
-
 	FRESULT res;
-	if(selectFile(filename,"BIN")){
+	char sres;
+
+	sres=selectFile(filename,"BIN");
+	if(sres<0){
 	    if(!silent){
 		lcdPrintln("Select ERROR");
 		lcdDisplay();

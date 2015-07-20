@@ -130,10 +130,13 @@ int selectFile(char *filename, const char *extension)
                 getInput();
                 return -1;
             case BTN_ENTER:
-            case BTN_RIGHT:
                 strcpy(filename, files[selected]);
                 getInput();
                 return 0;
+            case BTN_RIGHT:
+                strcpy(filename, files[selected]);
+                getInput();
+                return 1;
         }
     }
 }
