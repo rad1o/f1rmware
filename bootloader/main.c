@@ -50,7 +50,7 @@
 #define BOOTCFG "BOOT.CFG"
 
 extern uint8_t  _app_start;
-void bootFile(const char * filename, uint8_t write);
+void bootFile(const char * filename);
 
 void doFlash(){
 	uint32_t addr = 0;
@@ -85,22 +85,41 @@ void doFlash(){
 	getInputWait();
 };
 
-void doExec(){
+void doRealExec(int silent){
 	char filename[FLEN];
 	FATFS FatFs;
 
 	FRESULT res;
 	if(selectFile(filename,"BIN")){
+	    if(!silent){
 		lcdPrintln("Select ERROR");
 		lcdDisplay();
 		getInputWait();
-		return;
+	    };
+	    return;
+	};
+	lcdPrintln("set as default:");
+	res=writeFile(BOOTCFG, filename, strlen(filename)+1);
+	if(res<0){
+	    lcdPrint("write Error:");
+	    lcdPrintln(IntToStr(-res,3,0));
+	    lcdPrintln(f_get_rc_string(res));
+	    lcdDisplay();
+	    getInputWait();
+	}else{
+	    lcdPrint("wrote ");
+	    lcdPrint(IntToStr(res,3,0));
+	    lcdPrintln(" bytes.");
+	    lcdDisplay();
+	    getInputWait();
 	};
 	lcdPrintln("Loading:");
 	lcdPrintln(filename);
 	lcdDisplay();
-	bootFile(filename,1);
-
+	bootFile(filename);
+};
+static inline void doExec(){
+	doRealExec(0);
 };
 
 void doMSC(){
@@ -144,7 +163,7 @@ void sys_tick_handler(void){ /* every SYSTICKSPEED us */
 	incTimer();
 };
 
-void bootFile(const char * filename, uint8_t write){
+void bootFile(const char * filename){
 	FIL file;
 	UINT readbytes;
 	FRESULT res;
@@ -171,20 +190,6 @@ void bootFile(const char * filename, uint8_t write){
 		lcdDisplay();
 		getInputWait();
 		return;
-	};
-	if(write){
-		res=writeFile(BOOTCFG, filename, strlen(filename)+1);
-		if(res<0){
-			lcdPrint("write Error:");
-			lcdPrintln(f_get_rc_string(-res));
-			lcdDisplay();
-			getInputWait();
-		};
-		lcdPrint("write Done:");
-		lcdPrintln(IntToStr(res,3,0));
-		lcdPrintln(IntToStr(strlen(filename),3,0));
-		lcdDisplay();
-		getInputWait();
 	};
 	boot((void*)&_app_start);
 };
@@ -213,23 +218,26 @@ int main(uint32_t startloc) {
 	sli=startloc;
 
 	if (startloc != (uintptr_t)&_app_start){ /* not booted via DFU, do autoboot */ 
-		if (getInputRaw()!=BTN_LEFT){
+		if (getInputRaw()==BTN_LEFT){
+		    getInputWaitRelease();
+		    doRealExec(1);
+		}else{
 			char filename[FLEN];
 			readTextFile(BOOTCFG, filename, FLEN);
 			lcdPrintln("Fname");
 			lcdPrintln(filename);
-			bootFile(filename,0);
+			bootFile(filename);
 		};
 	};
 	static const struct MENU main={ "Bootloader", {
-		{ "Info", &doInfo},
-		{ "Exec", &doExec},
-		{ "Flash", &doFlash},
+		{ "Exec Firmware", &doExec},
 		{ "MSC", &doMSC},
+		{ "Flash Boot Ldr", &doFlash},
+		{ "Info", &doInfo},
 		{NULL,NULL}
 	}};
 	do {
-		getInputWaitRelease();
 		handleMenu(&main);
 	}while(1);
 }
+
