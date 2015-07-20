@@ -61,7 +61,7 @@ void img_menu() {
 	char filename[FLEN];
 	FATFS FatFs;
 	FRESULT res;
-	int ct=0x3a;
+	int so=0x0;
 
 	lcdClear();
 	lcdPrintln("Image");
@@ -71,6 +71,12 @@ void img_menu() {
 	lcdDisplay();
 
 	getInputWaitRelease();
+/*	lcd_select();
+	lcdWrite(TYPE_CMD,0x33);
+	lcdWrite(TYPE_DATA,0);
+	lcdWrite(TYPE_DATA,130);
+	lcdWrite(TYPE_DATA,0);
+	lcd_deselect(); */
 
 	while(1){
 		switch(getInputWaitRepeat()){
@@ -109,15 +115,17 @@ void img_menu() {
 				do_image(filename);
 				break;
 			case BTN_LEFT:
-				ct-=1;
+				so-=1;
+				if(so<0) so=132;
 				lcd_select();
-				lcdWrite(TYPE_CMD,0x25); lcdWrite(TYPE_DATA, ct);
+				lcdWrite(TYPE_CMD,0x37); lcdWrite(TYPE_DATA, so);
 				lcd_deselect();
 				break;
 			case BTN_RIGHT:
-				ct+=1;
+				so+=1;
+				if(so>132) so=0;
 				lcd_select();
-				lcdWrite(TYPE_CMD,0x25); lcdWrite(TYPE_DATA, ct);
+				lcdWrite(TYPE_CMD,0x37); lcdWrite(TYPE_DATA, so);
 				lcd_deselect();
 				break;
 			case BTN_ENTER:
