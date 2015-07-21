@@ -42,7 +42,6 @@ make
 Prerequisite: rad1o is connected to USB
 
 ```
-cd feldtest
 sudo make flash
 ```
 
@@ -75,6 +74,5 @@ Get the firmware, compile and flash it.
 git clone https://github.com/rad1o/f1rmware.git
 cd f1rmware/
 make
-cd feldtest
 make flash
 ```

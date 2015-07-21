@@ -17,3 +17,6 @@ There is no easy way to debug the code while it runs on the board, but the board
     TOGGLE(LED2);
     TOGGLE(LED3);
     TOGGLE(LED4);
+
+## USB serial
+You can use usb serial to output text while running. Check testapp/cdc.c for a rudimentary example
