@@ -153,8 +153,8 @@ void doInfo(){
 	lcdPrint("StackP:  "); lcdPrint(IntToStr(get_sp(),8,F_HEX));lcdNl();
 	lcdPrint("ShadowR: "); lcdPrint(IntToStr(CREG_M4MEMMAP,8,F_HEX));lcdNl();
 	lcdPrint("text_s:  "); lcdPrint(IntToStr((uintptr_t)&_text_start,8,F_HEX));lcdNl();
-	lcdPrint("text_e:  "); lcdPrint(IntToStr((uintptr_t)&_bin_end,8,F_HEX));lcdNl();
-	lcdPrint("size:    "); lcdPrint(IntToStr((uintptr_t)&_bin_size,8,F_HEX));lcdNl();
+	lcdPrint("bin_end: "); lcdPrint(IntToStr((uintptr_t)&_bin_end,8,F_HEX));lcdNl();
+	lcdPrint("bin_size:"); lcdPrint(IntToStr((uintptr_t)&_bin_size,8,F_HEX));lcdNl();
 	lcdPrint("reloc_ep:"); lcdPrint(IntToStr((uintptr_t)&_reloc_ep,8,F_HEX));lcdNl();
 	lcdPrint("end:     "); lcdPrint(IntToStr((uintptr_t)&_end,8,F_HEX));lcdNl();
 	lcdPrint("startloc:"); lcdPrint(IntToStr(sli,8,F_HEX));lcdNl();
