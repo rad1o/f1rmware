@@ -1,4 +1,4 @@
-APP?=feldtest
+APP?=testapp
 
 all: lib hackrf $(APP).dfu $(APP).bin
 
@@ -23,10 +23,10 @@ $(APP)/$(APP).bin:
 $(APP)/$(APP).dfu:
 	$(MAKE) -C $(APP) $(APP).dfu
 	
-$(APP).bin: $(APP)/feldtest.bin
+$(APP).bin: $(APP)/$(APP).bin
 	cp $< $@
 
-$(APP).dfu: $(APP)/feldtest.dfu
+$(APP).dfu: $(APP)/$(APP).dfu
 	cp $< $@
 
 clean:
