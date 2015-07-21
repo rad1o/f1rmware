@@ -35,8 +35,12 @@ LIBS += -lc
 
 OCFLAGS = --strip-unneeded
 
+DEPDIR = .deps
+df = $(DEPDIR)/$(*F)
+
 %.o : %.c
 	$(CC) $(CFLAGS) $(INCLUDE_PATHS) -o $@ $<
+	$(CC) -MM $(CFLAGS) $(INCLUDE_PATHS) $< > $(df).d
 
 %.bin: %.elf
 	$(OBJCOPY) $(OCFLAGS) -O binary $< $@
@@ -44,10 +48,14 @@ OCFLAGS = --strip-unneeded
 %.dfu: %.bin
 	$(DFUTOOL) $< $@
 
-all: $(APP).dfu $(APP).bin
+all: $(DEPDIR) $(APP).dfu $(APP).bin
+
+$(DEPDIR):
+	mkdir $(DEPDIR)
 
 clean::
 	-rm -f $(OBJS) $(APP).elf $(APP).bin $(APP).dfu $(APP).map
+	-rm -rf $(DEPDIR)
 
 program: flash
 
@@ -55,6 +63,7 @@ flash: $(APP).dfu
 	$(DFUUTIL) --device 1fc9:000c --alt 0 --download $(APP).dfu
 
 $(APP).elf: $(OBJS) $(LDSCRIPT)
-#	$(LD) $(LDFLAGS) -o $(APP).elf $(OBJS) $(LIB_PATHS) $(LIBS)
 	$(CC) $(LDFLAGS) -o $(APP).elf $(OBJS) $(LIB_PATHS) $(LIBS)
 	$(SIZE) $(APP).elf
+
+-include $(SRCS:%.c=$(DEPDIR)/%.d)
