@@ -17,11 +17,11 @@ hackrf/Readme.md:
 
 hackrf: hackrf/Readme.md
 
-$(APP)/main.bin:
-	$(MAKE) -C $(APP) main.bin
+$(APP)/$(APP).bin:
+	$(MAKE) -C $(APP) $(APP).bin
 	
-$(APP)/main.dfu:
-	$(MAKE) -C $(APP) main.dfu
+$(APP)/$(APP).dfu:
+	$(MAKE) -C $(APP) $(APP).dfu
 	
 $(APP).bin: $(APP)/feldtest.bin
 	cp $< $@
