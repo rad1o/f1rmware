@@ -89,7 +89,7 @@ void doRealExec(int silent){
 	char filename[FLEN];
 	FATFS FatFs;
 	FRESULT res;
-	char sres;
+	int sres;
 
 	sres=selectFile(filename,"BIN");
 	if(sres<0){
