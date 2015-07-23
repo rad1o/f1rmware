@@ -26,6 +26,7 @@ void feld_menu(){
 	SETUPgout(RX_LNA);
 	SETUPgout(CE_VCO);
 	SETUPgout(MIXER_EN);
+	SETUPgout(EN_VDD);
 
 	char tu=0,td=0,tl=0,tr=0;
 	char tuN=0,tdN=0,tlN=0,trN=0;
@@ -37,10 +38,10 @@ void feld_menu(){
 	int ctr=0;
 	while (1) {
 		lcdClear(0xff);
-		lcdPrintln("Feld-Test v12");
+		lcdPrintln("Feld-Test v13");
 		lcdPrintln("");
 		lcdPrint("Page ");lcdPrintln(IntToStr(page,2,0));
-		if (page==0){
+		if (page==1){
 			tu=GET(BY_MIX); tuN=GET(BY_MIX_N);
 			lcdPrint(IntToStr(tu,1,F_HEX)); lcdPrint(IntToStr(tuN,1,F_HEX)); lcdPrintln(" Up BY_MIX/_N");
 			td=GET(BY_AMP); tdN=GET(BY_AMP_N);
@@ -96,8 +97,9 @@ void feld_menu(){
 					page++;
 					break;
 			};
-		}else if (page==1){
-			lcdPrint("  "); lcdPrintln(" Up   ");
+		}else if (page==0){
+			tu2=GET(EN_VDD);
+			lcdPrint(IntToStr(tu2,1,F_HEX)); lcdPrint(" "); lcdPrintln(" Up EN_VDD");
 			td2=GET(RX_LNA);td2N=GET(TX_AMP);
 			lcdPrint(IntToStr(td2,1,F_HEX)); lcdPrint(IntToStr(td2N,1,F_HEX)); lcdPrintln(" Dn RX/TX");
 			lcdPrint(IntToStr(tl2,1,F_HEX)); lcdPrint(" ");                    lcdPrintln(" Lt MIXER_EN");
@@ -113,9 +115,9 @@ void feld_menu(){
 				case BTN_UP:
 					tu2=1-tu2;
 					if (tu2){
-						;
+					    ON(EN_VDD);
 					}else{
-						;
+					    OFF(EN_VDD);
 					};
 					break;
 				case BTN_DOWN:
