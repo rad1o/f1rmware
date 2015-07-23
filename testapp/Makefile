@@ -31,6 +31,12 @@ OBJS += ../lpcapi/cdc/cdc_desc.o
 OBJS += ../lpcapi/cdc/cdc_main.o
 OBJS += ../lpcapi/cdc/cdc_vcom.o
 
+# CPLD
+OBJS += ../hackrf/firmware/common/xapp058/micro.o
+OBJS += ../hackrf/firmware/common/xapp058/ports.o
+OBJS += ../hackrf/firmware/common/xapp058/lenval.o
+OBJS += ../hackrf/firmware/common/cpld_jtag.o
+
 SRCS = $(wildcard *.c)
 SOBJS = $(foreach mod,$(SRCS),$(subst .c,.o,$(mod)))
 
