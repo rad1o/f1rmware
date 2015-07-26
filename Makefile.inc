@@ -62,7 +62,7 @@ program: flash
 flash: $(APP).dfu
 	$(DFUUTIL) --device 1fc9:000c --alt 0 --download $(APP).dfu
 
-$(APP).elf: $(OBJS) $(LDSCRIPT)
+$(APP).elf: $(DEPDIR) $(OBJS) $(LDSCRIPT)
 	$(CC) $(LDFLAGS) -o $(APP).elf $(OBJS) $(LIB_PATHS) $(LIBS)
 	$(SIZE) $(APP).elf
 
