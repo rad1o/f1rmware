@@ -23,7 +23,8 @@
 #include <libopencm3/lpc43xx/scu.h>
 #include <libopencm3/lpc43xx/dac.h>
 
-#include "setup.h"
+#include <rad1olib/setup.h>
+#include <rad1olib/pins.h>
 #include "output.h"
 
 #define PORT_LED1 GPIO2
@@ -38,7 +39,9 @@ int main(void)
 	scu_pinmux(P4_2,SCU_GPIO_NOPULL|SCU_CONF_FUNCTION0);
 	GPIO2_DIR |= PIN_LED1;
 
-    dac_init(false);
+	SETUPgout(MIC_AMP_DIS);
+	OFF(MIC_AMP_DIS);
+	dac_init(false);
 
 	while (1) 
 	{
