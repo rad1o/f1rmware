@@ -8,3 +8,4 @@
 *.bin
 *.gen
 .deps
+flashapp/xsvf.inc
