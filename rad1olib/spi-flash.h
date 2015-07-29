@@ -3,8 +3,10 @@
 
 #include <stdint.h>
 
+#define FLASH_SIZE (2048*1024)
+
 #define FLASHFS_OFFSET (512*1024)
-#define FLASHFS_LENGTH (512*1024)
+#define FLASHFS_LENGTH (FLASH_SIZE-FLASHFS_OFFSET)
 
 #define S1_BUSY (1<<0)  /* Busy (volatile) */
 #define S1_WEL  (1<<1)  /* Write Enable Latch (volatile) */
