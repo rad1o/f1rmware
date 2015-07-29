@@ -37,6 +37,7 @@
 
 #define EN_VDD      P5_0,  SCU_CONF_FUNCTION0, GPIO2, GPIOPIN9,  clear        // RF Power
 #define EN_1V8      P6_10, SCU_CONF_FUNCTION0, GPIO3, GPIOPIN6,  clear        // CPLD Power
+#define MIC_AMP_DIS P9_1,  SCU_CONF_FUNCTION0, GPIO4, GPIOPIN13, set          // MIC Power
 
 #define LED1        P4_1,  SCU_CONF_FUNCTION0, GPIO2, GPIOPIN1,  clear
 #define LED2        P4_2,  SCU_CONF_FUNCTION0, GPIO2, GPIOPIN2,  clear
