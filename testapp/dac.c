@@ -28,24 +28,87 @@
 #include <rad1olib/pins.h>
 
 #include <r0ketlib/display.h>
+#include <r0ketlib/itoa.h>
 #include <r0ketlib/print.h>
 #include <r0ketlib/keyin.h>
 
+#include <fatfs/ff.h>
+#include <r0ketlib/fs_util.h>
+#include <r0ketlib/select.h>
+
+unsigned char * ram=(uint8_t *)0x20000000;
+unsigned int ram_len=64*1024;
 
 //# MENU dac
 void dac_menu(){
-	int i;
-	uint32_t sample;
+	int i=0;
+	int mode=0;
+	UINT readbytes=0;
 	cpu_clock_set(204);
 	getInputWaitRelease();
-	lcdPrintln("DAC Echo test");
+	lcdClear();
+	lcdPrintln("DAC test");
+	lcdNl();
+	lcdPrintln("Up Load file");
+	lcdPrintln("Lt File output");
+	lcdPrintln("Rt Echo test");
 	lcdDisplay();
 
 	SETUPgout(MIC_AMP_DIS);
 	OFF(MIC_AMP_DIS); // Enable AMP
 	dac_init(false); 
 
-	while (getInputRaw()==BTN_NONE) {
-	    dac_set(adc_get_single(ADC0,ADC_CR_CH7)>>1); 
+	while(1){
+	    while (getInputRaw()==BTN_NONE) {
+		if(mode==1){ // FILE
+		    if(++i>=readbytes)
+			i=0;
+		    dac_set(ram[i]);
+		    delay(765);
+		}else if (mode==0){ // ECHO
+		    dac_set(adc_get_single(ADC0,ADC_CR_CH7)>>1);
+		};
+	    };
+	    if(getInputRaw()==BTN_ENTER)
+		return;
+	    if(getInputRaw()==BTN_LEFT)
+		mode=1;
+	    if(getInputRaw()==BTN_RIGHT)
+		mode=0;
+
+	    if(getInputRaw()==BTN_UP){
+		FATFS FatFs;
+		FRESULT res;
+		FIL file;
+		char filename[FLEN];
+
+		getInputWaitRelease();
+		if(selectFile(filename,"DAC")<0){
+		    lcdPrintln("Select ERROR");
+		    lcdDisplay();
+		    continue;
+		};
+
+		res=f_open(&file, filename, FA_OPEN_EXISTING|FA_READ);
+		if(res!=FR_OK){
+		    lcdPrintln("FOPEN ERROR");
+		    lcdPrintln(f_get_rc_string(res));
+		    lcdDisplay();
+		    continue;
+		};
+
+		res=f_read(&file, ram, ram_len, &readbytes);
+
+		if(res!=FR_OK || readbytes<1){
+		    lcdPrint("Read Error:");
+		    lcdPrintln(f_get_rc_string(res));
+		    lcdDisplay();
+		    continue;
+		};
+		lcdPrint(IntToStr(readbytes,8,0));
+		lcdPrintln(" bytes");
+		lcdDisplay();
+		mode=1;
+	    };
 	};
 }
