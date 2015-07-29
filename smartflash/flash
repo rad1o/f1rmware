@@ -1,0 +1,5 @@
+#!/bin/sh
+dev=$1
+sdev=$2
+dd if=full.img bs=512 of=/dev/$sdev conv=fsync 2>/dev/null
+exit $?

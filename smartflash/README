@@ -1,0 +1,18 @@
+"make build" makes sure hat all requisites are built
+
+"make" prepares everything for flashing
+
+"./FLASHgui" is the flash utility. Will probably need to run as root
+
+This needs a patched dfu-util built from rad1o/dfu-util:
+
+Quick build instructions for dfu-util:
+
+    git clone https://github.com/rad1o/dfu-util.git
+    cd dfu-util 
+    sh autogen.sh 
+    ./configure  
+    make
+    # install in-place of existing dfu-util
+    sudo cp src/dfu-util `which dfu-util`
+

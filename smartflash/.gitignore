@@ -1,0 +1,4 @@
+*.img
+*.dfu
+IMG
+dfu-util
