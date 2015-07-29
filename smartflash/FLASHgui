@@ -176,7 +176,7 @@ while(1){
 		if ($paths{$p}{ignore}){ # IGNOREd
 			$win->attron(COLOR_PAIR(3));   # Start color.
 			$win->addstr($line,0,
-					sprintf "%-5s | %04s:%04s | %s %s" . " "x42, 
+					sprintf "%-8s | %04s:%04s | %s %s" . " "x42,
 					$p, $paths{$p}{vid},$paths{$p}{pid},
 					$paths{$p}{mfg},$paths{$p}{prod}
 				);
@@ -184,14 +184,14 @@ while(1){
 		}elsif ($paths{$p}{gone}){ 
 			$win->attron(COLOR_PAIR(4));   # Start color.
 			$win->addstr($line,0,
-					sprintf "%-5s | %9s | %s" . " "x42, 
+					sprintf "%-8s | %9s | %s" . " "x42,
 					$p, "(gone)",
 					$paths{$p}{msg}
 				);
 			$win->attroff(COLOR_PAIR(4));  # End color.
 		}else{
 			$win->addstr($line,0,
-					sprintf "%-5s | %04s:%04s | %s " . " "x42, 
+					sprintf "%-8s | %04s:%04s | %s " . " "x42,
 					$p, $paths{$p}{vid},$paths{$p}{pid},
 					$paths{$p}{msg}
 					. ($paths{$p}{run}>0?" (running)":
