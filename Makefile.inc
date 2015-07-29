@@ -38,7 +38,7 @@ OCFLAGS = --strip-unneeded
 DEPDIR = .deps
 df = $(DEPDIR)/$(*F)
 
-%.o : %.c
+%.o : %.c $(DEPDIR)
 	$(CC) $(CFLAGS) $(INCLUDE_PATHS) -o $@ $<
 	$(CC) -MM $(CFLAGS) $(INCLUDE_PATHS) $< > $(df).d
 
@@ -48,7 +48,7 @@ df = $(DEPDIR)/$(*F)
 %.dfu: %.bin
 	$(DFUTOOL) $< $@
 
-all: $(DEPDIR) $(APP).dfu $(APP).bin
+all: $(APP).dfu $(APP).bin
 
 $(DEPDIR):
 	mkdir $(DEPDIR)
@@ -62,7 +62,7 @@ program: flash
 flash: $(APP).dfu
 	$(DFUUTIL) --device 1fc9:000c --alt 0 --download $(APP).dfu
 
-$(APP).elf: $(DEPDIR) $(OBJS) $(LDSCRIPT)
+$(APP).elf: $(OBJS) $(LDSCRIPT)
 	$(CC) $(LDFLAGS) -o $(APP).elf $(OBJS) $(LIB_PATHS) $(LIBS)
 	$(SIZE) $(APP).elf
 
