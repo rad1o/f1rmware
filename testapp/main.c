@@ -32,6 +32,7 @@ int main(void) {
 
 	SETUPgout(EN_VDD);
 	SETUPgout(MIXER_EN);
+	SETUPgout(MIC_AMP_DIS);
 
 	SETUPgout(LED1);
 	SETUPgout(LED2);

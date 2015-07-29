@@ -192,6 +192,7 @@ int main(uint32_t startloc) {
 
 	SETUPgout(EN_VDD);
 	SETUPgout(MIXER_EN);
+	SETUPgout(MIC_AMP_DIS);
 
 	SETUPgout(LED1);
 	SETUPgout(LED2);
