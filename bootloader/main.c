@@ -120,6 +120,7 @@ void doMSC(){
 	lcdPrintln("disconnect");
 	lcdDisplay();
 	MSCdisable();
+	fsReInit();
 	getInputWaitRelease();
 };
 

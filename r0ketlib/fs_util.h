@@ -4,6 +4,7 @@
 #include <fatfs/ff.h>
 
 void fsInit(void);
+void fsReInit(void);
 int readFile(char * filename, char * data, int len);
 int readTextFile(char * filename, char * data, int len);
 int writeFile(char * filename, const char * data, int len);

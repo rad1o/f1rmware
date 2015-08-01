@@ -8,6 +8,8 @@
 #include <lpcapi/msc/msc_main.h>
 #include <libopencmsis/core_cm3.h>
 
+#include <r0ketlib/fs_util.h>
+
 //# MENU MSC
 void msc_menu(){
 	MSCenable();
@@ -22,5 +24,6 @@ void msc_menu(){
 	lcdPrintln("disconnect");
 	lcdDisplay();
 	MSCdisable();
+	fsReInit();
 	getInputWaitRelease();
 };

@@ -39,6 +39,10 @@ void fsInit(){
 	};
 }
 
+void fsReInit(){
+	f_mount(&FatFs,"/",0);
+}
+
 int readFile(char * filename, char * data, int len){
     FIL file;
     UINT readbytes;
