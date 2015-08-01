@@ -1,12 +1,17 @@
-# Makefile to create filesystem image to flash rad1o badge
+# Makefile to create filesystem image and flash rad10 badge
 
-all: gather image
+default: gather image
+all: build gather image run
 
-fsdir=IMG
-mountpoint=/mnt
-fsimg=filesystem.img
-hdrimg=header.img
-fullimg=full.img
+fsdir?=IMG
+mountpoint?=/mnt
+fsimg?=filesystem.img
+hdrimg?=header.img
+fullimg?=full.img
+APP=../flashapp/flashapp.dfu
+FILEORDER= \
+    hackrf.bin \
+    testapp.bin 
 
 gather:
 	@echo
@@ -18,14 +23,13 @@ gather:
 	echo -n "testapp.bin" > $(fsdir)/boot.cfg
 	cp ../flashapp/flashapp.dfu .
 
+fsimage: FILES!= perl order-files $(fsdir) $(FILEORDER)
 fsimage:
 	@echo
 	@echo '### Creating FS image'
 	$(RM) -f $(fsimg)
 	mkfs.fat -F 12 -I -S 512 -C $(fsimg) 1536
-	sudo mount $(fsimg) $(mountpoint)
-	sudo cp $(fsdir)/* $(mountpoint)
-	sudo umount $(mountpoint)
+	mcopy -i $(fsimg) $(FILES) ::
 
 header:
 	@echo
@@ -39,7 +43,15 @@ image: fsimage header
 	dd if=$(hdrimg) bs=1024 of=$(fullimg)
 	dd if=$(fsimg) bs=1024 seek=512 of=$(fullimg)
 
+run:
+	if id -nG|grep -q '(root|disk)' ; then \
+	    ./FLASHgui ; \
+	else \
+	    sudo ./FLASHgui ; \
+	fi
+
 ### Rebuild everything 
+rebuild: build
 build:
 	cd ../hackrf/firmware/hackrf_usb/build && make
 	cd ../testapp && make testapp.bin
@@ -52,3 +64,16 @@ dfu-util:
 clean:
 	$(RM) -rf $(fsdir)
 	$(RM) $(fsimg) $(hdrimg) $(fullimg) flashapp.dfu
+
+
+### Targets for FLASHgui
+flash:
+	dd if=$(fullimg) bs=512 of=/dev/$(UDISK) conv=fsync 2>/dev/null
+
+dfu:
+	dfu-util -p $(UPATH) --download $(APP) 2>&1 >/dev/null  | grep -v "unable to read DFU status after completion" || true
+
+msc: FILES!= perl order-files $(fsdir) $(FILEORDER)
+
+msc:
+	mcopy -D o -i /dev/$(UDISK) $(FILES) ::

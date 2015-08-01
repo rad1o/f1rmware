@@ -1,4 +1,0 @@
-#!/bin/sh
-dev=$1
-dfu-util -p $dev --download ../flashapp/flashapp.dfu 2>&1 >/dev/null  | grep -v "unable to read DFU status after completion"
-exit 0

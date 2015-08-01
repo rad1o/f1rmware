@@ -2,7 +2,7 @@
 
 use strict;
 
-my($src,$dst,@files)=@ARGV;
+my($src,@files)=@ARGV;
 my %allfiles;
 
 my $dh;
@@ -25,5 +25,5 @@ for (sort keys %allfiles){
 	push @dwim,$_;
 };
 
-system("cp",(map {$src."/".$_} @dwim),$dst);
+print join(" ",map {$src."/".$_} @dwim),"\n";
 
