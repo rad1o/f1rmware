@@ -44,11 +44,7 @@ image: fsimage header
 	dd if=$(fsimg) bs=1024 seek=512 of=$(fullimg)
 
 run:
-	if id -nG|grep -q '(root|disk)' ; then \
-	    ./FLASHgui ; \
-	else \
-	    sudo ./FLASHgui ; \
-	fi
+	./FLASHgui
 
 ### Rebuild everything 
 rebuild: build
