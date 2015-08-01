@@ -1,0 +1,23 @@
+#!/bin/sh
+dir=/tmp/rad1o
+path=$1
+dev=$2
+
+if [ ! -d $dir ] ; then
+        mkdir $dir
+fi
+
+if [ ! -d $dir/$dev ] ; then
+        mkdir $dir/$dev
+fi
+
+umount /dev/$dev 2>/dev/null || true
+#mkdosfs -I /dev/$dev
+mount /dev/$dev -t vfat $dir/$dev
+
+perl copy-files-ordered IMG $dir/$dev \
+	hackrf.bin \
+	testapp.bin
+
+umount /dev/$dev
+exit $?

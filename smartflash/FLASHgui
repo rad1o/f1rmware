@@ -138,12 +138,12 @@ while(1){
 
 		my $id="$paths{$p}{vid}:$paths{$p}{pid}";
 
-		if($id eq "1fc9:000c"){
+		if($id eq "1fc9:000c"){ # LPC4330 - DFU Mode
 			next if ($paths{$p}{done} eq "1fc9:000c");
 			$paths{$p}{msg}="DFU";
 			$paths{$p}{run}=call($p,qw(./dfu),$p);
 			$paths{$p}{done}=$id;
-		}elsif($id eq "1fc9:0042"){
+		}elsif($id eq "1fc9:0042"){ # rad1o "full flash" mode
 			next if ($paths{$p}{done} eq "1fc9:0042");
 			my $sdev=getdev($p);
 			if($sdev eq ""){
@@ -153,7 +153,7 @@ while(1){
 			$paths{$p}{msg}="FLASH $sdev";
 			$paths{$p}{run}=call($p,qw(./flash),$p,$sdev);
 			$paths{$p}{done}=$id;
-		}elsif($id eq "1fc9:0082"){
+		}elsif($id eq "1fc9:0082"){ # rad1o/NXP Mass storage
 			next if ($paths{$p}{done} eq "1fc9:0082");
 			my $sdev=getdev($p);
 			if($sdev eq ""){
@@ -161,7 +161,7 @@ while(1){
 				next;
 			};
 			$paths{$p}{msg}="FILE $sdev";
-			# call FLASH $p
+			$paths{$p}{run}=call($p,qw(./msc),$p,$sdev);
 			$paths{$p}{done}=$id;
 		}else{
 			$paths{$p}{ignore}=1;

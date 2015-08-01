@@ -1,0 +1,29 @@
+#!/usr/bin/env perl
+
+use strict;
+
+my($src,$dst,@files)=@ARGV;
+my %allfiles;
+
+my $dh;
+
+opendir($dh, $src) || die "source dir missing";
+%allfiles=map {$_ => 1} grep {/^[^.]/} readdir($dh);
+close $dh;
+
+my @dwim;
+for (@files){
+	if(!$allfiles{$_}){
+		warn "$_ not found in $src\n";
+	}else{
+		push @dwim,$_;
+		delete $allfiles{$_};
+	};
+};
+
+for (sort keys %allfiles){
+	push @dwim,$_;
+};
+
+system("cp",(map {$src."/".$_} @dwim),$dst);
+
