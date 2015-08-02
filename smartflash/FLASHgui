@@ -227,6 +227,6 @@ while(1){
 			sprintf "%d Actions running",scalar(keys %pids)
 			);
 	$win_bot->refresh;
-	sleep(.3);
+	select(undef,undef,undef,.3);
 	$firstrun=0;
 };
