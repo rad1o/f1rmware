@@ -1,6 +1,12 @@
 APP?=testapp
 
-all: lib hackrf $(APP).dfu $(APP).bin
+all: lib hackrf subdirs $(APP).dfu $(APP).bin
+
+subdirs:
+	$(MAKE) -C testapp
+	$(MAKE) -C bootloader
+	$(MAKE) -C flashapp
+	$(MAKE) -C l0dables
 
 libopencm3/README:
 	git submodule init
@@ -32,6 +38,10 @@ $(APP).dfu: $(APP)/$(APP).dfu
 clean:
 	rm -f *.bin *.dfu
 	$(MAKE) -C $(APP) clean
+	$(MAKE) -C flashapp clean
+	$(MAKE) -C bootloader clean
+	$(MAKE) -C l0dables clean
+	$(MAKE) -C smartflash clean
 #	cd libopencm3 && make clean
 
 flash: $(APP).dfu
