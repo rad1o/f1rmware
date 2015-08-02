@@ -26,6 +26,7 @@
 
 /* Enforce emmission of the vector table. */
 EXTERN (vector_table)
+EXTERN (JumpTable)
 
 /* Define the entry point of the output file. */
 ENTRY(reset_handler)
@@ -33,10 +34,17 @@ ENTRY(reset_handler)
 /* Define sections. */
 SECTIONS
 {
-	.text : {
+	.vect : {
 		_text_ram = 0; /* Start of Code in RAM NULL because Copy of Code from ROM to RAM disabled */
 		. = ALIGN(0x400);
 		*(.vectors)	/* Vector table */
+	} > ram_local1
+
+	.jump : {
+		KEEP(*(.jump))	/* Jump table */
+	} > ram_local1
+
+	.text : {
 		*(.text*)	/* Program code */
 		. = ALIGN(4);
 		*(.rodata*)	/* Read-only data */
@@ -124,4 +132,7 @@ SECTIONS
 	/* Leave room above stack for IAP to run. */
 	__StackTop = ORIGIN(ram_local2) + LENGTH(ram_local2) - 32;
 	PROVIDE(_stack = __StackTop);
+	_l0dable_start = ORIGIN(ram_l0dable);
+	_l0dable_len = LENGTH(ram_l0dable);
+	_jumptable_len = SIZEOF(.jump);
 }

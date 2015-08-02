@@ -45,19 +45,18 @@ df = $(DEPDIR)/$(*F)
 %.bin: %.elf
 	$(OBJCOPY) $(OCFLAGS) -O binary $< $@
 
+%.c1d: %.o $(DEPDIR) $(LDSCRIPT)
+	$(CC) $(LDFLAGS) -o $(*F).elf $< $(LIB_PATHS) $(LIBS)
+	$(OBJCOPY) $(OCFLAGS) -O binary $(*F).elf $@
+
 %.dfu: %.bin
 	$(DFUTOOL) $< $@
 
+ifdef APP
 all: $(APP).dfu $(APP).bin
-
-$(DEPDIR):
-	mkdir $(DEPDIR)
 
 clean::
 	-rm -f $(OBJS) $(APP).elf $(APP).bin $(APP).dfu $(APP).map
-	-rm -rf $(DEPDIR)
-
-program: flash
 
 flash: $(APP).dfu
 	$(DFUUTIL) --device 1fc9:000c --alt 0 --download $(APP).dfu
@@ -65,5 +64,17 @@ flash: $(APP).dfu
 $(APP).elf: $(OBJS) $(LDSCRIPT)
 	$(CC) $(LDFLAGS) -o $(APP).elf $(OBJS) $(LIB_PATHS) $(LIBS)
 	$(SIZE) $(APP).elf
+endif
+
+$(RPATH)/l0dables/jumptable.c: $(RPATH)/l0dables/EXPORTS
+	make -C $(RPATH)/l0dables jumptable.c
+
+$(DEPDIR):
+	mkdir $(DEPDIR)
+
+clean::
+	-rm -rf $(DEPDIR)
+
+program: flash
 
 -include $(SRCS:%.c=$(DEPDIR)/%.d)
