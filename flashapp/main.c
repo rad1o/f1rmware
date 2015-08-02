@@ -29,7 +29,7 @@ void sys_tick_handler(void){
 	TOGGLE(LED2);
 };
 
-unsigned char default_xsvf[] = {
+const unsigned char default_xsvf[] = {
 #include "xsvf.inc"
 };
 
