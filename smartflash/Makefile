@@ -19,7 +19,7 @@ gather:
 	[ ! -d $(fsdir) ] && mkdir $(fsdir) || true
 	cp ../hackrf/firmware/hackrf_usb/build/hackrf_usb.bin $(fsdir)/hackrf.bin
 	cp ../testapp/testapp.bin $(fsdir)/
-	cp ../l0dables/*.c1d $(fsdir)/
+	-cp ../l0dables/*.c1d $(fsdir)/
 	cp ../hackrf/firmware/cpld/sgpio_if/default.xsvf $(fsdir)/cpld.xsv
 	# Add f0nts, images, l0dables, etc.
 	echo -n "testapp.bin" > $(fsdir)/boot.cfg
@@ -49,7 +49,7 @@ run: image
 	./FLASHgui
 
 ### Rebuild everything 
-rebuild: build image
+rebuild: build gather image
 build:
 	@echo
 	@echo '### Building everything'
