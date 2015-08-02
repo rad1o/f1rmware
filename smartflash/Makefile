@@ -19,6 +19,8 @@ gather:
 	[ ! -d $(fsdir) ] && mkdir $(fsdir) || true
 	cp ../hackrf/firmware/hackrf_usb/build/hackrf_usb.bin $(fsdir)/hackrf.bin
 	cp ../testapp/testapp.bin $(fsdir)/
+	cp ../l0dables/*.c1d $(fsdir)/
+	cp ../hackrf/firmware/cpld/sgpio_if/default.xsvf $(fsdir)/cpld.xsv
 	# Add f0nts, images, l0dables, etc.
 	echo -n "testapp.bin" > $(fsdir)/boot.cfg
 	cp ../flashapp/flashapp.dfu .
@@ -39,20 +41,23 @@ header:
 
 image: fsimage header
 	@echo
-	@echo '### Assembling Make full image'
+	@echo '### Assembling full image'
 	dd if=$(hdrimg) bs=1024 of=$(fullimg)
 	dd if=$(fsimg) bs=1024 seek=512 of=$(fullimg)
 
-run:
+run: image
 	./FLASHgui
 
 ### Rebuild everything 
-rebuild: build
+rebuild: build image
 build:
+	@echo
+	@echo '### Building everything'
 	cd ../hackrf/firmware/hackrf_usb/build && make
 	cd ../testapp && make testapp.bin
 	cd ../bootloader && make boot.bin
 	cd ../flashapp && make flashapp.dfu
+	cd ../l0dables && make
 
 dfu-util:
 	cd ../../dfu-util && sh autogen.sh && ./configure && make
