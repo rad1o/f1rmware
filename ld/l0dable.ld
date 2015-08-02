@@ -15,6 +15,7 @@ SECTIONS
 
 	.myhdr : {
 		LONG(_jumpsize);
+		LONG(ram);
 	} >shadow
 
 	.text : {

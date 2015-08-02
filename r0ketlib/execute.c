@@ -49,6 +49,21 @@ uint8_t execute_file (const char * fname){
         return -1;
     };
 
+    res = f_read(&file, &dst, sizeof(uint32_t), &readbytes);
+    if(res!=FR_OK){
+	lcdPrintln(f_get_rc_string(res));
+	lcdDisplay();
+        return -1;
+    };
+
+    if ((uintptr_t)dst<l0dable_start || (uintptr_t)dst>(l0dable_start+l0dable_len)){
+	lcdPrintln("l0daddr illegal");
+	lcdPrint(IntToStr((uintptr_t)dst,8,F_HEX));
+	lcdDisplay();
+        return -1;
+    };
+
+
     res = f_read(&file, (uint8_t *)l0dable_start, l0dable_len, &readbytes);
     if(res!=FR_OK){
 	lcdPrintln(f_get_rc_string(res));
@@ -65,13 +80,13 @@ uint8_t execute_file (const char * fname){
     lcdPrint(IntToStr(readbytes,5,F_LONG));
     lcdPrintln(" bytes...");
 
-    dst=(void (*)(void)) (l0dable_start|1); // Enable Thumb mode!
+    dst=(void (*)(void)) ((uintptr_t)dst|1); // Enable Thumb mode!
 
 #if 0
-    lcdPrint("dst="); lcdPrint(IntToStr((uintptr_t)dst,8,F_HEX)); lcdNl();
-    lcdPrint("len="); lcdPrint(IntToStr((uintptr_t)&_l0dable_len,8,F_HEX)); lcdNl();
-    lcdPrint("jt="); lcdPrint(IntToStr(jumptable_len,8,F_HEX)); lcdNl();
-    lcdPrint("ver="); lcdPrint(IntToStr(version,8,F_HEX)); lcdNl();
+    lcdPrint("dst= "); lcdPrint(IntToStr((uintptr_t)dst,8,F_HEX)); lcdNl();
+    lcdPrint("len= "); lcdPrint(IntToStr((uintptr_t)&_l0dable_len,8,F_HEX)); lcdNl();
+    lcdPrint("jt=  "); lcdPrint(IntToStr(jumptable_len,8,F_HEX)); lcdNl();
+    lcdPrint("ver= "); lcdPrint(IntToStr(version,8,F_HEX)); lcdNl();
     lcdDisplay();
 #endif
 
