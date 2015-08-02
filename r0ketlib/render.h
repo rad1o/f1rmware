@@ -21,6 +21,7 @@ void setIntFont(const struct FONT_DEF * font);
 void setExtFont(const char *file);
 int getFontHeight(void);
 int DoString(int sx, int sy, const char *s);
+int DoChar(int sx, int sy, int c);
 
 #define START_FONT 0
 #define SEEK_EXTRAS 1

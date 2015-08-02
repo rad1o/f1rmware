@@ -1,4 +1,4 @@
-BIN=blinky.c1d
+BIN=blinky.c1d invaders.c1d
 
 TABLEFILES=jumptable.c jumptable.h usetable.h
 
