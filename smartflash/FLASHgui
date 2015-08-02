@@ -1,10 +1,11 @@
 #!/usr/bin/env perl
 #
-# vim:set ts=4 sw=4:
+# vim:set ts=8 sw=4:
 
 use strict;
 use Curses;
-use POSIX qw(strftime);
+use POSIX qw(strftime getgroups);
+use v5.10.1;
 
 #use FindBin;
 #use lib "$FindBin::Bin/lib";
@@ -28,8 +29,7 @@ sub gosub {
 	my $dh;
 	my $dir;
 	opendir($dh, DEV."/".$dev) || do {
-#		print "Failure for $dev?\n";
-		return "";
+		die "opendir failure for $dev: $!?\n";
 	};
 	($dir)=grep {/$grep/} grep {/^[^.]/} readdir($dh);
 	if($dir eq ""){
@@ -60,8 +60,18 @@ sub getdev{
 	    if($r!~/^sd/){
 		die "Strange device? $dev -> $r?\n";
 	    };
+	    if ($< != 0 || $> != 0){
+		my ($uid,$gid)=(stat("/dev/".$r))[4,5];
+		if ($uid != $< || $uid != $>){
+		    my @gg=getgroups();
+		    if (!($gid ~~ @gg)){
+			die "$r no permission\n";
+		    };
+		};
+	    };
 	    return $r;
 	};
+	return $@ if $@;
 	return $r;
 };
 
@@ -96,17 +106,18 @@ sub call{
 };
 
 initscr;
+my($width,$height);
+getmaxyx($height,$width);
 start_color();
 init_pair(4,::COLOR_BLUE, ::COLOR_BLACK);
 init_pair(3,::COLOR_RED, ::COLOR_BLACK);
 #END{endwin;}
-use constant WIDTH => 80;
-use constant m_height => 15;
-my $win_top=subwin(2,WIDTH,0,0);
-my $win=subwin(m_height,WIDTH,2,0);
+my $win_top=subwin(2,$width,0,0);
+my $win=subwin($height-3,$width,2,0);
+my $win_bot=subwin(1,$width,$height-1,0);
 noecho;
 curs_set(0);
-$win_top->addstr(0,0,"rad1o flash gui 0.1");
+$win_top->addstr(0,0,"rad1o flash gui 0.2");
 $win_top->addstr(1,0,"-"x20);
 $win_top->refresh;
 
@@ -128,6 +139,7 @@ while(1){
 		$paths{$p}{vid}=getline($p."/idVendor");
 		if ($paths{$p}{vid} eq ""){
 			$paths{$p}{gone}=1;
+			$paths{$p}{done}=0;
 			next;
 		}else{
 			$paths{$p}{gone}=0;
@@ -150,6 +162,11 @@ while(1){
 				$paths{$p}{msg}="(not ready)";
 				next;
 			};
+			if($sdev =~ / /){
+				chomp($sdev);
+				$paths{$p}{msg}="($sdev)";
+				next;
+			};
 			$paths{$p}{msg}="FLASH $sdev";
 			$paths{$p}{run}=call($p,qw(make -s flash),"UPATH=$p","UDISK=$sdev");
 			$paths{$p}{done}=$id;
@@ -158,6 +175,11 @@ while(1){
 			my $sdev=getdev($p);
 			if($sdev eq ""){
 				$paths{$p}{msg}="(not ready)";
+				next;
+			};
+			if($sdev =~ / /){
+				chomp($sdev);
+				$paths{$p}{msg}="($sdev)";
 				next;
 			};
 			$paths{$p}{msg}="FILE $sdev";
@@ -200,10 +222,11 @@ while(1){
 		};
 	    $line++;
 	};
-	$win->addstr(13,0,
+	$win->refresh;
+	$win_bot->addstr(0,0,
 			sprintf "%d Actions running",scalar(keys %pids)
 			);
-	$win->refresh;
-	sleep(1);
+	$win_bot->refresh;
+	sleep(.3);
 	$firstrun=0;
 };
