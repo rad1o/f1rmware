@@ -78,3 +78,6 @@ msc: FILES!= perl order-files $(fsdir) $(FILEORDER)
 
 msc:
 	mcopy -D o -i /dev/$(UDISK) $(FILES) ::
+
+sdr:
+	osmocom_fft -s 10000000 -f 432000000 -g 30 --peak-hold

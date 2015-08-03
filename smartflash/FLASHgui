@@ -5,6 +5,7 @@
 use strict;
 use Curses;
 use POSIX qw(strftime getgroups);
+use File::Spec;
 use v5.10.1;
 
 #use FindBin;
@@ -97,7 +98,13 @@ sub call{
 	if (not defined $pid) {
 		die "fork failed\n";
 	} elsif ($pid == 0) {
+		setpgrp(0,0);
 		shift;
+		if($_[0] eq "fnord"){
+		    shift;
+		    open STDOUT, '>', File::Spec->devnull();
+		    open STDERR, '>', File::Spec->devnull();
+		};
 		my $e=system(@_);
 		exit($e>>8); 
 	};
@@ -139,7 +146,13 @@ while(1){
 		$paths{$p}{vid}=getline($p."/idVendor");
 		if ($paths{$p}{vid} eq ""){
 			$paths{$p}{gone}=1;
+			if($paths{$p}{run}>0 and $paths{$p}{done} =~ /1d50:/){
+				kill('HUP',-$paths{$p}{run});
+				$paths{$p}{msg}.=", killed";
+				$paths{$p}{run}=0;
+			};
 			$paths{$p}{done}=0;
+			$paths{$p}{ignore}=0;
 			next;
 		}else{
 			$paths{$p}{gone}=0;
@@ -151,12 +164,12 @@ while(1){
 		my $id="$paths{$p}{vid}:$paths{$p}{pid}";
 
 		if($id eq "1fc9:000c"){ # LPC4330 - DFU Mode
-			next if ($paths{$p}{done} eq "1fc9:000c");
+			next if ($paths{$p}{done} eq $id);
 			$paths{$p}{msg}="DFU";
 			$paths{$p}{run}=call($p,qw(make -s dfu),"UPATH=$p");
 			$paths{$p}{done}=$id;
 		}elsif($id eq "1fc9:0042"){ # rad1o "full flash" mode
-			next if ($paths{$p}{done} eq "1fc9:0042");
+			next if ($paths{$p}{done} eq $id);
 			my $sdev=getdev($p);
 			if($sdev eq ""){
 				$paths{$p}{msg}="(not ready)";
@@ -171,7 +184,7 @@ while(1){
 			$paths{$p}{run}=call($p,qw(make -s flash),"UPATH=$p","UDISK=$sdev");
 			$paths{$p}{done}=$id;
 		}elsif($id eq "1fc9:0082"){ # rad1o/NXP Mass storage
-			next if ($paths{$p}{done} eq "1fc9:0082");
+			next if ($paths{$p}{done} eq $id);
 			my $sdev=getdev($p);
 			if($sdev eq ""){
 				$paths{$p}{msg}="(not ready)";
@@ -184,6 +197,11 @@ while(1){
 			};
 			$paths{$p}{msg}="FILE $sdev";
 			$paths{$p}{run}=call($p,qw(make -s msc),"UPATH=$p","UDISK=$sdev");
+			$paths{$p}{done}=$id;
+		}elsif($id eq "1d50:6089" or $id eq "1d50:cc15" ){ # hackrf/rad1o SDR
+			next if ($paths{$p}{done} eq $id);
+			$paths{$p}{msg}="SDR";
+			$paths{$p}{run}=call($p,"fnord",qw(make -s sdr),"UPATH=$p");
 			$paths{$p}{done}=$id;
 		}else{
 			$paths{$p}{ignore}=1;
@@ -207,7 +225,7 @@ while(1){
 			$win->attron(COLOR_PAIR(4));   # Start color.
 			$win->addstr($line,0,
 					sprintf "%-8s | %9s | %s" . " "x42,
-					$p, "(gone)",
+					$p, $paths{$p}{run}>0?"(gone, $paths{$p}{run})":"(gone)",
 					$paths{$p}{msg}
 				);
 			$win->attroff(COLOR_PAIR(4));  # End color.
