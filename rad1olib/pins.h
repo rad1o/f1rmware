@@ -43,7 +43,7 @@
 #define LED2        P4_2,  SCU_CONF_FUNCTION0, GPIO2, GPIOPIN2,  clear
 #define LED3        P6_12, SCU_CONF_FUNCTION0, GPIO2, GPIOPIN8,  clear
 #define LED4        PB_6,  SCU_CONF_FUNCTION4, GPIO5, GPIOPIN26, clear
-#define RGB_LED     P8_0,  SCU_CONF_FUNCTION4, GPIO5, GPIOPIN20, clear
+#define RGB_LED     P8_0,  SCU_CONF_FUNCTION0, GPIO4, GPIOPIN0,  clear
 
 	/* input */
 #define BC_DONE     PD_16, SCU_GPIO_PUP|SCU_CONF_FUNCTION4, GPIO6, GPIOPIN30  // Charge Complete Output (active low)
