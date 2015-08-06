@@ -81,8 +81,10 @@ static bool check_bunker(char xpos, char ypos, int8_t shift);
 
 void ram(void) {
 	while(1) {
-		if (!screen_intro())
-			return;
+		if (!screen_intro()){
+      setTextColor(0xff,0x00);
+      return;
+    }
 		game.rokets = 3;
 		game.level = 1;
 		game.score = 0;
@@ -90,7 +92,7 @@ void ram(void) {
 		screen_level();
 		while (game.rokets>=0) {
 			////checkISP();
-			lcdFill(0xff);
+			lcdFill(0x00);
 			check_end();
 			move_ufo();
 			move_shot();
@@ -108,7 +110,8 @@ void ram(void) {
 			delayms(12);
 		}
 		if (!screen_gameover())
-			return;
+      setTextColor(0xff,0x00);
+      return;
 	}
 }
 
@@ -120,14 +123,18 @@ static bool screen_intro() {
 	//getInputWaitRelease();
 	while(key==0) {
 		getInputWaitRelease();
-		lcdFill(0xff);
+		lcdFill(0x00);
 		setIntFont(&Font_Invaders);
-        lcdSetCrsr(28+15,25+15);lcdPrint(step?"ABC":"abc");
+    setTextColor(0x00,0b11100000);
+    lcdSetCrsr(28+18,25+15);lcdPrint(step?"ABC":"abc");
 		setIntFont(&Font_7x8);
-		lcdSetCrsr(28+15,40+15);lcdPrint("SPACE");
-		lcdSetCrsr(18+15,50+15);lcdPrint("INVADERS");
+    setTextColor(0x00,0b00011000);
+		lcdSetCrsr(28+18,40+15);lcdPrint("SPACE");
+    setTextColor(0x00,0b11111000);
+		lcdSetCrsr(18+18,50+15);lcdPrint("INVADERS");
 
 		highscore = highscore_get(highnick);
+    setTextColor(0x00,0xff);
 		lcdSetCrsr(0,0);lcdPrint(IntToStr(highscore,6,F_LONG));
 //		lcdSetCrsr(0,9);lcdPrint(highnick);
 		lcdDisplay();
@@ -141,12 +148,15 @@ static bool screen_intro() {
 static bool screen_gameover() {
 	char key =0;
 	while(key==0) {
-		lcdFill(0xff);
+		lcdFill(0x00);
 		setIntFont(&Font_7x8);
+    setTextColor(0x00,0b11100000);
 		lcdSetCrsr(14+15,32+15);lcdPrint("GAME OVER");
+    setTextColor(0x00,0xff);
 		lcdSetCrsr(0,0);lcdPrint(IntToStr(game.score,6,F_LONG));
 		if (highscore_set(game.score, GLOBAL(nickname))){
-			lcdSetCrsr(0,9);lcdPrint("HIGHSCORE!");
+      setTextColor(0x00,0b00011000);
+      lcdSetCrsr(0,9);lcdPrint("HIGHSCORE!");
 		};
 		lcdDisplay();
 		key=getInputWaitTimeout(5000);
@@ -156,10 +166,11 @@ static bool screen_gameover() {
 }
 
 static void screen_level() {
-	lcdFill(0xff);
+	lcdFill(0x00);
 	draw_score();
 	setIntFont(&Font_7x8);
 	lcdSetCrsr(20,32);
+  setTextColor(0x00,0xff);
 	lcdPrint("Level ");
 	lcdPrint(IntToStr(game.level,3,0));
 	lcdDisplay();
@@ -441,9 +452,9 @@ static void draw_bunker() {
 		for (int x=0;x<8;x++){
 			for (int y=0;y<BUNKER_WIDTH;y++){
 				if(game.bunker[b][y] & (1<<x)){
-					lcdSetPixel(BUNKER_X(b)+y,RESY-x-8,0);
+					lcdSetPixel(BUNKER_X(b)+y,RESY-x-8,0b00011000);
 				}else{
-					lcdSetPixel(BUNKER_X(b)+y,RESY-x-8,0xff);
+					lcdSetPixel(BUNKER_X(b)+y,RESY-x-8,0x00);
 				};
 			}
 		}
@@ -453,14 +464,14 @@ static void draw_bunker() {
 static void draw_shots() {
     if (game.shot_x != 255) {
         for (int length=0; length<=5; length++) {
-            lcdSetPixel(game.shot_x, game.shot_y+length, true);
+            lcdSetPixel(game.shot_x, game.shot_y+length, 0xff);
         }
     }
 
 	for (int col = 0; col < ENEMY_COLUMNS; col++) {
 		if (game.shots_x[col] != DISABLED) {
 			for (int length=0; length<=5; length++) {
-				lcdSetPixel(game.shots_x[col], game.shots_y[col]+length,true);
+				lcdSetPixel(game.shots_x[col], game.shots_y[col]+length,0xff);
 			}
 		}
 	}
@@ -469,7 +480,7 @@ static void draw_shots() {
 
 static void draw_status() {
     for (int p = 0; p<game.alive; p++){
-        lcdSetPixel(p+1,1,true);
+        lcdSetPixel(p+1,1,0xff);
     }
 }
 
@@ -477,18 +488,23 @@ static void draw_sprite(char type, char x, char y) {
 	setIntFont(&Font_Invaders);
 	switch(type) {
 		case TYPE_PLAYER:
+      setTextColor(0x00,0b11111000);
 			DoChar(x,y-1,'P');
 			break;
 		case TYPE_ENEMY_A:
+      setTextColor(0x00,0b11100000);
 			DoChar(x,y-1,game.step?'a':'A');
 			break;
 		case TYPE_ENEMY_B:
+      setTextColor(0x00,0b11100000);
 			DoChar(x,y-1,game.step?'b':'B');
 			break;
 		case TYPE_ENEMY_C:
+      setTextColor(0x00,0b11100000);
 			DoChar(x,y-1,game.step?'c':'C');
 			break;
 		case TYPE_UFO:
+      setTextColor(0x00,0b11100111);
 			DoChar(x,y-1,'U');
 			break;
 	}
@@ -496,6 +512,7 @@ static void draw_sprite(char type, char x, char y) {
 
 static void draw_score() {
 	setIntFont(&Font_7x8);
+  setTextColor(0x00,0xff);
 	lcdSetCrsr(0,0);lcdPrint(IntToStr(game.score,6,F_LONG));
 	lcdSetCrsr(RESX-8,0);lcdPrint(IntToStr(game.rokets,1,0));
 	setIntFont(&Font_Invaders);
