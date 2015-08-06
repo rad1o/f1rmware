@@ -32,9 +32,9 @@
 #define TYPE_ENEMY_C 4
 #define TYPE_UFO     5
 
-#define BUNKERS 3
+#define BUNKERS 4
 #define BUNKER_WIDTH  10
-static const uint8_t BUNKER_X[] = {15, RESX/2-BUNKER_WIDTH/2,RESX-BUNKER_WIDTH-15};
+#define BUNKER_X(b) ( RESX / (BUNKERS+1) * (b+1) - BUNKER_WIDTH/2 )
 static const uint8_t ENEMY_WIDTHS[] = {8,10,12};
 
 struct gamestate {
@@ -44,17 +44,17 @@ struct gamestate {
 	char shots_x[ENEMY_COLUMNS];
 	char shots_y[ENEMY_COLUMNS];
     char alive;
-    int16_t move; 
+    int16_t move;
 	char direction, lastcol;
-    bool killed; 
+    bool killed;
 	bool step;
 	uint32_t score;
 	uint16_t level;
 	int8_t rokets;
     char enemy_x[ENEMY_ROWS][ENEMY_COLUMNS];
     char enemy_row_y[ENEMY_ROWS];
-    uint8_t bunker[BUNKERS][BUNKER_WIDTH]; 
-} game; 
+    uint8_t bunker[BUNKERS][BUNKER_WIDTH];
+} game;
 char key;
 
 static bool highscore_set(uint32_t score, char nick[]);
@@ -83,7 +83,7 @@ void ram(void) {
 	while(1) {
 		if (!screen_intro())
 			return;
-		game.rokets = 3; 
+		game.rokets = 3;
 		game.level = 1;
 		game.score = 0;
 		init_game();
@@ -126,7 +126,7 @@ static bool screen_intro() {
 		setIntFont(&Font_7x8);
 		lcdSetCrsr(28,40);lcdPrint("SPACE");
 		lcdSetCrsr(18,50);lcdPrint("INVADERS");
-		
+
 		highscore = highscore_get(highnick);
 		lcdSetCrsr(0,0);lcdPrint(IntToStr(highscore,6,F_LONG));
 //		lcdSetCrsr(0,9);lcdPrint(highnick);
@@ -153,7 +153,7 @@ static bool screen_gameover() {
 	}
 	//getInputWaitRelease();
 	return !(key==BTN_LEFT);
-}	
+}
 
 static void screen_level() {
 	lcdFill(0xff);
@@ -213,7 +213,7 @@ static void init_game(void) {
 	game.step = false;
 	game.ufo = DISABLED;
 	init_enemy();
-	
+
 	for (int col=0; col<ENEMY_COLUMNS; col++){
 	   game.shots_x[col] = DISABLED;
    	}
@@ -223,7 +223,7 @@ static void init_game(void) {
 		//	game.bunker[b][slice] = 255<<2;
 		//}
 		game.bunker[b][0] = 0b00111100;
-		game.bunker[b][1] = 0b01111100; 
+		game.bunker[b][1] = 0b01111100;
 		game.bunker[b][2] = 0b11111100;
 		game.bunker[b][3] = 0b11100000;
 		game.bunker[b][4] = 0b11100000;
@@ -246,11 +246,11 @@ static void init_enemy() {
 
 static bool check_bunker(char xpos, char ypos, int8_t shift){
 	for (int b=0; b<BUNKERS; b++) {
-		if (xpos>BUNKER_X[BUNKERS-1-b] &&
-				xpos<BUNKER_X[BUNKERS-1-b]+BUNKER_WIDTH &&
+		if (xpos>BUNKER_X(b) &&
+				xpos<BUNKER_X(b)+BUNKER_WIDTH &&
 				ypos<RESY-8 &&
 				ypos>RESY-16) {
-			int offset = BUNKER_WIDTH - (xpos-BUNKER_X[BUNKERS-1-b]);	
+			int offset = xpos-BUNKER_X(b);
 			if (game.bunker[b][offset]!=0) {
 				if (shift>0)
 					game.bunker[b][offset]&=game.bunker[b][offset]<<shift;
@@ -268,12 +268,12 @@ static void move_shot() {
     if(game.shot_x == DISABLED) {
         return;
     }
-    
+
     //moving out of top, end shot
     if (game.shot_y <= 0) {
             game.shot_x = DISABLED;
             return;
-    } 
+    }
 
    if (check_bunker(game.shot_x,game.shot_y-5,1 ))
 		game.shot_x=DISABLED;
@@ -314,7 +314,7 @@ static void move_shots() {
 		//No shot, maybe generate
 		if (game.shots_x[col] == DISABLED) {
 			for (int row = 0; row<ENEMY_ROWS; row++) {
-				if (game.enemy_x[row][col] != DISABLED) {	
+				if (game.enemy_x[row][col] != DISABLED) {
 					if(getRandom()%(game.alive*20/((game.level/3)+1))==0) {
 						game.shots_x[col] = game.enemy_x[row][col]+5;
 						game.shots_y[col] = game.enemy_row_y[row]+0;
@@ -328,19 +328,19 @@ static void move_shots() {
 		if (game.shots_y[col] >= RESY) {
 			game.shots_x[col] = DISABLED;
 			return;
-		} 
+		}
 		//check for collision with bunker
         if (check_bunker(game.shots_x[col],game.shots_y[col],-1))
 			game.shots_x[col]=DISABLED;
 
-		//check for collision with player	
+		//check for collision with player
 		if (game.shots_y[col] >= RESY-13 &&
 			game.shots_x[col] > game.player+1 &&
 			game.shots_x[col] < game.player+6) {
 
 			game.killed = true;
 		}
-		
+
 		//move shots down
 		game.shots_y[col] += 1;
 	}
@@ -384,7 +384,7 @@ static void move_enemy() {
         game.move-=game.level/5+1;
         return;
     }
-    
+
 	game.step = !game.step;
     for (int col = 0; col < ENEMY_COLUMNS; col++) {
         for (int row = 0; row < ENEMY_ROWS; row++) {
@@ -398,9 +398,9 @@ static void move_enemy() {
 					}
 					game.killed = true;
                 }
-                check_bunker(pos,game.enemy_row_y[row]+8,-2);  
-			
-			    //Are we at the beginning or end? Direction change	
+                check_bunker(pos,game.enemy_row_y[row]+8,-2);
+
+			    //Are we at the beginning or end? Direction change
                 if((pos <=0 && game.direction != 1) ||
                    (pos >=RESX-10 && game.direction == 1)){
                     game.direction = (game.direction==1)?-1:1;
@@ -413,7 +413,7 @@ static void move_enemy() {
             }
         }
     }
-    
+
     game.move = game.alive*2-1;
 }
 
@@ -435,15 +435,15 @@ static void draw_enemy() {
         }
     }
 }
-    
+
 static void draw_bunker() {
 	for (int b=0; b<BUNKERS; b++) {
 		for (int x=0;x<8;x++){
 			for (int y=0;y<BUNKER_WIDTH;y++){
 				if(game.bunker[b][y] & (1<<x)){
-					lcdSetPixel(BUNKER_X[b]+y,RESY-x-8,0);
+					lcdSetPixel(BUNKER_X(b)+y,RESY-x-8,0);
 				}else{
-					lcdSetPixel(BUNKER_X[b]+y,RESY-x-8,0xff);
+					lcdSetPixel(BUNKER_X(b)+y,RESY-x-8,0xff);
 				};
 			}
 		}
@@ -508,7 +508,7 @@ static void check_end() {
 		game.rokets--;
 		delayms_queue(500);
         game.player = POS_PLAYER_X;
-        
+
 		for(int col=0; col<ENEMY_COLUMNS; col++) {
 			game.shots_x[col] = DISABLED;
 		}
