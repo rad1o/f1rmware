@@ -42,7 +42,7 @@ void lcd_select() {
             SSP_MODE_NORMAL,
             SSP_MASTER,
             SSP_SLAVE_OUT_ENABLE);
-	
+
 	OFF(LCD_CS);
 }
 
@@ -84,7 +84,7 @@ void lcdInit(void) {
 		0x3A, 2,           // mode 8bpp  (2= 8bpp, 3= 12bpp, 5= 16bpp)
 		0x36, 0b11000000,  // my,mx,v,lao,rgb,x,x,x
 		0x25, 0x3a,        // set contrast
-		0x29,              // display on 
+		0x29,              // display on
 		0x03,              // BSTRON (booster voltage)
 		0x2A, 1, RESX,
 		0x2B, 1, RESY
@@ -142,7 +142,7 @@ void lcdDisplay(void) {
 
 	for(y=0;y<RESY;y++){
 		for(x=0;x<RESX;x++){
-			lcdWrite(TYPE_DATA,lcdGetPixel(x,y)); 
+			lcdWrite(TYPE_DATA,lcdGetPixel(x,y));
 		};
 	}
     lcd_deselect();
@@ -155,7 +155,7 @@ void lcdSetContrast(int c) {
     lcd_deselect();
 }
 
-void lcdShiftH(bool right, bool wrap) {
+void lcdShiftH(bool right, int wrap) {
 	uint8_t tmp;
 	for (int yb = 0; yb<RESY; yb++) {
 		if (right) {
@@ -170,7 +170,7 @@ void lcdShiftH(bool right, bool wrap) {
 	}
 }
 
-void lcdShiftV(bool up, bool wrap) {
+void lcdShiftV(bool up, int wrap) {
 	uint8_t tmp[RESX];
 	if (up) {
 		if (wrap)
@@ -189,7 +189,7 @@ void lcdShiftV(bool up, bool wrap) {
 	}
 }
 
-void lcdShift(int x, int y, bool wrap) {
+void lcdShift(int x, int y, int wrap) {
 	bool dir=true;
 
     if(x<0){
@@ -210,4 +210,3 @@ void lcdShift(int x, int y, bool wrap) {
     while(y-->0)
         lcdShiftV(dir, wrap);
 }
-

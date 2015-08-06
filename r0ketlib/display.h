@@ -17,7 +17,7 @@ void lcdFill(char f);
 void lcdDisplay(void);
 void lcdSetPixel(char x, char y, uint8_t f);
 uint8_t lcdGetPixel(char x, char y);
-void lcdShift(int x, int y, bool wrap);
+void lcdShift(int x, int y, int wrap);
 void lcdSetContrast(int c);
 
 void lcd_select();
