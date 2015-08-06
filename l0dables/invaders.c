@@ -32,9 +32,9 @@
 #define TYPE_ENEMY_C 4
 #define TYPE_UFO     5
 
-#define BUNKERS 3
+#define BUNKERS 4
 #define BUNKER_WIDTH  10
-static const uint8_t BUNKER_X[] = {15, RESX/2-BUNKER_WIDTH/2,RESX-BUNKER_WIDTH-15};
+#define BUNKER_X(b) ( RESX / (BUNKERS+1) * (b+1) - BUNKER_WIDTH/2 )
 static const uint8_t ENEMY_WIDTHS[] = {8,10,12};
 
 struct gamestate {
@@ -246,11 +246,11 @@ static void init_enemy() {
 
 static bool check_bunker(char xpos, char ypos, int8_t shift){
 	for (int b=0; b<BUNKERS; b++) {
-		if (xpos>BUNKER_X[b] &&
-				xpos<BUNKER_X[b]+BUNKER_WIDTH &&
+		if (xpos>BUNKER_X(b) &&
+				xpos<BUNKER_X(b)+BUNKER_WIDTH &&
 				ypos<RESY-8 &&
 				ypos>RESY-16) {
-			int offset = xpos-BUNKER_X[b];	
+			int offset = xpos-BUNKER_X(b);
 			if (game.bunker[b][offset]!=0) {
 				if (shift>0)
 					game.bunker[b][offset]&=game.bunker[b][offset]<<shift;
@@ -441,9 +441,9 @@ static void draw_bunker() {
 		for (int x=0;x<8;x++){
 			for (int y=0;y<BUNKER_WIDTH;y++){
 				if(game.bunker[b][y] & (1<<x)){
-					lcdSetPixel(BUNKER_X[b]+y,RESY-x-8,0);
+					lcdSetPixel(BUNKER_X(b)+y,RESY-x-8,0);
 				}else{
-					lcdSetPixel(BUNKER_X[b]+y,RESY-x-8,0xff);
+					lcdSetPixel(BUNKER_X(b)+y,RESY-x-8,0xff);
 				};
 			}
 		}
