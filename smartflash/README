@@ -2,6 +2,8 @@
 
 "make" prepares everything for flashing
 
+This needs mcopy from mtools. On arch: `pacman -S mtools`
+
 "./FLASHgui" is the flash utility. Will probably need to run as root
 
 This needs a patched dfu-util built from rad1o/dfu-util:
