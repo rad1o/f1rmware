@@ -122,10 +122,10 @@ static bool screen_intro() {
 		getInputWaitRelease();
 		lcdFill(0xff);
 		setIntFont(&Font_Invaders);
-        lcdSetCrsr(28,25);lcdPrint(step?"ABC":"abc");
+        lcdSetCrsr(28+15,25+15);lcdPrint(step?"ABC":"abc");
 		setIntFont(&Font_7x8);
-		lcdSetCrsr(28,40);lcdPrint("SPACE");
-		lcdSetCrsr(18,50);lcdPrint("INVADERS");
+		lcdSetCrsr(28+15,40+15);lcdPrint("SPACE");
+		lcdSetCrsr(18+15,50+15);lcdPrint("INVADERS");
 
 		highscore = highscore_get(highnick);
 		lcdSetCrsr(0,0);lcdPrint(IntToStr(highscore,6,F_LONG));
@@ -143,7 +143,7 @@ static bool screen_gameover() {
 	while(key==0) {
 		lcdFill(0xff);
 		setIntFont(&Font_7x8);
-		lcdSetCrsr(14,32);lcdPrint("GAME OVER");
+		lcdSetCrsr(14+15,32+15);lcdPrint("GAME OVER");
 		lcdSetCrsr(0,0);lcdPrint(IntToStr(game.score,6,F_LONG));
 		if (highscore_set(game.score, GLOBAL(nickname))){
 			lcdSetCrsr(0,9);lcdPrint("HIGHSCORE!");
