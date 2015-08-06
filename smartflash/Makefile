@@ -22,6 +22,7 @@ gather:
 	-cp ../l0dables/*.c1d $(fsdir)/
 	cp ../hackrf/firmware/cpld/sgpio_if/default.xsvf $(fsdir)/cpld.xsv
 	# Add f0nts, images, l0dables, etc.
+	cp ../files/* $(fsdir)/
 	echo -n "testapp.bin" > $(fsdir)/boot.cfg
 	cp ../flashapp/flashapp.dfu .
 
