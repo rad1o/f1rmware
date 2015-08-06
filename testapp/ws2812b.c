@@ -38,7 +38,7 @@ void ws1812b_menu(){
 
 		switch(getInput()){
 			case BTN_UP:
-                ws2812_sendarray(pattern, sizeof(red));
+                ws2812_sendarray(pattern, sizeof(pattern));
 				break;
 			case BTN_DOWN:
                 ws2812_sendarray(green, sizeof(green));
