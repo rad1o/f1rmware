@@ -10,6 +10,7 @@
 
 #include "invfont.c"
 
+//FIXME: temporary hacks
 #define GLOBAL(nickname) "Sec"
 #define delayms(x) delay(x*100)
 #define delayms_queue(x) delay(x*100)

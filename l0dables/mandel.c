@@ -1,11 +1,17 @@
-#include <sysinit.h>
 
-#include "basic/basic.h"
 
-#include "lcd/render.h"
-#include "lcd/display.h"
-#include "lcd/allfonts.h"
+#include <r0ketlib/display.h>
+#include <r0ketlib/fonts.h>
+#include <r0ketlib/render.h>
+#include <r0ketlib/keyin.h>
+
 #include "usetable.h"
+
+//FIXME: temporary hacks
+#define delayms(x) delay(x*100)
+#define delayms_queue(x) delay(x*100)
+
+
 
 #define FIXSIZE 25
 #define mul(a,b) ((((long long)a)*(b))>>FIXSIZE)
@@ -13,7 +19,7 @@
 #define integer(a) (((a)+(1<<(FIXSIZE-1)))>>FIXSIZE)
 
 #define ZOOM_RATIO 0.90
-#define ITERATION_MAX 150
+#define ITERATION_MAX 127
 
 void mandelInit();
 void mandelMove();
@@ -50,7 +56,7 @@ void mandelInit() {
     mandel.imin = fixpt(-2);
     mandel.imax = fixpt(2);
     mandel.presscount = 0;
-    mandel.presslimitzin = 15;    
+    mandel.presslimitzin = 15;
     mandel.presslimitzout = 5;
     mandel.zoomlevel = 0;
     mandel.maxzoomin = 42;
@@ -67,7 +73,7 @@ void mandelInit() {
 void mandelMove() {
     //long delta_r = (mandel.rmax - mandel.rmin)/10;
     //long delta_i = (mandel.imax - mandel.imin)/10;
- 
+
 	long rs =(mandel.rmax-mandel.rmin)/RESY;
 	long is =(mandel.imax-mandel.imin)/RESX;
 
@@ -120,7 +126,7 @@ void mandelMove() {
         mandel.dirty = true;
         delayms(10);
         mandel.zoomlevel = mandel.zoomlevel + 1 ;
-     } 
+     }
 }
 
 void mandelPixel(int x, int y) {
@@ -134,7 +140,7 @@ void mandelPixel(int x, int y) {
     //q=fixpt(mandel.imin+x*is);
     p=mandel.rmin+y*rs;
 	q=mandel.imin+x*is;
-            
+
 	rn=0;
     r0=0;
     i0=0;
@@ -144,9 +150,9 @@ void mandelPixel(int x, int y) {
         i0=mul(fixpt(2),mul(r0,i0)) +q;
         r0=rn;
     }
-    if (iteration==ITERATION_MAX) iteration=1;
+    if (iteration==ITERATION_MAX) iteration=ITERATION_MAX;
     bool pixel = ( iteration>1);
-    lcdSetPixel(x, y, pixel);
+    lcdSetPixel(x, y, 255-iteration*2);
 }
 
 void mandelUpdate() {
@@ -158,28 +164,28 @@ void mandelUpdate() {
         ymax = RESY;
         mandel.dirty = false;
     } else if (mandel.dleft) {
-        lcdShift(1,0,false);
+        lcdShift(-1,0,false);
         xmin = 0;
         xmax = 1;
         ymin = 0;
         ymax = RESY;
         mandel.dleft = false;
     } else if (mandel.dright) {
-        lcdShift(-1,0,false);
+        lcdShift(1,0,false);
         xmin = RESX-1;
         xmax = RESX;
         ymin = 0;
         ymax = RESY;
         mandel.dright = false;
     } else if (mandel.dup) {
-        lcdShift(0,-1,true);
+        lcdShift(0,-1,false);
         xmin=0;
         xmax=RESX;
         ymin=0;
         ymax=1;
         mandel.dup = false;
     } else if (mandel.ddown) {
-        lcdShift(0,1,true);
+        lcdShift(0,1,false);
         xmin=0;
         xmax=RESX;
         ymin=RESY-1;
@@ -195,4 +201,3 @@ void mandelUpdate() {
         }
     }
 }
-

@@ -20,3 +20,4 @@ setIntFont
 lcdSetPixel
 DoChar
 setTextColor
+lcdShift
