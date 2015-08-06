@@ -54,11 +54,7 @@ sub wanted { # Go through all headers
 		}elsif (m!^\s*extern\s[^(]* ([\w]+)\s*(\[[^]]*\]\s*)?;\s*$!){ # (globla) Variable
             $id=$1;
             s/extern //;
-            my $star="*";
-            if( s/\[.*\]//){ # Fixup Array definitions
-                $star="";
-            };
-            s/$id/($star $id)/;
+            s/$id/(*$id)/;
             s/;//;
             $variable{$id}=1;
 			$types{$id}=$_;
