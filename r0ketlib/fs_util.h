@@ -3,6 +3,8 @@
 
 #include <fatfs/ff.h>
 
+#define FLEN 13
+
 void fsInit(void);
 void fsReInit(void);
 int readFile(char * filename, char * data, int len);

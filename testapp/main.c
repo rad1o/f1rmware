@@ -10,6 +10,7 @@
 #include <r0ketlib/display.h>
 #include <r0ketlib/keyin.h>
 #include <r0ketlib/menu.h>
+#include <r0ketlib/config.h>
 
 #include <rad1olib/pins.h>
 #include <rad1olib/systick.h>
@@ -40,9 +41,10 @@ int main(void) {
 	SETUPgout(LED4);
 
 	inputInit();
-    lcdInit();
+	lcdInit();
 	fsInit(); 
-    lcdFill(0xff);
+	lcdFill(0xff);
+	readConfig();
 
 	generated_init();
 
