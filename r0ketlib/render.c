@@ -18,7 +18,14 @@ struct EXTFONT efont;
 
 static FIL file; /* current font file */
 
+uint8_t color_bg = 0xff; /* background color */
+uint8_t color_fg = 0x00; /* foreground color */
+
 /* Exported Functions */
+void setTextColor(uint8_t bg, uint8_t fg){
+  color_bg = bg;
+  color_fg = fg;
+}
 
 void setIntFont(const struct FONT_DEF * newfont){
     memcpy(&efont.def,newfont,sizeof(struct FONT_DEF));
@@ -205,7 +212,7 @@ int DoChar(int sx, int sy, int c){
 
 
 	const uint8_t * data;
-    int width,preblank=0,postblank=0; 
+    int width,preblank=0,postblank=0;
     do { /* Get Character data */
         /* Get intex into character list */
         c=_getIndex(c);
@@ -309,23 +316,23 @@ int DoChar(int sx, int sy, int c){
 		for(int b=1;b<=preblank;b++){
             if(sx>=RESX)
                 continue;
-			lcdBuffer[xy_(sx-b,sy+y)]=0xff;
+			lcdBuffer[xy_(sx-b,sy+y)]=color_bg;
 		};
         /* Render character */
 		for(x=0;x<width;x++){
             if(sx+x>=RESX)
                 continue;
 			if (gPx(x,y)){
-				lcdBuffer[xy_(sx+x,sy+y)]=0b00000000;
+				lcdBuffer[xy_(sx+x,sy+y)]=color_fg;
 			}else{
-				lcdBuffer[xy_(sx+x,sy+y)]=0xff;
+				lcdBuffer[xy_(sx+x,sy+y)]=color_bg;
 			};
 		};
         /* Optional: empty space to the right */
 		for(int m=0;m<postblank;m++){
             if(sx+x+m>=RESX)
                 continue;
-			lcdBuffer[xy_(sx+x+m,sy+y)]=0xff;
+			lcdBuffer[xy_(sx+x+m,sy+y)]=color_bg;
 		};
 	};
 	return sx+(width+postblank);

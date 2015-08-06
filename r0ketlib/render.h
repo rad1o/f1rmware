@@ -17,6 +17,7 @@
 	}while(0)
 */
 
+void setTextColor(uint8_t bg, uint8_t fg);
 void setIntFont(const struct FONT_DEF * font);
 void setExtFont(const char *file);
 int getFontHeight(void);

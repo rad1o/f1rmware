@@ -19,3 +19,4 @@ Font_7x8
 setIntFont
 lcdSetPixel
 DoChar
+setTextColor
