@@ -1,6 +1,8 @@
 #ifndef __BASICCONFIG_H_
 #define __BASICCONFIG_H_
 
+#include <stdint.h>
+
 int readConfig(void);
 int saveConfig(void);
 void applyConfig(void);
@@ -25,6 +27,8 @@ extern struct CDESC the_config[];
 extern char nickname[];
 extern char nickfont[];
 extern char nickl0[];
+extern uint8_t nickfg;
+extern uint8_t nickbg;
 
 #define GLOBALversion      (the_config[ 0].value)
 #define GLOBALdaytrig      (the_config[ 1].value)
@@ -41,6 +45,8 @@ extern char nickl0[];
 #define GLOBALnickname     (nickname)
 #define GLOBALnickfont     (nickfont)
 #define GLOBALnickl0       (nickl0)
+#define GLOBALnickfg       (nickfg)
+#define GLOBALnickbg       (nickbg)
 
 #define GLOBAL(x) GLOBAL ## x
 

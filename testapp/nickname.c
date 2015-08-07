@@ -13,6 +13,7 @@
 #include <r0ketlib/fonts.h>
 #include <r0ketlib/fonts/smallfonts.h>
 #include <r0ketlib/stringin.h>
+#include <r0ketlib/colorin.h>
 
 #include <string.h>
 
@@ -66,6 +67,12 @@ void init_nick(void){
 void doNick(void){
 	input("Nickname:", GLOBAL(nickname), 32, 127, MAXNICK-1);
 	writeFile("nick.cfg",GLOBAL(nickname),strlen(GLOBAL(nickname)));
+	getInputWaitRelease();
+}
+
+//# MENU nick setFGcolor
+void doColorFG(void){
+  GLOBAL(nickfg)=colorpicker("Foreground:", GLOBAL(nickfg));
 	getInputWaitRelease();
 }
 

@@ -7,6 +7,7 @@
 #include <r0ketlib/fs_util.h>
 #include <fatfs/ff.h>
 #include <string.h>
+#include <stdint.h>
 
 #define CFGVER 3
 
@@ -30,6 +31,9 @@ struct CDESC the_config[]= {
 char nickname[MAXNICK]="anonymous";
 char nickfont[FLEN];
 char nickl0[FLEN];
+
+uint8_t nickfg=0x00;
+uint8_t nickbg=0xff;
 
 #define CONFFILE "rad1o.cfg"
 #define CONF_ITER for(int i=0;the_config[i].name!=NULL;i++)
@@ -91,7 +95,7 @@ int saveConfig(void){
 		return 1;
 	};
 	return 0;
-} 
+}
 int readConfig(void){
     FIL file;            /* File object */
     UINT readbytes;
