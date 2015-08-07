@@ -87,6 +87,7 @@ void ram(void)
 		int dx=0;
 		int dy=0;
 		setExtFont(GLOBAL(nickfont));
+		setTextColor(0x00,0xFF);
 		dx=DoString(0,0,GLOBAL(nickname));
 		dx=(RESX-dx)/2;
 		if(dx<0) dx=0;
