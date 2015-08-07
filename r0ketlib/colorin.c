@@ -17,8 +17,8 @@ struct colorpicker{
 static void colorpickerInit(char p[], uint8_t c) {
 	s_color.prompt = p;
 	s_color.color = c;
-  s_color.r = c & 0b11100000;
-  s_color.g = c & 0b00011100;
+  s_color.r = (c & 0b11100000)>>5;
+  s_color.g = (c & 0b00011100)>>2;
   s_color.b = c & 0b00000011;
 	s_color.pos = 0;
 	s_color.done = false;

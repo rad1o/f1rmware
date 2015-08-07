@@ -48,12 +48,15 @@ void simpleNickname(void) {
     dy=(RESY-getFontHeight())/2;
 
 	lcdClear();
+  lcdFill(GLOBAL(nickbg));
+  setTextColor(GLOBAL(nickbg),GLOBAL(nickfg));
 	lcdSetCrsr(dx,dy);
 	lcdPrint(GLOBAL(nickname));
 	lcdDisplay();
 
-    getInputWait();
-    return;
+  getInputWait();
+  setTextColor(0xFF,0x00);
+  return;
 }
 
 /**************************************************************************/
@@ -74,6 +77,12 @@ void doNick(void){
 //# MENU nick setFGcolor
 void doColorFG(void){
   GLOBAL(nickfg)=colorpicker("Foreground:", GLOBAL(nickfg));
+	getInputWaitRelease();
+}
+
+//# MENU nick setBGcolor
+void doColorBG(void){
+  GLOBAL(nickbg)=colorpicker("Background:", GLOBAL(nickbg));
 	getInputWaitRelease();
 }
 
