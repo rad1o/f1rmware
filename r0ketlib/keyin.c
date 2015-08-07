@@ -106,7 +106,7 @@ uint8_t getInputWaitRepeat(void) {
         else
             dtime=20;
         repeatctr++;
-        int end=_timectr+(dtime*1000/SYSTICKSPEED);
+        int end=_timectr+(dtime/SYSTICKSPEED);
         while(_timectr<end && key==getInputRaw())
             work_queue();
         key=getInputRaw();

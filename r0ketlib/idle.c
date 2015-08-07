@@ -5,7 +5,6 @@
 /**************************************************************************/
 
 void work_queue(void){
-
 	__WFI();
 	return;
 }
@@ -32,4 +31,11 @@ void delayms_power(uint32_t ms){
 	do {
         __WFI();
 	} while (ms >_timectr);
+}
+
+void delayms(uint32_t duration){
+	int end=_timectr+duration/SYSTICKSPEED;
+	do {
+		__WFI();
+	} while (end >_timectr);
 }

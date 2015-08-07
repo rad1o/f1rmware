@@ -3,6 +3,7 @@
 #include <rad1olib/pins.h>
 #include <r0ketlib/display.h>
 #include <r0ketlib/print.h>
+#include <r0ketlib/idle.h>
 #include <libopencm3/lpc43xx/ssp.h>
 #include <libopencm3/lpc43xx/gpio.h>
 #include <libopencm3/lpc43xx/scu.h>
@@ -13,16 +14,6 @@
 
 uint8_t lcdBuffer[RESX*RESY];
 uint8_t displayType;
-
-void delayms(uint32_t duration){ /* XXX: do me correctly */
-	uint32_t i;
-
-	duration*=10000;
-
-	for (i = 0; i < duration; i++)
-		__asm__("nop");
-}
-
 
 void lcd_select() {
     /* the LCD requires 9-Bit frames */
