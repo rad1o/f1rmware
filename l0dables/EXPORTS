@@ -21,3 +21,9 @@ lcdSetPixel
 DoChar
 setTextColor
 lcdShift
+nickname
+nickfont
+lcdClear
+setExtFont
+DoString
+getFontHeight
