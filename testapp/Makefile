@@ -25,6 +25,7 @@ OBJS += ../r0ketlib/fs_util.o
 OBJS += ../r0ketlib/execute.o
 OBJS += ../r0ketlib/config.o
 OBJS += ../r0ketlib/stringin.o
+OBJS += ../r0ketlib/random.o
 OBJS += ../lpcapi/msc/msc_desc.o
 OBJS += ../lpcapi/msc/msc_main.o
 OBJS += ../lpcapi/msc/msc_ram.o
