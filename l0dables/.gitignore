@@ -2,3 +2,4 @@ usetable.h
 jumptable.c
 jumptable.h
 *.c1d
+*.n1k

@@ -21,6 +21,7 @@
 
 void simpleNickname(void);
 
+//# MENU nick fancyNick
 void fancyNickname(void) {
     if(GLOBAL(l0nick)){
         if(execute_file(GLOBAL(nickl0)))
@@ -98,7 +99,7 @@ void doFont(void){
 //# MENU nick chooseAnim
 void doAnim(void){
     getInputWaitRelease();
-    if( selectFile(GLOBAL(nickl0),"NIK") != 0){
+    if( selectFile(GLOBAL(nickl0),"N1K") != 0){
         lcdPrintln("No file selected.");
         GLOBAL(l0nick)=0;
         return;
