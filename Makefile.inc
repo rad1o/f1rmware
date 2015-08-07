@@ -49,6 +49,14 @@ df = $(DEPDIR)/$(*F)
 	$(CC) $(LDFLAGS) -o $(*F).elf $< $(LIB_PATHS) $(LIBS)
 	$(OBJCOPY) $(OCFLAGS) -O binary $(*F).elf $@
 
+%.n1k: %.o $(DEPDIR) $(LDSCRIPT)
+	$(CC) $(LDFLAGS) -o $(*F).elf $< $(LIB_PATHS) $(LIBS)
+	$(OBJCOPY) $(OCFLAGS) -O binary $(*F).elf $@
+
+%.n1k: %.o $(DEPDIR) $(LDSCRIPT)
+	$(CC) $(LDFLAGS) -o $(*F).elf $< $(LIB_PATHS) $(LIBS)
+	$(OBJCOPY) $(OCFLAGS) -O binary $(*F).elf $@
+
 %.dfu: %.bin
 	$(DFUTOOL) $< $@
 
