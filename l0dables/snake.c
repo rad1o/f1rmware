@@ -5,20 +5,25 @@
  *   created by Flori4n (DrivenHoliday) & MascH (CCCHB tent)
  ***************************************/
 
-#include <sysinit.h>
 #include <string.h>
 
-#include "basic/basic.h"
-#include "basic/config.h"
-#include "basic/random.h"
-#include "lcd/render.h"
-#include "lcd/display.h"
-#include "lcd/fonts.h"
-#include "lcd/fonts/invaders.h"
-//#Include "lcd/lcd.h"
-//#include "lcd/print.h"
-#include "funk/mesh.h"
+#include <r0ketlib/config.h>
+#include <r0ketlib/display.h>
+#include <r0ketlib/fonts.h>
+#include <r0ketlib/render.h>
+#include <r0ketlib/print.h>
+#include <r0ketlib/keyin.h>
+#include <r0ketlib/itoa.h>
+
+#include "invfont.c"
+
 #include "usetable.h"
+
+//FIXME: temporary hacks
+#define delayms(x) delay(x*100)
+#define getRandom(x) (0)
+
+
 
 #define MAX_SNAKE_LEN (40)
 #define SNAKE_DIM (3)
@@ -87,17 +92,17 @@ void ram(void)
 	snake.tail[pos].x--;
       else if(snake.dir == 3)
 	snake.tail[pos].y--;
-	
+
       snake.t_start = pos;
-      
+
       if (pos < snake.len) {
 	del = MAX_SNAKE_LEN - (snake.len - pos);
       }	else
 	del = pos - snake.len;
 
       // remove last, add first line
-      draw_block(snake.tail[del].x, snake.tail[del].y, 0);
-      draw_block(snake.tail[pos].x, snake.tail[pos].y, 1);
+      draw_block(snake.tail[del].x, snake.tail[del].y, 0xFF);
+      draw_block(snake.tail[pos].x, snake.tail[pos].y, 0x00);
 
       // check for obstacle hit..
       if (hitWall() || hitSelf()) {
@@ -108,10 +113,10 @@ void ram(void)
       }
       else if (hitFood())
 	next_level();
-  
+
       lcdDisplay();
     }
-    
+
 #ifdef SIMULATOR
     delayms(50);
 #else
@@ -145,13 +150,13 @@ static void reset()
   // setup the screen
   lcdClear();
   for (i=MIN_X; i<MAX_X; i++) {
-    lcdSetPixel(i,MIN_Y,1);
-    lcdSetPixel(i,MAX_Y,1);
+    lcdSetPixel(i,MIN_Y,0x00);
+    lcdSetPixel(i,MAX_Y,0x00);
   }
-  
+
   for (i=MIN_Y; i<MAX_Y; i++) {
-    lcdSetPixel(MIN_X,i,1);
-    lcdSetPixel(MAX_X,i,1);
+    lcdSetPixel(MIN_X,i,0x00);
+    lcdSetPixel(MAX_X,i,0x00);
   }
 
   snake.speed = MIN_SPEED;
@@ -170,9 +175,9 @@ static void reset()
   snake.tail[2].y = SIZE_Y/2;
 
   // print initail tail
-  draw_block(snake.tail[0].x, snake.tail[0].y, 1);
-  draw_block(snake.tail[1].x, snake.tail[1].y, 1);
-  draw_block(snake.tail[2].x, snake.tail[2].y, 1);
+  draw_block(snake.tail[0].x, snake.tail[0].y, 0x00);
+  draw_block(snake.tail[1].x, snake.tail[1].y, 0x00);
+  draw_block(snake.tail[2].x, snake.tail[2].y, 0x00);
 
   // switch to level one
   next_level();
@@ -198,11 +203,11 @@ static void draw_block(int x, int y, int set)
 static void next_level()
 {
   food = getFood();
-  draw_block( food.x, food.y, 1);
+  draw_block( food.x, food.y, 0x00);
 
   snake.len++;
   snake.speed--;
-  DoInt(0,0,++points);
+  lcdPrint(IntToStr(++points,6,0));
 }
 
 static void handle_input()
@@ -216,7 +221,7 @@ static void handle_input()
   else if (key&BTN_LEFT && dir_old != 0)
     snake.dir = 2;
   else if (key&BTN_RIGHT && dir_old !=2)
-    snake.dir = 0;  
+    snake.dir = 0;
 }
 
 static int hitWall()
@@ -226,7 +231,7 @@ static int hitWall()
     || (snake.tail[snake.t_start].y*3 <= MIN_Y)
     || (snake.tail[snake.t_start].y*3 >= MAX_Y) ) ?
     1 : 0;
-    
+
 }
 
 static int hitSelf()
@@ -243,7 +248,7 @@ static int hitSelf()
 static void death_anim()
 {
   int i,j, a=4;
-  
+
   while(a--) {
     //    lcdToggleFlag(LCD_INVERTED);
     for (i=0; i<RESY; i++) {
@@ -264,6 +269,7 @@ static void death_anim()
 }
 
 static bool highscore_set(uint32_t score, char nick[]) {
+#if 0
     MPKT * mpkt= meshGetMessage('s');
     if(MO_TIME(mpkt->pkt)>score)
         return false;
@@ -274,10 +280,12 @@ static bool highscore_set(uint32_t score, char nick[]) {
         uint32touint8p(GetUUID32(),mpkt->pkt+26);
         mpkt->pkt[25]=0;
     };
+#endif
 	return true;
 }
 
 static uint32_t highscore_get(char nick[]){
+#if 0
     MPKT * mpkt= meshGetMessage('s');
     char * packet_nick = (char*)MO_BODY(mpkt->pkt);
     // the packet crc end is already zeroed
@@ -285,6 +293,8 @@ static uint32_t highscore_get(char nick[]){
         packet_nick[MAXNICK-1] = 0;
     strcpy(nick, packet_nick);
 	return MO_TIME(mpkt->pkt);
+#endif
+  return 0;
 }
 
 static int showHighscore()
@@ -298,14 +308,14 @@ static int showHighscore()
 
   lcdClear();
   DoString(0,RESY/2-33, "  Your Score");
-  DoInt(RESX/2-4, RESY/2-25, points);
+  DoString(RESX/2-4, RESY/2-25, IntToStr(points,6,0));
   DoString(0,RESY/2-10, "  Highscore");
-  DoInt(RESX/2-4, RESY/2-2, score);
+  DoString(RESX/2-4, RESY/2-2, IntToStr(score,6,0));
   DoString(0, RESY/2+18, "  UP to play ");
   DoString(0, RESY/2+26, "DOWN to quit ");
-  
+
   lcdDisplay();
-  
+
   while(1) {
     key = getInputRaw();
     if (key&BTN_DOWN) {

@@ -27,3 +27,4 @@ lcdClear
 setExtFont
 DoString
 getFontHeight
+lcdGetPixel
