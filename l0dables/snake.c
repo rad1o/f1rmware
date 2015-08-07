@@ -201,7 +201,7 @@ static void next_level()
 
   snake.len++;
   snake.speed--;
-  lcdPrint(IntToStr(++points,6,0));
+  DoString(0,0,IntToStr(++points,6,0));
 }
 
 static void handle_input()
@@ -245,12 +245,12 @@ static void death_anim()
 
   while(a--) {
     //    lcdToggleFlag(LCD_INVERTED);
-    for (i=0; i<RESY; i++) {
-      for (j=0; j<RESX; j++) {
-    	lcdSetPixel(j,i,!lcdGetPixel(j,i));
-      }
-    }
+    lcdFill(0x00);
     lcdDisplay();
+    delayms(100);
+    lcdFill(0xFF);
+    lcdDisplay();
+    delayms(100);
 
 #ifdef SIMULATOR
     delayms(5000);
