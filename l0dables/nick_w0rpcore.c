@@ -19,10 +19,6 @@
 
 #include "usetable.h"
 
-//FIXME: temporary hacks
-#define delayms_queue_plus(x,_) delay(x*100)
-#define getRandom(x) (10)
-
 #define NUM_STARS 100
 #define SPEED_MAX 10
 #define SPEED_DEFAULT 4

@@ -28,3 +28,7 @@ setExtFont
 DoString
 getFontHeight
 lcdGetPixel
+delayms
+delayms_queue
+getRandom
+delayms_queue_plus

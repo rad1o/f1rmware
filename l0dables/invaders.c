@@ -7,14 +7,10 @@
 #include <r0ketlib/fonts/smallfonts.h>
 #include <r0ketlib/keyin.h>
 #include <r0ketlib/itoa.h>
+#include <r0ketlib/idle.h>
+#include <r0ketlib/config.h>
 
 #include "invfont.c"
-
-//FIXME: temporary hacks
-#define GLOBAL(nickname) "Sec"
-#define delayms(x) delay(x*100)
-#define delayms_queue(x) delay(x*100)
-#define getRandom(x) (0)
 
 #include "usetable.h"
 /**************************************************************************/

@@ -8,9 +8,6 @@
 
 #include "usetable.h"
 
-//FIXME: temporary hacks
-#define delayms_queue_plus(x,_) delay(x*100)
-
 #define one ((uint32_t)1)
 #define utf8boundary nick[4]+nick[6]
 

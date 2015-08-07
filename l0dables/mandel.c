@@ -7,12 +7,6 @@
 
 #include "usetable.h"
 
-//FIXME: temporary hacks
-#define delayms(x) delay(x*100)
-#define delayms_queue(x) delay(x*100)
-
-
-
 #define FIXSIZE 25
 #define mul(a,b) ((((long long)a)*(b))>>FIXSIZE)
 #define fixpt(a) ((long)(((a)*(1<<FIXSIZE))))

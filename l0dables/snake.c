@@ -19,12 +19,6 @@
 
 #include "usetable.h"
 
-//FIXME: temporary hacks
-#define delayms(x) delay(x*100)
-#define getRandom(x) (0)
-
-
-
 #define MAX_SNAKE_LEN (40)
 #define SNAKE_DIM (3)
 #define MIN_SPEED (25)
