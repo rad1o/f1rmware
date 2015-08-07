@@ -10,15 +10,18 @@
  * commit 33fe346942176a0e988818980d04d1a8f746f894 1 parent 0eaf74fa87
  * wertarbyte authored August 13, 2011
  */
-#include <sysinit.h>
-
-#include "basic/basic.h"
-#include "basic/config.h"
-
-#include "lcd/lcd.h"
-#include "lcd/print.h"
+#include <r0ketlib/config.h>
+#include <r0ketlib/display.h>
+#include <r0ketlib/fonts.h>
+#include <r0ketlib/render.h>
+#include <r0ketlib/print.h>
+#include <r0ketlib/keyin.h>
 
 #include "usetable.h"
+
+//FIXME: temporary hacks
+#define delayms_queue_plus(x,_) delay(x*100)
+#define getRandom(x) (10)
 
 #define NUM_STARS 100
 #define SPEED_MAX 10
@@ -26,14 +29,7 @@
 #define SPEED_STOP 0
 #define SPEED_WARP 6
 
-// Two RGB LEDs on the Modulbus
-#define LEDA_R RB_SPI_SS0
-#define LEDA_G RB_SPI_SS1
-#define LEDA_B RB_SPI_SS2
 
-#define LEDB_R RB_SPI_SS3
-#define LEDB_G RB_SPI_SS4
-#define LEDB_B RB_SPI_SS5
 
 typedef struct {
 	short x, y, z;
@@ -100,7 +96,7 @@ void ram(void)
 		if(dx<0) dx=0;
 		dy=(RESY-getFontHeight())/2;
 
-		lcdClear();
+		lcdFill(0x00);
 		DoString(dx,dy,GLOBAL(nickname));
 
 		for (i = 0; i < NUM_STARS; i++) {
@@ -122,17 +118,17 @@ void ram(void)
 				continue;
 			}
 
-			lcdSetPixel(tempx, tempy, 1);
+			lcdSetPixel(tempx, tempy, 0xFF);
 			if (stars[i].z < 50) {
-				lcdSetPixel(tempx + 1, tempy, 1);
+				lcdSetPixel(tempx + 1, tempy, 0xFF);
 			}
 			if (stars[i].z < 20) {
-				lcdSetPixel(tempx, tempy + 1, 1);
-				lcdSetPixel(tempx + 1, tempy + 1, 1);
+				lcdSetPixel(tempx, tempy + 1, 0xFF);
+				lcdSetPixel(tempx + 1, tempy + 1, 0xFF);
 			}
 		}
 
-		lcdRefresh();
+		lcdDisplay();
 
 		delayms_queue_plus(50,0);
 	}
@@ -140,13 +136,14 @@ void ram(void)
 }
 
 void set_warp_lights(uint8_t enabled) {
-	gpioSetValue(LEDA_R, 0);
-	gpioSetValue(LEDA_G, 0);
-	gpioSetValue(LEDA_B, enabled);
+	return;
+	//gpioSetValue(LEDA_R, 0);
+	//gpioSetValue(LEDA_G, 0);
+	//gpioSetValue(LEDA_B, enabled);
 
-	gpioSetValue(LEDB_R, 0);
-	gpioSetValue(LEDB_G, 0);
-	gpioSetValue(LEDB_B, enabled);
+	//gpioSetValue(LEDB_R, 0);
+	//gpioSetValue(LEDB_G, 0);
+	//gpioSetValue(LEDB_B, enabled);
 }
 
 void drift_ship(void) {
@@ -166,4 +163,3 @@ void init_star(s_star *star, int z)
 
 	return;
 }
-
