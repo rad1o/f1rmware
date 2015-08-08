@@ -119,7 +119,7 @@ void img_menu() {
 				lcdWrite(TYPE_CMD,0x3a); lcdWrite(TYPE_DATA,2);
 				lcd_deselect();
 				getInputWaitRelease();
-				if(selectFile(filename,"L16")<0){
+				if(selectFile(filename,"L08")<0){
 					lcdPrintln("Select ERROR");
 					lcdDisplay();
 					getInputWait();
