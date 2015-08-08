@@ -17,18 +17,21 @@ $|=1;
 
 my ($verbose);
 my ($mode);
+my ($header);
 
 $mode=12;
 
 GetOptions (
             "verbose"   => \$verbose, # flag
             "bits=i"    => \$mode,    # numeric
+            "code"      => \$header,  # flag
 			"help"     => sub {
 			print <<HELP;
 Uasge: img2lcd.pl [-v] [-b 8|12|16] <inputfile> [<outputfile>]
 
 Options:
 --verbose       Be verbose.
+--code          Generate C header
 --bits=n        How many bits per pixel
 HELP
 			exit(-1);}
@@ -44,7 +47,7 @@ my $out=shift;
 
 if( !defined $out){
     $out=$in;
-    $out=~s/\..*/./;
+    $out=~s/\.[^.]*$/./;
     if ($mode==12){
         $out.="lcd";
     }else{
@@ -89,6 +92,8 @@ for my $y (0..$h-1){
 				$keep=$b;
 				$odd=1;
 			};
+		}elsif($mode==8){
+			push @img,($r&0b11100000)|($g&0b11100000)>>3|($b&0b11000000)>>6;
 		}elsif($mode==16){
 			push @img,(($r&0b11111000)|($g>>5));
 			push @img,(($g&0b00011100)<<3|($b>>3));
@@ -101,29 +106,33 @@ for my $y (0..$h-1){
 print "Size:",scalar(@img),"\n" if ($verbose);
 
 open(Q,">",$out)||die "open: $!";
+if($header){
 open(F,">",$out.".h")||die "open: $!";
 
 print F "unsigned int img${mode}_len = ",scalar(@img),";\n";
 print F "const unsigned char img${mode}_raw[] = {\n";
+};
 
 my $le;
 if($mode==12){
 	$le=130*1.5;
 }elsif($mode==16){
 	$le=130*2;
+}elsif($mode==8){
+	$le=130;
 }else{
 	die;
 };
 my $ctr=0;
 for (@img){
 #		printf F "%c",$img[$w-$x-1][$hb-$y];
-	printf F "0x%02x, ",$_;
+	printf F "0x%02x, ",$_ if $header;
 	printf Q "%c",$_;
 	if (++$ctr%$le ==0) {
-		print F "\n";
+		print F "\n" if $header;
 	};
 };
-print F "};\n";
+print F "};\n" if $header;
 
-close(F);
+close(F) if $header;
 close(Q);
