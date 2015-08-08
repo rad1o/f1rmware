@@ -1,3 +1,4 @@
+/* vim: set ts=4 sw=4 expandtab: */
 /*
  * This file is part of rad1o
  *
@@ -17,6 +18,7 @@
 #include <hackrf/firmware/common/cpld_jtag.h>
 
 #include <lpcapi/msc/msc_main.h>
+#include "msc/msc_disk.h"
 #include <libopencmsis/core_cm3.h>
 #include <libopencm3/lpc43xx/gpio.h>
 
@@ -87,7 +89,17 @@ void full_msc(){
 	lcdPrintln("MSC enabled.");
 	lcdDisplay();
 	while(getInputRaw()!=BTN_ENTER){
-		__WFI();
+        uint32_t min = mscDisk_minAddressWR();
+        uint32_t max = mscDisk_maxAddressWR();
+        lcdClear(0xff);
+        lcdPrint("MIN:");
+        lcdPrintln(IntToStr(min,8,0));
+        lcdPrint("MAX:");
+        lcdPrintln(IntToStr(max,8,0));
+        lcdDisplay();
+        if(min == 0 && max == 2097151) {
+            break;
+        }
 	};
 	lcdPrintln("MSC disabled");
 	lcdDisplay();
@@ -118,6 +130,11 @@ int main(void) {
     cpld_flash();
     cpu_clock_set(50);
     full_msc();
-
+    while(1) {
+	    delay(2000000);
+	    ON(LED4);
+	    delay(2000000);
+	    OFF(LED4);
+    }
     return 0;
 }

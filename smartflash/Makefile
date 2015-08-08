@@ -27,13 +27,12 @@ gather:
 	echo -n "testapp.bin" > $(fsdir)/boot.cfg
 	cp ../flashapp/flashapp.dfu .
 
-fsimage: FILES!= perl order-files $(fsdir) $(FILEORDER)
 fsimage:
 	@echo
 	@echo '### Creating FS image'
 	$(RM) -f $(fsimg)
 	mkfs.fat -F 12 -I -S 512 -C $(fsimg) 1536
-	mcopy -i $(fsimg) $(FILES) ::
+	mcopy -i $(fsimg) `perl order-files $(fsdir) $(FILEORDER)` ::
 
 header:
 	@echo

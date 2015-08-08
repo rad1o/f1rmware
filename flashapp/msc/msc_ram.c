@@ -1,3 +1,4 @@
+/* vim: set ts=4 sw=4 expandtab: */
 /*
  * @brief File contains callback to MSC driver backed by a memory disk.
  *
@@ -48,6 +49,9 @@ static const uint8_t g_InquiryStr[] = {'N', 'X', 'P', ' ', ' ', ' ', ' ', ' ',	 
 //#include <rad1olib/assert.h>
 #define ASSERT(x) 
 /* USB device mass storage class read callback routine */
+volatile uint32_t min_address_wr = 0xffffffff;
+volatile uint32_t max_address_wr = 0;
+
 static void translate_rd(uint32_t offset, uint8_t * *buff_adr, uint32_t length, uint32_t hi_offset)
 {
 	ASSERT(hi_offset==0);
@@ -59,6 +63,14 @@ static void translate_rd(uint32_t offset, uint8_t * *buff_adr, uint32_t length, 
 static void translate_wr(uint32_t offset, uint8_t * *buff_adr, uint32_t length, uint32_t hi_offset)
 {
 	ASSERT(hi_offset==0);
+
+    if(min_address_wr > offset) {
+        min_address_wr = offset;
+    }
+
+    if(max_address_wr < offset + length -1) {
+        max_address_wr = offset + length - 1;
+    }
 
 	flash_random_write(offset, length, *buff_adr);
 }
@@ -116,4 +128,14 @@ ErrorCode_t mscDisk_init(USBD_HANDLE_T hUsb, USB_CORE_DESCS_T *pDesc, USBD_API_I
 	pUsbParam->mem_size = msc_param.mem_size;
 
 	return ret;
+}
+
+uint32_t mscDisk_minAddressWR(void)
+{
+    return min_address_wr;
+}
+
+uint32_t mscDisk_maxAddressWR(void)
+{
+    return max_address_wr;
 }
