@@ -1,13 +1,14 @@
-#include <sysinit.h>
+#include <string.h>
 
-#include "basic/basic.h"
-#include "basic/config.h"
-#include "lcd/render.h"
+#include <r0ketlib/config.h>
+#include <r0ketlib/render.h>
+#include <r0ketlib/idle.h>
+#include <r0ketlib/keyin.h>
 
 #include "usetable.h"
 
-#define SCREEN_WIDTH 13
-#define SCREEN_HEIGHT 8
+#define SCREEN_WIDTH 19
+#define SCREEN_HEIGHT 17
 
 #define FONT_WIDTH 7
 #define FONT_HEIGHT 8
@@ -23,7 +24,7 @@
 
 void ram(void){
 	lcdClear();
-
+  lcdFill(0x00);
 	// nickname helper variables
 	int nickname_len = strlen(GLOBAL(nickname));
 	int nickname_posx = (SCREEN_WIDTH - nickname_len) / 2;
@@ -65,8 +66,10 @@ void ram(void){
 						&& ml->head_y == nickname_posy
 						&& chrpos >= 0 && chrpos < nickname_len) {
 					// show the nickname
+					// FIXME: setTextColor(GLOBAL(nickbg),GLOBAL(nickfg));
 					chr = GLOBAL(nickname)[chrpos];
 				} else {
+					setTextColor(0x00,0b00011100);
 					chr = getRandom() % 95 + 33;
 				}
 				DoChar(ml->head_x * FONT_WIDTH, ml->head_y * FONT_HEIGHT, chr);
