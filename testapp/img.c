@@ -110,7 +110,7 @@ void img_menu() {
 				};
 
 				lcd_select();
-				lcdWrite(TYPE_CMD,0x3a); lcdWrite(TYPE_DATA,2);
+				lcdWrite(TYPE_CMD,0x3a); lcdWrite(TYPE_DATA,3);
 				lcd_deselect();
 				do_image(filename);
 				break;
@@ -127,7 +127,7 @@ void img_menu() {
 				};
 
 				lcd_select();
-				lcdWrite(TYPE_CMD,0x3a); lcdWrite(TYPE_DATA,5);
+				lcdWrite(TYPE_CMD,0x3a); lcdWrite(TYPE_DATA,2);
 				lcd_deselect();
 				do_image(filename);
 				break;
