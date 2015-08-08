@@ -16,34 +16,44 @@ $|=1;
 ###
 
 my ($verbose);
+my ($mode);
+
+$mode=12;
 
 GetOptions (
-            "verbose"  => \$verbose, # flag
+            "verbose"   => \$verbose, # flag
+            "bits=i"    => \$mode,    # numeric
 			"help"     => sub {
 			print <<HELP;
-Uasge: img2lcd.pl [-v]
+Uasge: img2lcd.pl [-v] [-b 8|12|16] <inputfile> [<outputfile>]
 
 Options:
---verbose         Be verbose.
+--verbose       Be verbose.
+--bits=n        How many bits per pixel
 HELP
 			exit(-1);}
 			);
-
 
 ###
 ### Code starts here.
 ###
 
-my $mode=shift;
-
 my $in=shift || "i42.gif";
 
+my $out=shift;
 
-my $out=shift || $in;
-$out=~s/\..*/.lcd/;
+if( !defined $out){
+    $out=$in;
+    $out=~s/\..*/./;
+    if ($mode==12){
+        $out.="lcd";
+    }else{
+        $out.=sprintf "l%02d",$mode;
+    };
+};
 
 load GD;
-my $image = GD::Image->new($in);
+my $image = GD::Image->new($in) || die "Could not open $in: $!\n";
 
 my $w=$image->width;
 my $h=$image->height;
