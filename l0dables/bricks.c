@@ -1,18 +1,20 @@
 /* bricks.c - provided by briks <briks@riseup.net> */
 
-#include "basic/basic.h"
+#include <r0ketlib/keyin.h>
+#include <r0ketlib/display.h>
+#include <r0ketlib/config.h>
 #include "usetable.h"
 
-#define SCREEN_WIDTH  96
-#define SCREEN_HEIGHT 67
+#define SCREEN_WIDTH  RESX
+#define SCREEN_HEIGHT RESY
 #define FIELD_WIDTH   8
 #define FIELD_HEIGHT  7
-#define BRICK_WIDTH   11
-#define BRICK_HEIGHT  4
-#define BRICK_SPACING 1
+#define BRICK_WIDTH   14
+#define BRICK_HEIGHT  8
+#define BRICK_SPACING 2
 
 #define PADDLE_WIDTH  20
-#define PADDLE_Y      66
+#define PADDLE_Y      RESY-10
 #define PADDLE_SPEED  3
 
 #define PAUSE_INITIAL 30
@@ -69,7 +71,7 @@ void ram(void) {
 	lcdPrintln("");
 	lcdPrintln("");
 	lcdPrintln("   by briks");
-	lcdRefresh();
+	lcdDisplay();
 	delayms(1000);
 
 	int pause = PAUSE_INITIAL;
@@ -82,11 +84,11 @@ void ram(void) {
 		lcdPrintln("");
 		lcdPrint("      ");
 		lcdPrintln(IntToStr(i, 2, 0));
-		lcdRefresh();
-		delayms(1000);		
+		lcdDisplay();
+		delayms(1000);
 		if (playLevel(i % LEVELS, pause) == 0) {
 			return;
-		} 
+		}
 		pause = pause - (pause / 4); // shorten pause (increases speed)
 	}
 }
@@ -94,6 +96,7 @@ void ram(void) {
 int playLevel(int levelNo, int pause) {
 
 	lcdClear();
+	lcdFill(GLOBAL(nickbg));
 
 	// load level
 	int bricks[FIELD_HEIGHT][FIELD_WIDTH];
@@ -110,12 +113,12 @@ int playLevel(int levelNo, int pause) {
 	while ( 1 ) {
 
 		// ball
-		drawBall(ball, 0);
+		drawBall(ball, GLOBAL(nickbg));
 		ball[0] += direction[0];
 		ball[1] += direction[1];
 
 		// paddle / user input
-		drawPaddle(paddleX, 0);
+		drawPaddle(paddleX, GLOBAL(nickbg));
 		int key = getInputRaw();
 		switch (key) {
 			case BTN_ENTER:
@@ -132,7 +135,7 @@ int playLevel(int levelNo, int pause) {
 					paddleX = SCREEN_WIDTH - PADDLE_WIDTH;
 				break;
 		}
-		drawPaddle(paddleX, 1);
+		drawPaddle(paddleX, GLOBAL(nickfg));
 
 		// collisions
 
@@ -156,7 +159,7 @@ int playLevel(int levelNo, int pause) {
 
 		// paddle / bottom
 		if (direction[1] > 0) {
-			// moving to the bottom 
+			// moving to the bottom
 			if (ball[1] >= PADDLE_Y) {
 				if (paddleX <= ball[0] && ball[0] <= paddleX + PADDLE_WIDTH) {
 					// collision with paddle
@@ -178,7 +181,7 @@ int playLevel(int levelNo, int pause) {
 						lcdPrintln("");
 						lcdPrintln("");
 						lcdPrintln("  GAME OVER");
-						lcdRefresh();
+						lcdDisplay();
 						delayms(2000);
 						return 0;
 					}
@@ -200,9 +203,9 @@ int playLevel(int levelNo, int pause) {
 			direction[0] = - abs(direction[0]);
 
 		drawBricks(bricks);
-		drawBall(ball, 1);
+		drawBall(ball, GLOBAL(nickfg));
 
-		lcdRefresh();
+		lcdDisplay();
 		delayms(pause);
 	}
 	return 0;
@@ -213,7 +216,7 @@ void drawBricks(int bricks[FIELD_HEIGHT][FIELD_WIDTH]) {
 		for (int y = 0; y < FIELD_HEIGHT; y++)
 			for (int i = 0; i < BRICK_WIDTH; i++)
 				for (int j = 0; j < BRICK_HEIGHT; j++)
-					lcdSetPixel(x * (BRICK_WIDTH + BRICK_SPACING) + i, y * (BRICK_HEIGHT + BRICK_SPACING) + j, bricks[y][x]);
+					lcdSetPixel(x * (BRICK_WIDTH + BRICK_SPACING) + i, y * (BRICK_HEIGHT + BRICK_SPACING) + j, bricks[y][x]?GLOBAL(nickfg):GLOBAL(nickbg));
 }
 
 void drawPxChk(int x, int y, int color) {
@@ -254,5 +257,3 @@ int abs(int x) {
 		return x * -1;
 	return x;
 }
-
-
