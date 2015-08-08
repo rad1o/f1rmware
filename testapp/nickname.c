@@ -77,12 +77,14 @@ void doNick(void){
 //# MENU nick setFGcolor
 void doColorFG(void){
   GLOBAL(nickfg)=colorpicker("Foreground:", GLOBAL(nickfg));
+  saveConfig();
 	getInputWaitRelease();
 }
 
 //# MENU nick setBGcolor
 void doColorBG(void){
   GLOBAL(nickbg)=colorpicker("Background:", GLOBAL(nickbg));
+  saveConfig();
 	getInputWaitRelease();
 }
 

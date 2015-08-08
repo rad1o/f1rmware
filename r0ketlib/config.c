@@ -25,15 +25,14 @@ struct CDESC the_config[]= {
     {"develmode",        0,     0, 1  , 1, CFG_TYPE_DEVEL},
     {"l0nick",           0,     0, 1  , 0, 0},
     {"chargeled",        0,     0, 1  , 0, 0},
+    {"nickfg",           0,     0, 255, 1, CFG_TYPE_DEVEL},
+    {"nickbg",           255,   0, 255, 1, CFG_TYPE_DEVEL},
     { NULL,              0,     0, 0  , 0, 0},
 };
 
 char nickname[MAXNICK]="anonymous";
 char nickfont[FLEN];
 char nickl0[FLEN];
-
-uint8_t nickfg=0x00;
-uint8_t nickbg=0xff;
 
 #define CONFFILE "rad1o.cfg"
 #define CONF_ITER for(int i=0;the_config[i].name!=NULL;i++)

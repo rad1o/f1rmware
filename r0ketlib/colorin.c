@@ -85,7 +85,7 @@ static void inputDraw() {
 	DoChar(s_color.pos * CHARWIDTH, 40, '-');
 }
 
-void colorpicker(char prompt[], uint8_t color){
+uint8_t colorpicker(char prompt[], uint8_t color){
 	setSystemFont();
   setTextColor(0xFF,0x00);
 	colorpickerInit(prompt, color);
@@ -94,5 +94,8 @@ void colorpicker(char prompt[], uint8_t color){
 		lcdDisplay();
 		inputMove();
 	}
-	return;
+  lcdPrintln("");
+  lcdPrint("color: ");
+  lcdPrintln(IntToStr(s_color.color,3,0));
+	return s_color.color;
 }
