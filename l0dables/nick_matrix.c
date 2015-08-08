@@ -66,13 +66,14 @@ void ram(void){
 						&& ml->head_y == nickname_posy
 						&& chrpos >= 0 && chrpos < nickname_len) {
 					// show the nickname
-					// FIXME: setTextColor(GLOBAL(nickbg),GLOBAL(nickfg));
+					setTextColor(GLOBAL(nickbg),GLOBAL(nickfg));
 					chr = GLOBAL(nickname)[chrpos];
 				} else {
 					setTextColor(0x00,0b00011100);
 					chr = getRandom() % 95 + 33;
 				}
 				DoChar(ml->head_x * FONT_WIDTH, ml->head_y * FONT_HEIGHT, chr);
+				setTextColor(0x00,0b00011100);
 				ml->cur_length++;
 			}
 			// remove char (when length or bottom is reached)
