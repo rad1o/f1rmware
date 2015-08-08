@@ -67,7 +67,7 @@ void img_menu() {
 	lcdPrintln("Image");
 	lcdPrintln("up:   16bit");
 	lcdPrintln("down: 12bit");
-	lcdPrintln("l/r:  contrast");
+	lcdPrintln("left: 8bit");
 	lcdDisplay();
 
 	getInputWaitRelease();
@@ -110,16 +110,26 @@ void img_menu() {
 				};
 
 				lcd_select();
-				lcdWrite(TYPE_CMD,0x3a); lcdWrite(TYPE_DATA,3);
+				lcdWrite(TYPE_CMD,0x3a); lcdWrite(TYPE_DATA,2);
 				lcd_deselect();
 				do_image(filename);
 				break;
 			case BTN_LEFT:
-				so-=1;
-				if(so<0) so=132;
 				lcd_select();
-				lcdWrite(TYPE_CMD,0x37); lcdWrite(TYPE_DATA, so);
+				lcdWrite(TYPE_CMD,0x3a); lcdWrite(TYPE_DATA,2);
 				lcd_deselect();
+				getInputWaitRelease();
+				if(selectFile(filename,"L16")<0){
+					lcdPrintln("Select ERROR");
+					lcdDisplay();
+					getInputWait();
+					return;
+				};
+
+				lcd_select();
+				lcdWrite(TYPE_CMD,0x3a); lcdWrite(TYPE_DATA,5);
+				lcd_deselect();
+				do_image(filename);
 				break;
 			case BTN_RIGHT:
 				so+=1;
