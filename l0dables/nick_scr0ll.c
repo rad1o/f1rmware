@@ -48,6 +48,8 @@ void ram(void) {
         ++iter;
         lcdDisplay();
         lcdClear();
+        lcdFill(GLOBAL(nickbg));
+        setTextColor(GLOBAL(nickbg),GLOBAL(nickfg));
         // Old shift code. Can't handle longer Nicks...
         // if(iter%LCDSHIFT_EVERY_N==0) lcdShift(1,-2,1);
         // if(iter%LCDSHIFT_EVERY_N==0) { nickx=(nickx+1)%100-nickwidth; nicky=(nicky+1)%50;}
