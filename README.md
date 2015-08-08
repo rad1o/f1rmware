@@ -1,5 +1,7 @@
 ![Build Status](https://travis-ci.org/rad1o/f1rmware.svg)
 
+Build Log: https://travis-ci.org/rad1o/f1rmware
+
 # rad1o
 
 This is the f1rmware of the CCCamp 2015 radio badge.
