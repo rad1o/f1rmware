@@ -59,6 +59,9 @@ extern "C"
  */
 ErrorCode_t mscDisk_init (USBD_HANDLE_T hUsb, USB_CORE_DESCS_T *pDesc, USBD_API_INIT_PARAM_T *pUsbParam);
 
+uint32_t mscDisk_minAddressWR(void);
+uint32_t mscDisk_maxAddressWR(void);
+
 /**
  * @}
  */
