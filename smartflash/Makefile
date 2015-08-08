@@ -26,31 +26,16 @@ gather:
 	cp ../files/* $(fsdir)/
 	echo -n "testapp.bin" > $(fsdir)/boot.cfg
 	cp ../flashapp/flashapp.dfu .
-
-fsimage:
-	@echo
-	@echo '### Creating FS image'
-	$(RM) -f $(fsimg)
-	mkfs.fat -F 12 -I -S 512 -C $(fsimg) 1536
-	mcopy -i $(fsimg) `perl order-files $(fsdir) $(FILEORDER)` ::
-
-header:
 	@echo
 	@echo '### Creating boot header image'
 	dd if=/dev/zero bs=1024 count=512 |tr "\000" "\377" > $(hdrimg)
 	dd if=../bootloader/boot.bin of=$(hdrimg) conv=notrunc
 
-image: fsimage header
-	@echo
-	@echo '### Assembling full image'
-	dd if=$(hdrimg) bs=1024 of=$(fullimg)
-	dd if=$(fsimg) bs=1024 seek=512 of=$(fullimg)
-
-run: image
+run:
 	./FLASHgui
 
 ### Rebuild everything 
-rebuild: build gather image
+rebuild: build gather header
 build:
 	@echo
 	@echo '### Building everything'
@@ -64,21 +49,39 @@ dfu-util:
 	cd ../../dfu-util && sh autogen.sh && ./configure && make
 
 clean:
-	$(RM) -rf $(fsdir)
-	$(RM) $(fsimg) $(hdrimg) $(fullimg) flashapp.dfu
+	$(RM) -rf $(fsdir).* $(fsdir)
+	$(RM) $(fsimg).* $(hdrimg) $(fullimg).* flashapp.dfu
+
+
+### Building individual images with different random data per badge
+fsimage:
+	$(RM) -rf $(fsimg).$(UDISK) $(fsdir).$(UDISK)
+	mkdir $(fsdir).$(UDISK)
+	cp -a $(fsdir)/* $(fsdir).$(UDISK)
+ifneq ("$(wildcard privkey1.pem)","")
+	dd if=/dev/urandom bs=1 count=64 of=$(fsdir).$(UDISK)/key1.bin 2>/dev/null
+	openssl dgst -sha256 -sign privkey1.pem -out $(fsdir).$(UDISK)/key1.sha256 $(fsdir).$(UDISK)/key1.bin
+	echo "KEY1" | cat - $(fsdir).$(UDISK)/key1.bin $(fsdir).$(UDISK)/key1.sha256 | qrencode -o $(fsdir).$(UDISK)/key1.png -l M -8 -s 2
+	../tools/img2lcd.pl -b 8 $(fsdir).$(UDISK)/key1.png
+	rm $(fsdir).$(UDISK)/key1.png
+endif
+	mkfs.fat -F 12 -I -S 512 -C $(fsimg).$(UDISK) 1536 >/dev/null
+	mcopy -i $(fsimg).$(UDISK) `perl order-files $(fsdir).$(UDISK) $(FILEORDER)` ::
+
+image: fsimage
+	dd if=$(hdrimg) bs=1024 of=$(fullimg).$(UDISK) 2>/dev/null
+	dd if=$(fsimg).$(UDISK) bs=1024 seek=512 of=$(fullimg).$(UDISK) 2>/dev/null
 
 
 ### Targets for FLASHgui
-flash:
-	dd if=$(fullimg) bs=512 of=/dev/$(UDISK) conv=fsync 2>/dev/null
+flash: image
+	dd if=$(fullimg).$(UDISK) bs=512 of=/dev/$(UDISK) conv=fsync 2>/dev/null
 
 dfu:
 	dfu-util -p $(UPATH) --download $(APP) 2>&1 >/dev/null  | grep -v "unable to read DFU status after completion" || true
 
-msc: FILES!= perl order-files $(fsdir) $(FILEORDER)
-
 msc:
-	mcopy -D o -i /dev/$(UDISK) $(FILES) ::
+	mcopy -D o -i /dev/$(UDISK) `perl order-files $(fsdir) $(FILEORDER)` ::
 
 sdr:
 	osmocom_fft -s 10000000 -f 432000000 -g 30 --peak-hold
