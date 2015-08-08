@@ -1,4 +1,4 @@
-BIN=blinky.c1d invaders.c1d mandel.c1d snake.c1d nick_scr0ll.c1d nick_w0rpcore.c1d nick_matrix.c1d
+BIN=blinky.c1d invaders.c1d mandel.c1d snake.c1d nick_scr0ll.c1d nick_w0rpcore.c1d nick_matrix.c1d nick_plain.c1d
 NIK=nick_scr0ll.n1k nick_w0rpcore.n1k nick_plain.n1k
 
 TABLEFILES=jumptable.c jumptable.h usetable.h
