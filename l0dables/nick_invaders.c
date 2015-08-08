@@ -4,7 +4,6 @@
  *  r0ket@nicidienase.de
  *
  *  Known Bugs:
- *  - Ignores Font-Setting
  *  - might look odd with really short or really long nicknames
  *
  */
