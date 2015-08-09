@@ -25,9 +25,10 @@
 #include <common/sgpio.h>
 #include <libopencm3/lpc43xx/dac.h>
 
+#include <portalib/complex.h>
 
 extern uint32_t sctr;
-extern uint16_t *sram;
+extern complex_s8_t *s8ram;
 
 //# MENU Apack
 void ppack_menu() {
@@ -49,7 +50,7 @@ void ppack_menu() {
 	ON(EN_VDD);
 	ON(EN_1V8);
 	OFF(MIC_AMP_DIS);
-	uint16_t * samples;
+	complex_s8_t * samples;
 
 	while(1){
 		switch(getInputRaw()){
@@ -62,16 +63,12 @@ void ppack_menu() {
 
 			    break;
 			case BTN_DOWN:
-			    lcdPrintln("audio");
-			    for(samples=(uint16_t*)0x20000000;samples<sram;samples++){
-				dac_set(samples[0]);
-				delayNop(765);
-			    };
-
+			    lcdPrintln("file");
+			    writeFile("samples.8", (char*)0x20000000,(uintptr_t)s8ram-0x20000000);
 			    break;
 			case BTN_LEFT:
 			    lcdPrintln("reset");
-			    sram=(uint16_t*)0x20000000;
+			    s8ram=(complex_s8_t*)0x20000000;
 			    break;
 			case BTN_RIGHT:
 				break;
@@ -80,7 +77,7 @@ void ppack_menu() {
 		};
 		TOGGLE(LED2);
 		delayms(40);
-		lcdPrint(IntToStr((uintptr_t)sram,8,F_HEX));
+		lcdPrint(IntToStr((uintptr_t)s8ram,8,F_HEX));
 		lcdPrint(" ");
 		lcdPrintln(IntToStr(sctr,7,F_LONG));
 		lcdDisplay();
