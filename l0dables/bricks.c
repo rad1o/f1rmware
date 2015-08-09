@@ -1,5 +1,6 @@
 /* bricks.c - provided by briks <briks@riseup.net> */
 
+#include <string.h>
 #include <r0ketlib/keyin.h>
 #include <r0ketlib/display.h>
 #include <r0ketlib/config.h>

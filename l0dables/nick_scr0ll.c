@@ -26,7 +26,7 @@ void ram(void) {
     static char speedmode=0;
     static char movx=1;
     static char LCDSHIFTX_EVERY_N=1;
-    static char LCDSHIFTY_EVERY_N=1;
+    static char __attribute__((unused)) LCDSHIFTY_EVERY_N=1;
     char *nick=GLOBAL(nickname);
 
 
