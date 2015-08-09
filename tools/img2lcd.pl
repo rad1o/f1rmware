@@ -47,12 +47,7 @@ my $out=shift;
 
 if( !defined $out){
     $out=$in;
-    $out=~s/\.[^.]*$/./;
-    if ($mode==12){
-        $out.="lcd";
-    }else{
-        $out.=sprintf "l%02d",$mode;
-    };
+    $out=~s/\.[^.]*$/.lcd/;
 };
 
 load GD;
@@ -116,16 +111,18 @@ print F "const unsigned char img${mode}_raw[] = {\n";
 my $le;
 if($mode==12){
 	$le=130*1.5;
+    unshift @img,2;
 }elsif($mode==16){
 	$le=130*2;
+    unshift @img,3;
 }elsif($mode==8){
 	$le=130;
+    unshift @img,1;
 }else{
 	die;
 };
 my $ctr=0;
 for (@img){
-#		printf F "%c",$img[$w-$x-1][$hb-$y];
 	printf F "0x%02x, ",$_ if $header;
 	printf Q "%c",$_;
 	if (++$ctr%$le ==0) {

@@ -129,6 +129,9 @@ void lcdDisplay(void) {
 
 	uint16_t x,y;
 
+    /* set (back) to 8 bpp mode */
+    lcdWrite(TYPE_CMD,0x3a); lcdWrite(TYPE_DATA,2);
+
 	lcdWrite(TYPE_CMD,0x2C); // memory write (RAMWR)
 
 	for(y=0;y<RESY;y++){
