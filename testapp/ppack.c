@@ -24,7 +24,12 @@
 #include <common/sgpio.h>
 #include <libopencm3/lpc43xx/dac.h>
 
-//# MENU aappack
+#include <portalib/complex.h>
+
+extern uint32_t sctr;
+extern complex_s8_t *s8ram;
+
+//# MENU Apack
 void ppack_menu() {
 	lcdClear();
 	lcdPrintln("PPack port");
@@ -32,6 +37,20 @@ void ppack_menu() {
 	lcdPrintln("down: ");
 	lcdPrintln("l/r:  ");
 	lcdDisplay();
+	dac_init(false);
+
+	cpu_clock_set(204); // WARP SPEED! :-)
+	hackrf_clock_init();
+	rf_path_pin_setup();
+	/* Configure external clock in */
+	scu_pinmux(SCU_PINMUX_GP_CLKIN, SCU_CLK_IN | SCU_CONF_FUNCTION1);
+
+	sgpio_configure_pin_functions();
+
+	ON(EN_VDD);
+	ON(EN_1V8);
+	OFF(MIC_AMP_DIS);
+	complex_s8_t * samples;
 
 	while(1){
 		switch(getInputWait()){
@@ -43,13 +62,23 @@ void ppack_menu() {
 
 			    break;
 			case BTN_DOWN:
-				break;
+			    lcdPrintln("file");
+			    writeFile("samples.8", (char*)0x20000000,(uintptr_t)s8ram-0x20000000);
+			    break;
 			case BTN_LEFT:
-				break;
+			    lcdPrintln("reset");
+			    s8ram=(complex_s8_t*)0x20000000;
+			    break;
 			case BTN_RIGHT:
 				break;
 			case BTN_ENTER:
 				return;
 		};
+		TOGGLE(LED2);
+		delayms(40);
+		lcdPrint(IntToStr((uintptr_t)s8ram,8,F_HEX));
+		lcdPrint(" ");
+		lcdPrintln(IntToStr(sctr,7,F_LONG));
+		lcdDisplay();
 	};
 };
