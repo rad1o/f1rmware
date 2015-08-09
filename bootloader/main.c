@@ -209,15 +209,21 @@ int main(uint32_t startloc) {
 	sli=startloc;
 
 	if (startloc != (uintptr_t)&_app_start){ /* not booted via DFU, do autoboot */ 
-		if (getInputRaw()==BTN_LEFT){
-		    getInputWaitRelease();
-		    doRealExec(1);
-		}else{
-			char filename[FLEN];
-			readTextFile(BOOTCFG, filename, FLEN);
-			lcdPrintln("Fname");
-			lcdPrintln(filename);
-			bootFile(filename);
+        char filename[FLEN];
+        switch(getInputRaw()){
+            case BTN_LEFT:
+                getInputWaitRelease();
+                doRealExec(1);
+                break;
+            case BTN_UP:
+                doMSC();
+            default:
+            case BTN_NONE:
+                readTextFile(BOOTCFG, filename, FLEN);
+                lcdPrintln("Booting:");
+                lcdPrintln(filename);
+                bootFile(filename);
+                break;
 		};
 	};
 	static const struct MENU main={ "Bootloader", {
