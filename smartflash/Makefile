@@ -35,7 +35,7 @@ run:
 	./FLASHgui
 
 ### Rebuild everything 
-rebuild: build gather header
+rebuild: build gather
 build:
 	@echo
 	@echo '### Building everything'
