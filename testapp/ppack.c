@@ -19,7 +19,7 @@
 #include <r0ketlib/fs_util.h>
 #include <rad1olib/pins.h>
 
-#include <portapack_hackrf/portapack.h>
+#include <portalib/portapack.h>
 #include <common/hackrf_core.h>
 #include <common/rf_path.h>
 #include <common/sgpio.h>
