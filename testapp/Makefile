@@ -70,6 +70,12 @@ OBJS += ../portapack/portapack_hackrf/firmware/portapack_hackrf/specan.o
 OBJS += ../portapack/portapack_hackrf/firmware/portapack_hackrf/fft.o
 OBJS += ../hackrf/firmware/common/sgpio_dma.o
 OBJS += ../hackrf/firmware/common/gpdma.o
+OBJS += ../hackrf/firmware/common/tuning.o
+OBJS += ../hackrf/firmware/common/max2837.o
+OBJS += ../hackrf/firmware/common/rf_path.o
+OBJS += ../hackrf/firmware/common/max5864.o
+OBJS += ../hackrf/firmware/common/hackrf_core.o
+OBJS += ../hackrf/firmware/common/sgpio.o
 LIBS += -lm
 
 LDSCRIPT=../ld/app.ld

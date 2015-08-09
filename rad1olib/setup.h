@@ -28,12 +28,14 @@
 #include <stdbool.h>
 
 extern uint8_t _cpu_speed;
-void delay(uint32_t duration);
+void delayNop(uint32_t duration);
 
-void cpu_clock_init(void);
+void cpuClockInit(void);
 void ssp_clock_init(void);
 void cpu_clock_set(uint32_t target_mhz);
 void usb_clock_init(void);
 void hackrf_clock_init(void);
+void si5351_init(void);
+
 
 #endif
