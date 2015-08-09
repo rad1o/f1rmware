@@ -86,22 +86,24 @@ void cpld_flash(){
 
 void full_msc(){
 	MSCenable();
-	lcdPrintln("MSC enabled.");
+	lcdPrintln("FLASHMSC enabled.");
+	lcdNl();
+	lcdNl();
 	lcdDisplay();
 	while(getInputRaw()!=BTN_ENTER){
         uint32_t min = mscDisk_minAddressWR();
         uint32_t max = mscDisk_maxAddressWR();
-        lcdClear(0xff);
+        lcdMoveCrsr(0,-16);
         lcdPrint("MIN:");
-        lcdPrintln(IntToStr(min,8,0));
+        lcdPrintln(IntToStr(min,8,F_SSPACE));
         lcdPrint("MAX:");
-        lcdPrintln(IntToStr(max,8,0));
+        lcdPrintln(IntToStr(max,8,F_SSPACE));
         lcdDisplay();
         if(min == 0 && max == 2097151) {
             break;
         }
 	};
-	lcdPrintln("MSC disabled");
+	lcdPrintln("FLASHMSC disabled");
 	lcdDisplay();
 	MSCdisable();
 };
