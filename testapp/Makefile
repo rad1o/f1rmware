@@ -55,6 +55,23 @@ OBJS += ../hackrf/firmware/common/max2871.o
 
 OBJS += ../l0dables/jumptable.o
 
+CFLAGS+=-I../portapack/portapack_hackrf/firmware
+CFLAGS+=-I../hackrf/firmware/common
+OBJS += ../portapack/portapack_hackrf/firmware/portapack_hackrf/portapack.o
+OBJS += ../portapack/portapack_hackrf/firmware/portapack_hackrf/rx_am.o
+OBJS += ../portapack/portapack_hackrf/firmware/portapack_hackrf/rx_fm_broadcast.o
+OBJS += ../portapack/portapack_hackrf/firmware/portapack_hackrf/rx_fm_narrowband.o
+OBJS += ../portapack/portapack_hackrf/firmware/portapack_hackrf/decimate.o
+OBJS += ../portapack/portapack_hackrf/firmware/portapack_hackrf/demodulate.o
+OBJS += ../portapack/portapack_hackrf/firmware/portapack_hackrf/fxpt_atan2.o
+OBJS += ../portapack/portapack_hackrf/firmware/portapack_hackrf/filters.o
+OBJS += ../portapack/portapack_hackrf/firmware/portapack_hackrf/portapack_state.o
+OBJS += ../portapack/portapack_hackrf/firmware/portapack_hackrf/specan.o
+OBJS += ../portapack/portapack_hackrf/firmware/portapack_hackrf/fft.o
+OBJS += ../hackrf/firmware/common/sgpio_dma.o
+OBJS += ../hackrf/firmware/common/gpdma.o
+LIBS += -lm
+
 LDSCRIPT=../ld/app.ld
 RPATH=..
 include ../Makefile.inc
