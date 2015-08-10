@@ -9,7 +9,6 @@
 #include "usetable.h"
 
 #define one ((uint32_t)1)
-#define utf8boundary nick[4]+nick[6]
 
 typedef uint8_t uchar;
 
