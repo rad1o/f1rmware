@@ -1,5 +1,8 @@
 all: lib hackrf subdirs
 
+travis: lib subdirs
+	$(MAKE) -C smartflash test
+
 subdirs:
 	$(MAKE) -C campapp
 	$(MAKE) -C testapp

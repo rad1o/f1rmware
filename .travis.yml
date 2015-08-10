@@ -6,4 +6,4 @@ before_install:
   - sudo apt-get install -qq gcc-arm-none-eabi python-yaml
 
 script:
-  - "make"
+  - "make travis"
