@@ -66,6 +66,7 @@ int main(void) {
         lcdPrintln("     to badge)");
         lcdDisplay();
         getInputWait();
+        getInputWaitRelease();
         input("Nickname?", GLOBAL(nickname), 32, 127, MAXNICK-1);
         getInputWaitRelease();
         writeFile("nick.cfg",GLOBAL(nickname),strlen(GLOBAL(nickname)));
