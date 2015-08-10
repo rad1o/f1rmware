@@ -29,10 +29,10 @@ hackrf/Readme.md:
 	git submodule init
 	git submodule update
 
-hackrf/hackrf.b1n:
+hackrf/firmware/hackrf_usb/build/hackrf_usb.bin:
 	$(MAKE) -C hackrf
 
-hackrf: hackrf/Readme.md hackrf/hackrf.b1n
+hackrf: hackrf/Readme.md hackrf/firmware/hackrf_usb/build/hackrf_usb.bin
 
 clean:
 	$(MAKE) -C campapp clean
