@@ -35,6 +35,7 @@ void fancyNickname(void) {
     if(GLOBAL(l0nick)){
         if(execute_file(GLOBAL(nickl0)))
             GLOBAL(l0nick)=0;
+        setTextColor(0xFF,0x00);
     }
 
     if(!GLOBAL(l0nick))
