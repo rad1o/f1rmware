@@ -42,7 +42,7 @@ df = $(DEPDIR)/$(*F)
 	$(CC) $(CFLAGS) $(INCLUDE_PATHS) -o $@ $<
 	$(CC) -MM $(CFLAGS) $(INCLUDE_PATHS) $< > $(df).d
 
-%.bin: %.elf
+%.b1n: %.elf
 	$(OBJCOPY) $(OCFLAGS) -O binary $< $@
 
 %.c1d: %.o $(DEPDIR) $(LDSCRIPT)
@@ -57,14 +57,14 @@ df = $(DEPDIR)/$(*F)
 	$(CC) $(LDFLAGS) -o $(*F).elf $< $(LIB_PATHS) $(LIBS)
 	$(OBJCOPY) $(OCFLAGS) -O binary $(*F).elf $@
 
-%.dfu: %.bin
+%.dfu: %.b1n
 	$(DFUTOOL) $< $@
 
 ifdef APP
-all: $(APP).dfu $(APP).bin
+all: $(APP).dfu $(APP).b1n
 
 clean::
-	-rm -f $(OBJS) $(APP).elf $(APP).bin $(APP).dfu $(APP).map
+	-rm -f $(OBJS) $(APP).elf $(APP).b1n $(APP).dfu $(APP).map
 
 flash: $(APP).dfu
 	$(DFUUTIL) --device 1fc9:000c --alt 0 --download $(APP).dfu

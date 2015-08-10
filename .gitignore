@@ -5,7 +5,7 @@
 *.dfu
 *.map
 *.elf
-*.bin
+*.b1n
 *.gen
 .deps
 flashapp/xsvf.inc

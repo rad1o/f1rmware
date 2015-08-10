@@ -1,12 +1,11 @@
-APP?=testapp
-
-all: lib hackrf subdirs $(APP).dfu $(APP).bin
+all: lib hackrf subdirs
 
 subdirs:
 	$(MAKE) -C testapp
 	$(MAKE) -C bootloader
 	$(MAKE) -C flashapp
 	$(MAKE) -C l0dables
+	$(MAKE) -C smartflash
 
 libopencm3/README:
 	git submodule init
@@ -21,28 +20,16 @@ hackrf/Readme.md:
 	git submodule init
 	git submodule update
 
-hackrf: hackrf/Readme.md
+hackrf/hackrf.b1n:
+	$(MAKE) -C hackrf
 
-$(APP)/$(APP).bin:
-	$(MAKE) -C $(APP) $(APP).bin
-	
-$(APP)/$(APP).dfu:
-	$(MAKE) -C $(APP) $(APP).dfu
-	
-$(APP).bin: $(APP)/$(APP).bin
-	cp $< $@
-
-$(APP).dfu: $(APP)/$(APP).dfu
-	cp $< $@
+hackrf: hackrf/Readme.md hackrf/hackrf.b1n
 
 clean:
-	rm -f *.bin *.dfu
-	$(MAKE) -C $(APP) clean
-	$(MAKE) -C flashapp clean
+	$(MAKE) -C testapp clean
 	$(MAKE) -C bootloader clean
+	$(MAKE) -C flashapp clean
 	$(MAKE) -C l0dables clean
 	$(MAKE) -C smartflash clean
+	$(MAKE) -C hackrf hack-clean
 #	cd libopencm3 && make clean
-
-flash: $(APP).dfu
-    $(DFUUTIL) --device 1fc9:000c --alt 0 --download $(APP).dfu

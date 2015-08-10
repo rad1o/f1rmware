@@ -1,7 +1,9 @@
 # Makefile to create filesystem image and flash rad10 badge
 
-default: gather image
-all: build gather image run
+default: gather
+test: build gather
+	$(MAKE) UDISK=test image
+all: build gather run
 
 fsdir?=IMG
 mountpoint?=/mnt
@@ -10,26 +12,26 @@ hdrimg?=header.img
 fullimg?=full.img
 APP=../flashapp/flashapp.dfu
 FILEORDER= \
-    hackrf.bin \
-    testapp.bin 
+    hackrf.b1n \
+    testapp.b1n
 
 gather:
 	@echo
 	@echo '### Gathering contents for image'
 	[ ! -d $(fsdir) ] && mkdir $(fsdir) || true
-	cp ../hackrf/firmware/hackrf_usb/build/hackrf_usb.bin $(fsdir)/hackrf.bin
-	cp ../testapp/testapp.bin $(fsdir)/
+	cp ../hackrf/firmware/hackrf_usb/build/hackrf_usb.bin $(fsdir)/hackrf.b1n
+	cp ../testapp/testapp.b1n $(fsdir)/
 	-cp ../l0dables/*.c1d $(fsdir)/
 	-for a in ../l0dables/*.n1k ; do b=$${a##*/}; cp $$a ${fsdir}/$${b#nick_} ; done
 	cp ../hackrf/firmware/cpld/sgpio_if/default.xsvf $(fsdir)/cpld.xsv
 	# Add f0nts, images, l0dables, etc.
 	cp ../files/* $(fsdir)/
-	echo -n "testapp.bin" > $(fsdir)/boot.cfg
+	echo -n "testapp.b1n" > $(fsdir)/boot.cfg
 	cp ../flashapp/flashapp.dfu .
 	@echo
 	@echo '### Creating boot header image'
 	dd if=/dev/zero bs=1024 count=512 |tr "\000" "\377" > $(hdrimg)
-	dd if=../bootloader/boot.bin of=$(hdrimg) conv=notrunc
+	dd if=../bootloader/boot.b1n of=$(hdrimg) conv=notrunc
 
 run:
 	./FLASHgui
@@ -39,9 +41,10 @@ rebuild: build gather
 build:
 	@echo
 	@echo '### Building everything'
-	cd ../hackrf/firmware/hackrf_usb/build && make
-	cd ../testapp && make testapp.bin
-	cd ../bootloader && make boot.bin
+#	cd ../hackrf/firmware/hackrf_usb/build && make
+	cd ../hackrf && make lib hackrf-usb
+	cd ../testapp && make testapp.b1n
+	cd ../bootloader && make boot.b1n
 	cd ../flashapp && make flashapp.dfu
 	cd ../l0dables && make
 

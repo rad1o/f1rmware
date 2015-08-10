@@ -74,7 +74,7 @@ void doRealExec(int silent){
 	FRESULT res;
 	int sres;
 
-	sres=selectFile(filename,"BIN");
+	sres=selectFile(filename,"B1N");
 	if(sres<0){
 	    if(!silent){
 		lcdPrintln("Select ERROR");
@@ -86,18 +86,17 @@ void doRealExec(int silent){
 	if(sres==0){
 	    lcdPrintln("set as default:");
 	    res=writeFile(BOOTCFG, filename, strlen(filename)+1);
-	    if(res<0){
-		lcdPrint("write Error:");
-		lcdPrintln(IntToStr(-res,3,0));
-		lcdPrintln(f_get_rc_string(res));
-		lcdDisplay();
-		getInputWait();
-	    }else{
+        if(res<0){
+            lcdPrint("write Error:");
+            lcdPrintln(IntToStr(-res,3,0));
+            lcdPrintln(f_get_rc_string(res));
+            lcdDisplay();
+            getInputWait();
+        }else{
 		lcdPrint("wrote ");
 		lcdPrint(IntToStr(res,3,0));
 		lcdPrintln(" bytes.");
 		lcdDisplay();
-		getInputWait();
 	    };
 	};
 	lcdPrintln("Loading:");
