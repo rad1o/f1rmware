@@ -1,6 +1,11 @@
 all: lib hackrf subdirs
 
-travis: lib subdirs
+travis: lib
+	$(MAKE) -C campapp
+	$(MAKE) -C testapp
+	$(MAKE) -C bootloader
+	$(MAKE) -C flashapp
+	$(MAKE) -C l0dables
 #	$(MAKE) -C smartflash test
 
 subdirs:
