@@ -5,7 +5,7 @@ TABLEFILES=jumptable.c jumptable.h usetable.h
 
 l0dables: usetable.h $(C1D) $(N1K)
 
-CFLAGS=-Wno-unused-variable -DRAD1O -DLPC43XX_M4
+CFLAGS=-Wno-unused-variable -DRAD1O -DLPC43XX_M4 -DL0DABLE
 CFLAGS+=-mlong-calls # XXX: do we need those?
 
 LDSCRIPT=../ld/l0dable.ld
