@@ -66,7 +66,7 @@ all: $(APP).dfu $(APP).b1n
 clean::
 	-rm -f $(OBJS) $(APP).elf $(APP).b1n $(APP).dfu $(APP).map
 
-flash: $(APP).dfu
+program: $(APP).dfu
 	$(DFUUTIL) --device 1fc9:000c --alt 0 --download $(APP).dfu
 
 $(APP).elf: $(OBJS) $(LDSCRIPT)
@@ -82,7 +82,5 @@ $(DEPDIR):
 
 clean::
 	-rm -rf $(DEPDIR)
-
-program: flash
 
 -include $(SRCS:%.c=$(DEPDIR)/%.d)
