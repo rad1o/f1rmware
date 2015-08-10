@@ -68,3 +68,9 @@ void night(void){
         lcdDisplay();
     };
 }
+
+void infoscreen();
+//# MENU INFO
+void info(void){
+    infoscreen();
+}
