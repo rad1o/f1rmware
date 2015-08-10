@@ -5,6 +5,8 @@
 #include <r0ketlib/itoa.h>
 #include <r0ketlib/keyin.h>
 #include <r0ketlib/fs_util.h>
+#include <rad1olib/pins.h>
+#include <r0ketlib/night.h>
 #include <fatfs/ff.h>
 #include <string.h>
 #include <stdint.h>
@@ -14,14 +16,14 @@
 struct CDESC the_config[]= {
     {"version",          0, CFGVER, CFGVER, 0, 0},
     //                   dflt  min max
-    {"daytrig",          310/2, 0, 255, 0, 0},
+    {"daytrig",          80,    0, 255, 0, 0},
     {"daytrighyst",      10,    0, 50 , 0, 0},
     {"dayinvert",        1,     0, 1  , 0, 0},
     {"lcdbacklight",     30,    0, 100, 0, 0},
     {"lcdmirror",        0,     0, 1  , 0, 0},
     {"lcdinvert",        0,     0, 1  , 0, 0},
     {"lcdcontrast",      58,    0, 127 , 0, 0},
-    {"alivechk",         0,     0, 2  , 1, CFG_TYPE_DEVEL},
+    {"alivechk",         0,     0, 1  , 1, CFG_TYPE_DEVEL},
     {"develmode",        0,     0, 1  , 1, CFG_TYPE_DEVEL},
     {"l0nick",           0,     0, 1  , 0, 0},
     {"chargeled",        0,     0, 1  , 0, 0},
@@ -44,8 +46,10 @@ void applyConfig(){
         lcdSetContrast(GLOBAL(lcdcontrast));
     if(GLOBAL(develmode))
         enableConfig(CFG_TYPE_DEVEL,1);
-//    if(isNight())
-//        backlightSetBrightness(GLOBAL(lcdbacklight));
+    if(isNight())
+        ON(LCD_BL_EN);
+    else
+        OFF(LCD_BL_EN);
 }
 
 int saveConfig(void){

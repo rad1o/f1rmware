@@ -18,8 +18,70 @@
 
 #include "main.gen"
 
+#define EVERY(x,y) if((ctr+y)%(x/SYSTICKSPEED)==0)
+void night_tick(void){
+    static int ctr;
+    ctr++;
+
+    EVERY(1024,0){
+//        if(!adcMutex){
+//            VoltageCheck();
+        LightCheck();
+    };
+
+    static char night=0;
+    static char posleds = 0;
+    EVERY(128,2){
+        if(night!=isNight()){
+            night=isNight();
+            if(night){
+                ON(LCD_BL_EN);
+//                push_queue(queue_unsetinvert);
+            }else{
+                OFF(LCD_BL_EN);
+//                push_queue(queue_setinvert);
+           };
+        };
+    };
+
+#if 0
+    EVERY(50,0){
+        if(GLOBAL(chargeled)){
+            char iodir= (GPIO_GPIO1DIR & (1 << (11) ))?1:0;
+            if(GetChrgStat()) {
+                if (iodir == gpioDirection_Input){
+                    IOCON_PIO1_11 = 0x0;
+                    gpioSetDir(RB_LED3, gpioDirection_Output);
+                    gpioSetValue (RB_LED3, 1);
+                    LightCheck();
+                }
+            } else {
+                if (iodir != gpioDirection_Input){
+                    gpioSetValue (RB_LED3, 0);
+                    gpioSetDir(RB_LED3, gpioDirection_Input);
+                    IOCON_PIO1_11 = 0x41;
+                    LightCheck();
+                }
+            }
+        };
+
+        if(GetVoltage()<3600){
+            IOCON_PIO1_11 = 0x0;
+            gpioSetDir(RB_LED3, gpioDirection_Output);
+            if( (ctr/(50/SYSTICKSPEED))%10 == 1 )
+                gpioSetValue (RB_LED3, 1);
+            else
+                gpioSetValue (RB_LED3, 0);
+        };
+    };
+#endif
+
+    return;
+}
+
 void sys_tick_handler(void){
 	incTimer();
+    night_tick();
 	generated_tick();
 };
 
@@ -48,6 +110,16 @@ int main(void) {
 	generated_init();
 
     init_nick();
+
+    readConfig();
+    if(getInputRaw()==BTN_RIGHT){
+        GLOBAL(develmode)=1;
+        applyConfig();
+    };
+
+    // XXX: TODO!
+    // randomInit();
+
     if(GLOBAL(version)==0){ // no config (yet?)
         lcdPrintln("-------------------");
         lcdPrintln("-RAD1O BADGE SETUP-");

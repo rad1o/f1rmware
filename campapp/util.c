@@ -54,3 +54,17 @@ void t_ani(void){
     selectFile(fname, "AN1");
     lcdShowAnim(fname);
 }
+
+//# MENU night
+void night(void){
+    while(getInputRaw()!=BTN_ENTER){
+        lcdClear();
+        lcdPrint("night:");
+        lcdPrint(IntToStr(isNight(),3,0));
+        lcdNl();
+        lcdPrint("light:");
+        lcdPrint(IntToStr(GetLight(),3,0));
+        lcdNl();
+        lcdDisplay();
+    };
+}
