@@ -12,6 +12,7 @@ hdrimg?=header.img
 fullimg?=full.img
 APP=../flashapp/flashapp.dfu
 FILEORDER= \
+    camp.b1n \
     hackrf.b1n \
     testapp.b1n
 
@@ -21,12 +22,13 @@ gather:
 	[ ! -d $(fsdir) ] && mkdir $(fsdir) || true
 	cp ../hackrf/firmware/hackrf_usb/build/hackrf_usb.bin $(fsdir)/hackrf.b1n
 	cp ../testapp/testapp.b1n $(fsdir)/
+	cp ../campapp/camp.b1n $(fsdir)/
 	-cp ../l0dables/*.c1d $(fsdir)/
 	-for a in ../l0dables/*.n1k ; do b=$${a##*/}; cp $$a ${fsdir}/$${b#nick_} ; done
 	cp ../hackrf/firmware/cpld/sgpio_if/default.xsvf $(fsdir)/cpld.xsv
 	# Add f0nts, images, l0dables, etc.
 	cp ../files/* $(fsdir)/
-	echo -n "testapp.b1n" > $(fsdir)/boot.cfg
+	echo -n "camp.b1n" > $(fsdir)/boot.cfg
 	cp ../flashapp/flashapp.dfu .
 	@echo
 	@echo '### Creating boot header image'

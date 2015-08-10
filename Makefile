@@ -1,6 +1,7 @@
 all: lib hackrf subdirs
 
 subdirs:
+	$(MAKE) -C campapp
 	$(MAKE) -C testapp
 	$(MAKE) -C bootloader
 	$(MAKE) -C flashapp
@@ -26,6 +27,7 @@ hackrf/hackrf.b1n:
 hackrf: hackrf/Readme.md hackrf/hackrf.b1n
 
 clean:
+	$(MAKE) -C campapp clean
 	$(MAKE) -C testapp clean
 	$(MAKE) -C bootloader clean
 	$(MAKE) -C flashapp clean

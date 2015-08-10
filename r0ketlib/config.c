@@ -12,7 +12,7 @@
 #define CFGVER 3
 
 struct CDESC the_config[]= {
-    {"version",          CFGVER, CFGVER, CFGVER, 0, 0},
+    {"version",          0, CFGVER, CFGVER, 0, 0},
     //                   dflt  min max
     {"daytrig",          310/2, 0, 255, 0, 0},
     {"daytrighyst",      10,    0, 50 , 0, 0},
