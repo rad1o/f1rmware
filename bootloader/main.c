@@ -113,15 +113,26 @@ void doMSC(){
 	lcdPrintln("MSC enabled.");
 	lcdDisplay();
 	getInputWaitRelease();
-	while(getInputWait()!=BTN_ENTER){
-		__WFI();
+
+	while(getInputRaw()!=BTN_ENTER){
+        uint32_t max = mscDisk_maxAddressWR();
+        lcdPrint("MAX:");
+        lcdPrintln(IntToStr(max,8,F_SSPACE));
+        lcdDisplay();
+        lcdMoveCrsr(0,-8);
+        if(max == 1572863) {
+            break;
+        }
+		//__WFI();
 	};
+
 	lcdPrintln("disconnect");
 	lcdDisplay();
 	MSCdisable();
 	fsReInit();
 	getInputWaitRelease();
 };
+
 
 extern void * _bin_end;
 extern void * _end;
