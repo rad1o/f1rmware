@@ -1,0 +1,19 @@
+--- /home/sec/Projects/gnuradio/gr-osmosdr/apps/osmocom_fft	2015-07-26 13:22:47.743207885 +0200
++++ /usr/local/bin/osmocom_fft	2015-08-03 15:07:23.977849575 +0200
+@@ -91,6 +91,8 @@
+                           help="Set fftsink averaging factor, default=[%default]")
+         parser.add_option("", "--averaging", action="store_true", default=False,
+                           help="Enable fftsink averaging, default=[%default]")
++        parser.add_option("", "--peak-hold", action="store_true", default=False,
++                          help="Enable fftsink peak hold, default=[%default]")
+         parser.add_option("", "--ref-scale", type="eng_float", default=1.0,
+                           help="Set dBFS=0dB input value, default=[%default]")
+         parser.add_option("", "--fft-size", type="int", default=1024,
+@@ -242,6 +244,7 @@
+                                               ref_level=20.0,
+                                               y_divs = 12,
+                                               average=options.averaging,
++                                              peak_hold=options.peak_hold,
+                                               avg_alpha=options.avg_alpha,
+                                               fft_rate=options.fft_rate)
+ 
