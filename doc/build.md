@@ -1,6 +1,7 @@
 # Build instructions
 
 ## Required software
+
 * arm-gcc: (https://launchpad.net/gcc-arm-embedded)
     * Manual installation:
         * `wget https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q2-update/+download/gcc-arm-none-eabi-4_9-2015q2-20150609-linux.tar.bz2`
@@ -27,6 +28,7 @@
     * Debian/Ubuntu: `sudo apt-get install dfu-util`
     * Arch: `sudo pacman -S dfu-util`
 
+If you use [Nix or NixOS](https://nixos.org/), you can do `nix-shell --pure .` to enter a shell with all required dependencies.
 
 ## Build firmware
 
