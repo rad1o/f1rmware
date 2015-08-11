@@ -35,3 +35,5 @@ delayms_queue_plus
 the_config
 lcdShowAnim
 lcdShowImageFile
+f_read
+f_write

@@ -85,6 +85,8 @@ struct CDESC {
 };
 #endif
 
+#include <fatfs/ff.h>
+
 typedef struct {
 	uintptr_t identifier;
 EOF
