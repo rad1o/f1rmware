@@ -7,4 +7,6 @@ before_install:
   - sudo apt-get install -qq gcc-arm-none-eabi python-yaml cmake dosfstools mtools
 
 script:
+    ls -l /sbin/mkfs.fat || true
+    dpkg -S mkfs.fat
   - "make travis"
