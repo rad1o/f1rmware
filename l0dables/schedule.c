@@ -41,11 +41,11 @@ void fahrplan_menu() {
 
     int line;
     int startline=0;
-    char *message=NULL;
+    // char *message=NULL;
     char filvers;
     char favers[5]; 
     unsigned char ob;
-    int eventid;
+    // int eventid;
     int evnext;
     int evprv;
     int evcur=5;
@@ -64,7 +64,7 @@ void fahrplan_menu() {
         UINT readbytes;
     
         res=f_open(&file, "FAHRPLAN.SCD", FA_OPEN_EXISTING|FA_READ|FA_WRITE);
-        if(res) message="FOPEN ERROR";
+        // if(res) message="FOPEN ERROR";
         res=f_read(&file, &filvers, 1, &readbytes); 
         res+=f_read(&file, (char *)favers, 4, &readbytes); 
         favers[4]=0;
@@ -113,7 +113,7 @@ void fahrplan_menu() {
 #ifndef SIMULATOR
         f_lseek(&file,evcur);
 
-        eventid=getint3fromf(&file);
+        getint3fromf(&file);
         evprv=getint3fromf(&file);
         evnext=getint3fromf(&file);
 
@@ -135,7 +135,7 @@ void fahrplan_menu() {
         for(line=0; line<13 && notend; line++) {
         f_lseek(&file,evtext+(startline+line)*17);
         res+=f_read(&file, (char *)buf, 18, &readbytes); 
-        if(res) message="READ ERROR"; else message="READ: 0";
+        // if(res) message="READ ERROR"; else message="READ: 0";
         notend=1;
         for(endc=0;endc<17;endc++) {
           if(buf[0]==0)notend=0;
