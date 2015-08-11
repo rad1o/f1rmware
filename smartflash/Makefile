@@ -71,6 +71,13 @@ ifneq ("$(wildcard privkey1.pem)","")
 	../tools/img2lcd.pl -b 8 $(fsdir).$(UDISK)/key1.png
 	rm $(fsdir).$(UDISK)/key1.png
 endif
+ifneq ("$(wildcard privkey2.pem)","")
+	dd if=/dev/urandom bs=1 count=64 of=$(fsdir).$(UDISK)/key2.bin 2>/dev/null
+	openssl dgst -sha256 -sign privkey2.pem -out $(fsdir).$(UDISK)/key2.sha256 $(fsdir).$(UDISK)/key2.bin
+	echo "KEY1" | cat - $(fsdir).$(UDISK)/key2.bin $(fsdir).$(UDISK)/key2.sha256 | qrencode -o $(fsdir).$(UDISK)/key2.png -l M -8 -s 2
+	../tools/img2lcd.pl -b 8 $(fsdir).$(UDISK)/key2.png
+	rm $(fsdir).$(UDISK)/key2.png
+endif
 	mkfs.fat -F 12 -I -S 512 -C $(fsimg).$(UDISK) 1536 >/dev/null
 	mcopy -i $(fsimg).$(UDISK) `perl order-files $(fsdir).$(UDISK) $(FILEORDER)` ::
 
