@@ -17,6 +17,7 @@
 
 #include <rad1olib/pins.h>
 #include <rad1olib/systick.h>
+#include <rad1olib/battery.h>
 
 #include <r0ketlib/fs_util.h>
 
@@ -50,9 +51,10 @@ void night_tick(void){
     ctr++;
 
     EVERY(1024,0){
-//        if(!adcMutex){
-//            VoltageCheck();
-        LightCheck();
+        //if(!adcMutex){
+            batteryVoltageCheck();
+            LightCheck();
+        //}
     };
 
     static char night=0;
@@ -70,37 +72,40 @@ void night_tick(void){
         };
     };
 
-#if 0
     EVERY(50,0){
         if(GLOBAL(chargeled)){
-            char iodir= (GPIO_GPIO1DIR & (1 << (11) ))?1:0;
-            if(GetChrgStat()) {
+            //char iodir= (GPIO_GPIO1DIR & (1 << (11) ))?1:0;
+            if(batteryCharging()) {
+                ON(LED4);
+#if 0
                 if (iodir == gpioDirection_Input){
                     IOCON_PIO1_11 = 0x0;
                     gpioSetDir(RB_LED3, gpioDirection_Output);
                     gpioSetValue (RB_LED3, 1);
                     LightCheck();
                 }
+#endif
             } else {
+                OFF(LED4);
+#if 0
                 if (iodir != gpioDirection_Input){
                     gpioSetValue (RB_LED3, 0);
                     gpioSetDir(RB_LED3, gpioDirection_Input);
                     IOCON_PIO1_11 = 0x41;
                     LightCheck();
                 }
+#endif
             }
         };
 
-        if(GetVoltage()<3600){
-            IOCON_PIO1_11 = 0x0;
-            gpioSetDir(RB_LED3, gpioDirection_Output);
-            if( (ctr/(50/SYSTICKSPEED))%10 == 1 )
-                gpioSetValue (RB_LED3, 1);
-            else
-                gpioSetValue (RB_LED3, 0);
+        if(batteryGetVoltage()<3600){
+            if( (ctr/(50/SYSTICKSPEED))%10 == 1 ) {
+                ON(LED4);
+            } else {
+                OFF(LED4);
+            }
         };
     };
-#endif
 
     return;
 }
@@ -132,6 +137,7 @@ int main(void) {
 	inputInit();
 	lcdInit();
 	fsInit(); 
+    batteryInit();
 	lcdFill(0xff);
 	readConfig();
 

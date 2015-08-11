@@ -38,6 +38,7 @@ OBJS += ../lpcapi/cdc/cdc_desc.o
 OBJS += ../lpcapi/cdc/cdc_main.o
 OBJS += ../lpcapi/cdc/cdc_vcom.o
 OBJS += ../rad1olib/light_ws2812_cortex.o
+OBJS += ../rad1olib/battery.o
 
 # CPLD
 OBJS += ../hackrf/firmware/common/xapp058/micro.o
