@@ -40,7 +40,7 @@ void tick_alive(void){
     return;
 }
 
-//# MENU img img
+//# MENU image display_image
 void t_img(void){
     char fname[FLEN];
     selectFile(fname, "LCD");
@@ -48,7 +48,7 @@ void t_img(void){
     getInputWait();
 }
 
-//# MENU img anim
+//# MENU image play_animtion
 void t_ani(void){
     char fname[FLEN];
     selectFile(fname, "AN1");
