@@ -52,7 +52,7 @@ int getFiles(char files[][FLEN], uint8_t count, uint16_t skip, const char *ext)
     return pos;
 }
 
-#define PERPAGE 7
+#define PERPAGE 15
 int selectFile(char *filename, const char *extension)
 {
     int skip = 0;
