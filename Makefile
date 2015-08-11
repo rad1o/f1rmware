@@ -1,6 +1,6 @@
 APP?=testapp
 
-all: lib hackrf subdirs $(APP).dfu $(APP).bin
+all: lib hackrf subdirs $(APP)/$(APP).dfu
 
 subdirs:
 	$(MAKE) -C testapp
@@ -25,15 +25,9 @@ hackrf: hackrf/Readme.md
 
 $(APP)/$(APP).bin:
 	$(MAKE) -C $(APP) $(APP).bin
-	
+
 $(APP)/$(APP).dfu:
 	$(MAKE) -C $(APP) $(APP).dfu
-	
-$(APP).bin: $(APP)/$(APP).bin
-	cp $< $@
-
-$(APP).dfu: $(APP)/$(APP).dfu
-	cp $< $@
 
 clean:
 	rm -f *.bin *.dfu
@@ -44,5 +38,5 @@ clean:
 	$(MAKE) -C smartflash clean
 #	cd libopencm3 && make clean
 
-flash: $(APP).dfu
-    $(DFUUTIL) --device 1fc9:000c --alt 0 --download $(APP).dfu
+flash: $(APP)/$(APP).dfu
+	$(MAKE) -C $(APP) flash
