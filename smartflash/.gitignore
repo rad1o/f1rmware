@@ -1,4 +1,6 @@
-*.img
 *.dfu
-IMG
+IMG*
 dfu-util
+filesystem.img*
+full.img*
+header.img
