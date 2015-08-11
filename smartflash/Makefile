@@ -45,6 +45,7 @@ build:
 	@echo '### Building everything'
 #	cd ../hackrf/firmware/hackrf_usb/build && make
 	cd ../hackrf && make lib hackrf-usb
+	cd ../campapp && make camp.b1n
 	cd ../testapp && make testapp.b1n
 	cd ../bootloader && make boot.b1n
 	cd ../flashapp && make flashapp.dfu

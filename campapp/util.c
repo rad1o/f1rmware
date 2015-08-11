@@ -14,7 +14,6 @@
 
 /**************************************************************************/
 
-// //# MENU usb_storage
 void msc_menu(void){
     MSCenable();
     lcdPrintln("MSC enabled.");
