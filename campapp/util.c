@@ -10,10 +10,11 @@
 #include <r0ketlib/image.h>
 #include <rad1olib/pins.h>
 #include <rad1olib/systick.h>
+#include <lpcapi/msc/msc_main.h>
 
 /**************************************************************************/
 
-//# MENU usb_storage
+// //# MENU usb_storage
 void msc_menu(void){
     MSCenable();
     lcdPrintln("MSC enabled.");
@@ -55,22 +56,8 @@ void t_ani(void){
     lcdShowAnim(fname);
 }
 
-//# MENU night
-void night(void){
-    while(getInputRaw()!=BTN_ENTER){
-        lcdClear();
-        lcdPrint("night:");
-        lcdPrint(IntToStr(isNight(),3,0));
-        lcdNl();
-        lcdPrint("light:");
-        lcdPrint(IntToStr(GetLight(),3,0));
-        lcdNl();
-        lcdDisplay();
-    };
-}
-
 void infoscreen();
 //# MENU INFO
-void info(void){
+void night(void){
     infoscreen();
 }

@@ -7,6 +7,9 @@
 #include <r0ketlib/keyin.h>
 #include <r0ketlib/select.h>
 #include <r0ketlib/stringin.h>
+#include <r0ketlib/execute.h>
+#include <r0ketlib/idle.h>
+#include <string.h>
 
 /**************************************************************************/
 

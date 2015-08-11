@@ -4,12 +4,16 @@
  */
 
 #include <unistd.h>
+#include <string.h>
 
 #include <rad1olib/setup.h>
 #include <r0ketlib/display.h>
 #include <r0ketlib/keyin.h>
 #include <r0ketlib/menu.h>
 #include <r0ketlib/config.h>
+#include <r0ketlib/print.h>
+#include <r0ketlib/stringin.h>
+#include <r0ketlib/night.h>
 
 #include <rad1olib/pins.h>
 #include <rad1olib/systick.h>
@@ -106,6 +110,8 @@ void sys_tick_handler(void){
     night_tick();
 	generated_tick();
 };
+
+void fancyNickname(void);
 
 int main(void) {
 	cpu_clock_init(); /* CPU Clock is now 104 MHz */
