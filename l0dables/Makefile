@@ -1,5 +1,5 @@
 C1D=blinky.c1d invaders.c1d mandel.c1d snake.c1d bricks.c1d schedule.c1d
-N1K=nick_scr0ll.n1k nick_w0rpcore.n1k nick_matrix.n1k nick_plain.n1k nick_invaders.n1k nick_anim.n1k nick_image.n1k
+N1K=nick_scr0ll.n1k nick_w0rpcore.n1k nick_matrix.n1k nick_plain.n1k nick_invaders.n1k nick_anim.n1k nick_image.n1k nick_life.n1k
 
 TABLEFILES=jumptable.c jumptable.h usetable.h
 
