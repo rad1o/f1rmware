@@ -31,7 +31,7 @@ LDFLAGS += -T$(LDSCRIPT)
 LDFLAGS += -Wl,-Map=$(APP).map
 
 LIBS += -L$(RPATH)/libopencm3/lib -lopencm3_lpc43xx
-LIBS += -lc
+LIBS += -lc -lm
 
 OCFLAGS = --strip-unneeded
 
