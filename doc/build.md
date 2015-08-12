@@ -4,10 +4,22 @@
 
 * arm-gcc: (https://launchpad.net/gcc-arm-embedded)
     * Manual installation:
-        * `wget https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q2-update/+download/gcc-arm-none-eabi-4_9-2015q2-20150609-linux.tar.bz2`
-        * `export PATH=$HOME/rad1o/gcc-arm-none-eabi-4_9-2015q2/bin:$PATH`
-    * Debian/Ubuntu: `sudo apt-get install gcc-arm-none-eabi libnewlib-arm-none-eabi`
-    * Ubuntu 14.04 users need to do: `sudo add-apt-repository -y ppa:terry.guo/gcc-arm-embedded` and `echo "Package: gcc-arm-none-eabi\n Pin: release o=LP-PPA-terry.guo-gcc-arm-embedded\n Priority: 501" |sudo tee /etc/apt/preferences.d/pin-gcc-arm-embedded` before the above step
+
+      ```
+      cd projectdir
+      wget https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q2-update/+download/gcc-arm-none-eabi-4_9-2015q2-20150609-linux.tar.bz2
+      tar -xjf gcc-arm-none-eabi-4_9-2015q2-20150609-linux.tar.bz2
+      export PATH=`pwd`/gcc-arm-none-eabi-4_9-2015q2/bin:$PATH`
+      ```
+    * Debian/Ubuntu: 
+        * Ubuntu 14.04 users start with:
+
+          ```
+          sudo add-apt-repository -y ppa:terry.guo/gcc-arm-embedded
+          echo "Package: gcc-arm-none-eabi\n Pin: release o=LP-PPA-terry.guo-gcc-arm-embedded\n Priority: 501" |sudo tee /etc/apt/preferences.d/pin-gcc-arm-embedded
+          sudo apt-gte update
+          ```
+      `sudo apt-get install gcc-arm-none-eabi libnewlib-arm-none-eabi`
 
     * Arch: `sudo pacman -S arm-none-eabi-gcc arm-none-eabi-newlib arm-none-eabi-binutils`
 * python-yaml (http://pyyaml.org/)
@@ -30,10 +42,13 @@
     * Debian/Ubuntu: `sudo apt-get install dfu-util`
     * Arch: `sudo pacman -S dfu-util`
     * If you want to use smartflash, instead build and install our fork from https://github.com/rad1o/dfu-util
-        * `git clone https://github.com/rad1o/dfu-util.git`
-        * `sudo apt-get install autoconf`
-        * `cd dfu-util && sh autogen.sh && ./configure && make`
-        * `sudo make install``
+
+      ```
+      git clone https://github.com/rad1o/dfu-util.git
+      sudo apt-get install autoconf libusb-1.0-0-dev
+      cd dfu-util && sh autogen.sh && ./configure && make
+      sudo make install
+      ```
 
 * cmake (optional, if you want to build the hackrf firmware)
     * `sudo apt-get install cmake`
