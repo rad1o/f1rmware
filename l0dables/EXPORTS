@@ -39,3 +39,6 @@ f_read
 f_write
 f_open
 f_lseek
+lcd_select
+lcd_deselect
+lcdWrite
