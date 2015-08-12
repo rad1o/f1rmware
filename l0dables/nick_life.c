@@ -179,7 +179,7 @@ static void draw_area() {
     for(uchar y=0; y<RESY; ++y) {
       // lcdSetPixel(x,y,lcdGetPixel(x,y)^bitset_get2(life,x+1,y+1));
       if((lcdGetPixel(x,y)==0) ^ bitset_get2(life,x+1,y+1)) {
-        lcdSetPixel(x,y,0xffffff);
+        lcdSetPixel(x,y,0xff);
       } else {
         lcdSetPixel(x,y,0);
       }
