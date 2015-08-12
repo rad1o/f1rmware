@@ -51,7 +51,10 @@ build:
 	cd ../flashapp && make flashapp.dfu
 	cd ../l0dables && make
 
-dfu-util:
+../../../dfu-util/README:
+	cd ../../.. && git clone https://github.com/rad1o/dfu-util.git
+
+dfu-util: ../../../dfu-util/README
 	cd ../../dfu-util && sh autogen.sh && ./configure && make
 
 clean:
