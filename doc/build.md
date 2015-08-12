@@ -4,6 +4,7 @@
 
 * arm-gcc: (https://launchpad.net/gcc-arm-embedded)
     * Manual installation:
+
       ```
       cd projectdir
       wget https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q2-update/+download/gcc-arm-none-eabi-4_9-2015q2-20150609-linux.tar.bz2
@@ -12,6 +13,7 @@
       ```
     * Debian/Ubuntu: 
         * Ubuntu 14.04 users start with:
+
           ```
           sudo add-apt-repository -y ppa:terry.guo/gcc-arm-embedded
           echo "Package: gcc-arm-none-eabi\n Pin: release o=LP-PPA-terry.guo-gcc-arm-embedded\n Priority: 501" |sudo tee /etc/apt/preferences.d/pin-gcc-arm-embedded
@@ -40,6 +42,7 @@
     * Debian/Ubuntu: `sudo apt-get install dfu-util`
     * Arch: `sudo pacman -S dfu-util`
     * If you want to use smartflash, instead build and install our fork from https://github.com/rad1o/dfu-util
+
       ```
       git clone https://github.com/rad1o/dfu-util.git
       sudo apt-get install autoconf
