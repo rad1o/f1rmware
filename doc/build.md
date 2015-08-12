@@ -45,7 +45,7 @@
 
       ```
       git clone https://github.com/rad1o/dfu-util.git
-      sudo apt-get install autoconf
+      sudo apt-get install autoconf libusb-1.0-0-dev
       cd dfu-util && sh autogen.sh && ./configure && make
       sudo make install
       ```
