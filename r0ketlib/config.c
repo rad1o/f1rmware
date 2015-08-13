@@ -60,10 +60,8 @@ void applyConfig(){
     else
         OFF(EN_VDD);
 
-    if(GLOBAL(lcdmirror)) {
 	lcdRotateLeft(GLOBAL(lcdmirror));
 	keyRotate(GLOBAL(lcdmirror));
-    };
 }
 
 int saveConfig(void){
