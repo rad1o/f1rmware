@@ -149,6 +149,18 @@ void lcdSetContrast(int c) {
     lcd_deselect();
 }
 
+void lcdRotateLeft(char doit) {
+	lcd_select();
+	lcdWrite(TYPE_CMD,0x36); // MDAC-Command
+	if (doit) {
+		lcdWrite(TYPE_DATA,0b01100000); // my,mx,v,lao,rgb,x,x,x
+	} else {
+		lcdWrite(TYPE_DATA,0b11000000); // my,mx,v,lao,rgb,x,x,x
+	}
+	lcd_deselect();
+	lcdDisplay();
+}
+
 void lcdShiftH(bool right, int wrap) {
 	uint8_t tmp;
 	for (int yb = 0; yb<RESY; yb++) {
