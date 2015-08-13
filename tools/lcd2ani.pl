@@ -25,7 +25,7 @@ GetOptions (
             "verbose"   => \$verbose, # flag
 			"help"     => sub {
 			print <<HELP;
-Uasge: lcd2an.pl [-v] {<file> <delaytime>}*
+Uasge: lcd2an.pl [-v] <outfile> {<infile> <delaytime>}*
 
 Options:
 --verbose       Be verbose.
