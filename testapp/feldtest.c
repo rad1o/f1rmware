@@ -204,13 +204,13 @@ void feld_menu(){
 
 		}else if (page==3){
 			if (tl4==0) {
-				lcdPrint("    Lt Exit");
-				lcdPrint("   ");
+				lcdPrintln("    Lt Exit");
+				lcdPrintln("   ");
 			} else {
-				lcdPrint("*_* ");
-				lcdPrint("    Rt Really?");
+				lcdPrintln("*_* ");
+				lcdPrintln("    Rt Really?");
 			}
-			lcdPrint("  "); 
+			lcdPrintln("  "); 
 			lcdPrintln("Enter for next page");
 			lcdDisplay(); 
 			switch(getInput()){
@@ -223,12 +223,14 @@ void feld_menu(){
 					};
 					break;
 				case BTN_ENTER:
-					tl4=0;
 					page++;
+				case BTN_UP:
+				case BTN_DOWN:
+					tl4=0;
 					break;
 			};
 		};
-		if (page>2){page=0;}
+		if (page>3){page=0;}
 
 		ON(LED1);
 		delay(200000);
