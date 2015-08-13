@@ -36,7 +36,11 @@ void ws2812_sendarray(uint8_t *data,int datlen)
 	volatile uint32_t *clr = ws2812_port_clr;
 	uint32_t i = 0;
 	uint32_t curbyte;
-
+	
+/* Workaround to match CPU speed to the ws2812 "baudrate" */	
+	uint32_t old_cpu_speed = _cpu_speed;
+	cpu_clock_set(38);
+	
 	while (datlen--) {
 		curbyte=*data++/1;
 
@@ -104,5 +108,7 @@ void ws2812_sendarray(uint8_t *data,int datlen)
 			:	[dat] "r" (curbyte), [set] "r" (set), [clr] "r" (clr), [masklo] "r" (masklo), [maskhi] "r" (maskhi)
 			);
 	}
+	/* Reset CPU speed to previous */
+	cpu_clock_set(_cpu_speed);
 }
 
