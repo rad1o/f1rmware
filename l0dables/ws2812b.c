@@ -10,8 +10,45 @@
 
 #include "usetable.h"
 
+static void redraw(uint8_t brightness);
+
 //# MENU ws2812b
 void ram(void){
+    uint8_t brightness = 0;
+
+    getInputWaitRelease();
+
+    SETUPgout(RGB_LED);
+
+    while(1){
+        lcdClear(0xff);
+        lcdPrintln("WS2812B LEDs");
+        lcdPrintln("UP: brighter");
+        lcdPrintln("DOWN: darker");
+        lcdPrintln("ENTER: exit");
+        lcdDisplay();
+
+        switch(getInput()){
+            case BTN_UP:
+                if(brightness < 10)
+                    redraw(++brightness);
+                break;
+            case BTN_DOWN:
+                if(brightness > 0)
+                    redraw(--brightness);
+                break;
+            case BTN_LEFT:
+                return;
+            case BTN_RIGHT:
+                break;
+            case BTN_ENTER:
+                return;
+        };
+    };
+    return;
+};
+
+static void redraw(uint8_t brightness){
     uint8_t pattern[] = {
         255, 255, 0,
         255, 255, 0,
@@ -24,44 +61,9 @@ void ram(void){
         255, 0,   0
     };
 
-    uint8_t black[] = {
-        0, 0, 0,
-        0, 0, 0,
+    for(uint8_t i=0; i<sizeof(pattern); i++){
+        pattern[i] = pattern[i] * brightness / 10;
+    }
 
-        0, 0, 0,
-        0, 0, 0,
-        0, 0, 0,
-        0, 0, 0,
-        0, 0, 0,
-        0, 0, 0
-    };
-
-    getInputWaitRelease();
-
-    SETUPgout(RGB_LED);
-
-    while(1){
-        lcdClear(0xff);
-        lcdPrintln("WS2812B LEDs");
-        lcdPrintln("UP: pattern");
-        lcdPrintln("DOWN: black");
-        lcdPrintln("ENTER: exit");
-        lcdDisplay();
-
-        switch(getInput()){
-            case BTN_UP:
-                ws2812_sendarray(pattern, sizeof(pattern));
-                break;
-            case BTN_DOWN:
-                ws2812_sendarray(black, sizeof(black));
-                break;
-            case BTN_LEFT:
-                return;
-            case BTN_RIGHT:
-                break;
-            case BTN_ENTER:
-                return;
-        };
-    };
-    return;
-};
+    ws2812_sendarray(pattern, sizeof(pattern));
+}
