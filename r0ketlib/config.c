@@ -29,6 +29,7 @@ struct CDESC the_config[]= {
     {"chargeled",        0,     0, 1  , 0, 0},
     {"nickfg",           0,     0, 255, 1, CFG_TYPE_DEVEL},
     {"nickbg",           255,   0, 255, 1, CFG_TYPE_DEVEL},
+    {"vdd_fix",          0,     0, 1,   0, 0},
     { NULL,              0,     0, 0  , 0, 0},
 };
 
@@ -50,6 +51,12 @@ void applyConfig(){
         ON(LCD_BL_EN);
     else
         OFF(LCD_BL_EN);
+
+    if(GLOBAL(vdd_fix))
+        ON(EN_VDD);
+    else
+        OFF(EN_VDD);
+
 }
 
 int saveConfig(void){

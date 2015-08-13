@@ -45,6 +45,7 @@ extern char nickl0[];
 #define GLOBALnickl0       (nickl0)
 #define GLOBALnickfg       (the_config[12].value)
 #define GLOBALnickbg       (the_config[13].value)
+#define GLOBALvdd_fix      (the_config[14].value)
 
 #define GLOBAL(x) GLOBAL ## x
 

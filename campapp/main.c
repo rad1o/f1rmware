@@ -135,21 +135,21 @@ int main(void) {
 	SETUPgout(LED4);
 
 	inputInit();
-	lcdInit();
 	fsInit(); 
-    batteryInit();
 	lcdFill(0xff);
 	readConfig();
+	switch(getInputRaw()){
+		case BTN_RIGHT:
+			GLOBAL(vdd_fix)=1;
+			applyConfig();
+			break;
+	};
+	lcdInit();
+	batteryInit();
 
 	generated_init();
 
     init_nick();
-
-    readConfig();
-    if(getInputRaw()==BTN_RIGHT){
-        GLOBAL(develmode)=1;
-        applyConfig();
-    };
 
     // XXX: TODO!
     // randomInit();
