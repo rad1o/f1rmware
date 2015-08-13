@@ -23,9 +23,9 @@ void rgbLedsTick(void) {
 	ctr++;
 
 	if(frames > 0) {
-		// LED delay is in leds[0]
-		if(ctr >= leds[0]){
-			ws2812_sendarray(&leds[ledctr*3*8+1], 3*8);
+		// LED delay is in leds[0:1]
+		if(ctr >= ((leds[0]<<8) + leds[1])){
+			ws2812_sendarray(&leds[ledctr*3*8+2], 3*8);
 			ledctr++;
 			if(ledctr >= frames)
 				ledctr = 0;

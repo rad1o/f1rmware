@@ -1,6 +1,7 @@
 #! /bin/bash
 import sys
 import binascii
+import struct
 
 basename = 'rgb_leds'
 
@@ -19,5 +20,5 @@ with open(filename) as fp:
     contents = contents.replace(' ', '')
     newname = 'files/' + basename + '.hex'
     with open(newname, 'w') as fpW:
-        fpW.write(chr(delay))
+        fpW.write(struct.pack('>H', delay))
         fpW.write(binascii.unhexlify(contents))
