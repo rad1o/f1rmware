@@ -22,7 +22,7 @@
 #define w3 (ws2812_ctot-ws2812_t2-5)
 
 #define ws2812_DEL1 "	nop		\n\t"
-#define ws2812_DEL2 "	b	.+2	\n\t"
+#define ws2812_DEL2 "   nop \n\t nop \n\t"
 #define ws2812_DEL4 ws2812_DEL2 ws2812_DEL2
 #define ws2812_DEL8 ws2812_DEL4 ws2812_DEL4
 #define ws2812_DEL16 ws2812_DEL8 ws2812_DEL8
@@ -39,12 +39,14 @@ void ws2812_sendarray(uint8_t *data,int datlen)
 	
 /* Workaround to match CPU speed to the ws2812 "baudrate" */	
 	uint32_t old_cpu_speed = _cpu_speed;
-	cpu_clock_set(38);
+	cpu_clock_set(51);
 	
 	while (datlen--) {
 		curbyte=*data++/1;
 
 	__asm__ volatile(
+
+            "CPSID I \n\t"
 			"		lsl %[dat],#24				\n\t"
 			"		movs %[ctr],#8				\n\t"
 			"ilop%=:							\n\t"
@@ -85,7 +87,7 @@ void ws2812_sendarray(uint8_t *data,int datlen)
 #endif
 			"		str %[masklo], [%[clr]]		\n\t"
 			"		subs %[ctr], #1				\n\t"
-			"		beq	end%=					\n\t"
+			ws2812_DEL1
 #if (w3&1)
 			ws2812_DEL1
 #endif
@@ -101,9 +103,9 @@ void ws2812_sendarray(uint8_t *data,int datlen)
 #if (w3&16)
 			ws2812_DEL16
 #endif
-
-			"		b 	ilop%=					\n\t"
+			"		bne 	ilop%=					\n\t"
 			"end%=:								\n\t"
+            "CPSIE I \n\t"
 			:	[ctr] "+r" (i)
 			:	[dat] "r" (curbyte), [set] "r" (set), [clr] "r" (clr), [masklo] "r" (masklo), [maskhi] "r" (maskhi)
 			);
