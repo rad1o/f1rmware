@@ -68,7 +68,7 @@ make
 
 Prerequisite: rad1o is connected to USB
 
-To flash the firmware permanently, simply copy the .bin file to the mounted mass storage of rad1o.
+To flash the firmware permanently, simply copy the `smartflash/IMG/*.b1n` files to the mounted mass storage of rad1o.
 If you want to just run the firmware once without permanently storing it on the rad1o, you will need the `dfu-util` mentioned above and run the `make flash` command.
 
 
