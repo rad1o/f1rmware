@@ -28,7 +28,7 @@ void infoscreen(){
     lcdClear();
     lcdPrintln("-------------------");
     lcdPrintln("-RAD1O BADGE SETUP-");
-    lcdPrintln("---- FW REV 01 ----");
+    lcdPrintln("---- FW REV 02 ----");
     lcdNl();
     lcdPrintln("To enter BOOT Menu");
     lcdPrintln("hold Joystick");
