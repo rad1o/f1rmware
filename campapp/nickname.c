@@ -9,6 +9,7 @@
 #include <r0ketlib/stringin.h>
 #include <r0ketlib/execute.h>
 #include <r0ketlib/idle.h>
+#include <r0ketlib/colorin.h>
 #include <string.h>
 
 /**************************************************************************/
@@ -26,7 +27,8 @@ void simpleNickname(void) {
         dx=0;
     dy=(RESY-getFontHeight())/2;
 
-	lcdClear();
+    lcdFill(GLOBAL(nickbg));
+    setTextColor(GLOBAL(nickbg),GLOBAL(nickfg));
 	DoString(dx,dy,GLOBAL(nickname));
 	lcdDisplay();
 
@@ -90,6 +92,20 @@ void doAnim(void){
     };
 	writeFile("l0nick.cfg",GLOBAL(nickl0),strlen(GLOBAL(nickl0)));
     GLOBAL(l0nick)=1;
+    saveConfig();
+    getInputWaitRelease();
+}
+
+//# MENU nick setFGcolor
+void doColorFG(void){
+    GLOBAL(nickfg)=colorpicker("Foreground:", GLOBAL(nickfg));
+    saveConfig();
+    getInputWaitRelease();
+}
+
+//# MENU nick setBGcolor
+void doColorBG(void){
+    GLOBAL(nickbg)=colorpicker("Background:", GLOBAL(nickbg));
     saveConfig();
     getInputWaitRelease();
 }
