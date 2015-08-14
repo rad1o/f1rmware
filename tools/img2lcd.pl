@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
 # img2lcd.pl - by <sec@42.org> 05/2011, BSD Licence
 #
