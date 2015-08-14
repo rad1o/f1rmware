@@ -1,6 +1,6 @@
 Vagrant.configure('2') do |config|
   config.vm.define :rad1o do |rad1o_config|
-    rad1o_config.vm.box     = "ubuntu/trusty64"
+    rad1o_config.vm.box     = 'ubuntu/trusty64'
     rad1o_config.vm.hostname = 'rad1o'
     rad1o_config.vm.network :private_network, ip: '10.0.10.2'
     rad1o_config.vm.provider :virtualbox do |vb|
