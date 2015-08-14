@@ -38,6 +38,9 @@
       cd libopencm3
       make
       ```
+* xxd (optional, needed for flashapp / flash-station setup)
+    * Debian: probably already installed (is a part of vim-common package)
+    * Arch: `yaourt -S xxd`
 * dfu-util (optional, convenient for development, http://dfu-util.sourceforge.net/)
     * Debian/Ubuntu: `sudo apt-get install dfu-util`
     * Arch: `sudo pacman -S dfu-util`
