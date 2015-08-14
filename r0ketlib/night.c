@@ -5,21 +5,21 @@
 
 #include <r0ketlib/keyin.h>
 
-
-
-
 #define SAMPCT (4)
-uint32_t light=150*SAMPCT;
-char _isnight=1;
-
 #define threshold GLOBAL(daytrig)
 #define RANGE GLOBAL(daytrighyst)
+
+// status: 0=init, 1=decreased 2=increased=ok
+uint8_t sensor_status=0;
+uint32_t light=150*SAMPCT;
+char _isnight=1;
 
 void LightCheck(void){
 //    adc_get_single(ADC0,ADC_CR_CH6)*2*330/1023
 
     SETUPadc(LED4);
 
+    uint32_t last_light=light;
     // ADC needs some time?
     light-=light/SAMPCT;
     light += adc_get_single(ADC0,ADC_CR_CH6);
@@ -30,13 +30,20 @@ void LightCheck(void){
     light-=light/SAMPCT;
     light += adc_get_single(ADC0,ADC_CR_CH6);
 
+    SETUPgout(LED4);
+
+    // disable light sensor until we get reasonable results
+    if(sensor_status<2){
+        if(light<last_light) sensor_status=1;
+        if(light>last_light && sensor_status==1) sensor_status=2;
+        return;
+    }
+
     if(_isnight && light/SAMPCT>(threshold+RANGE))
         _isnight=0;
 
     if(!_isnight && light/SAMPCT<threshold)
         _isnight=1;
-
-    SETUPgout(LED4);
 }
 
 uint32_t GetLight(void){
