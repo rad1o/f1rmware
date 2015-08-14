@@ -57,6 +57,8 @@ void applyConfig(){
     else
         OFF(EN_VDD);
 
+    lcdSetRotation(GLOBAL(lcdmirror));
+    keySetRotation(GLOBAL(lcdmirror));
 }
 
 int saveConfig(void){

@@ -15,6 +15,8 @@
 uint8_t lcdBuffer[RESX*RESY];
 uint8_t displayType;
 
+static char isTurned;
+
 void lcd_select() {
     /* the LCD requires 9-Bit frames */
     // Freq = PCLK / (CPSDVSR * [SCR+1])
@@ -101,6 +103,7 @@ void lcdInit(void) {
 	}
     lcd_deselect();
 	lcdFill(0xff); /* Clear display buffer */
+	lcdRotate();
 	setSystemFont();
 }
 
@@ -147,6 +150,23 @@ void lcdSetContrast(int c) {
 	lcdWrite(TYPE_CMD,0x25);
 	lcdWrite(TYPE_DATA,c);
     lcd_deselect();
+}
+
+void lcdSetRotation(char doit) {
+	isTurned = doit;
+	lcdRotate();
+}
+
+void lcdRotate(void) {
+	lcd_select();
+	lcdWrite(TYPE_CMD,0x36); // MDAC-Command
+	if (isTurned) {
+		lcdWrite(TYPE_DATA,0b01100000); // my,mx,v,lao,rgb,x,x,x
+	} else {
+		lcdWrite(TYPE_DATA,0b11000000); // my,mx,v,lao,rgb,x,x,x
+	}
+	lcd_deselect();
+	lcdDisplay();
 }
 
 void lcdShiftH(bool right, int wrap) {

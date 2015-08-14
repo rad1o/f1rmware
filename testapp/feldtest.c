@@ -34,6 +34,7 @@ void feld_menu(){
 	char tu2=0,td2=0,td2N=0,tl2=0,tr2=0;
 	uint16_t sf=3500;
 	char tu3=0,td3=0,tl3=0,tr3=0;
+	char tl4=0,tr4=0;
 
 	int ctr=0;
 	while (1) {
@@ -162,9 +163,11 @@ void feld_menu(){
 
 		}else if (page==2){
 			lcdPrint("SF: ");lcdPrint(IntToStr(sf,4,F_LONG)); lcdPrintln(" MHz");
+			lcdPrintln("   Up SF +100");
+			lcdPrintln("   Dn SF -100");
 			tl3=GET(CE_VCO);
 			lcdPrint(IntToStr(tl3,1,F_HEX)); lcdPrint(" "); lcdPrintln(" Lt CE_VCO");
-			lcdPrint("  "); lcdPrintln(" Rt ");
+			// lcdPrint("  "); lcdPrintln(" Rt ");
 			lcdPrintln("Enter for next page");
 			lcdDisplay(); 
 			switch(getInput()){
@@ -199,8 +202,35 @@ void feld_menu(){
 					break;
 			};
 
+		}else if (page==3){
+			if (tl4==0) {
+				lcdPrintln("    Lt Exit");
+				lcdPrintln("   ");
+			} else {
+				lcdPrintln("*_* ");
+				lcdPrintln("    Rt Really?");
+			}
+			lcdPrintln("  "); 
+			lcdPrintln("Enter for next page");
+			lcdDisplay(); 
+			switch(getInput()){
+				case BTN_LEFT:
+					tl4=1-tl4;
+					break;
+				case BTN_RIGHT:
+					if (tl4) {
+						return;
+					};
+					break;
+				case BTN_ENTER:
+					page++;
+				case BTN_UP:
+				case BTN_DOWN:
+					tl4=0;
+					break;
+			};
 		};
-		if (page>2){page=0;}
+		if (page>3){page=0;}
 
 		ON(LED1);
 		delay(200000);

@@ -5,6 +5,9 @@
 
 #define FUNC (SCU_GPIO_PDN)
 
+
+static char isTurned;
+
 void inputInit(void){
         /* the GPIO_DIR could be opimized */
         scu_pinmux(KEY_UP_PIN,FUNC|KEY_UP_FUNC);
@@ -24,31 +27,60 @@ void inputInit(void){
 };
 
 
+void keySetRotation(char doit) {
+	isTurned = doit;
+}
+
+
 uint8_t getInputRaw(void) {
     uint8_t result = BTN_NONE;
 
-    if (gpio_get(KEY_UP_GPORT,KEY_UP_GPIN)) {
-        result |= BTN_UP;
-    }
+    if (isTurned) { // display turned to the left
+		if (gpio_get(KEY_UP_GPORT,KEY_UP_GPIN)) {
+			result |= BTN_RIGHT;
+		}
 
-    if (gpio_get(KEY_DOWN_GPORT,KEY_DOWN_GPIN)) {
-        result |= BTN_DOWN;
-    }
+		if (gpio_get(KEY_DOWN_GPORT,KEY_DOWN_GPIN)) {
+			result |= BTN_LEFT;
+		}
 
-    if (gpio_get(KEY_ENTER_GPORT,KEY_ENTER_GPIN)) {
-        result |= BTN_ENTER;
-    }
+		if (gpio_get(KEY_ENTER_GPORT,KEY_ENTER_GPIN)) {
+			result |= BTN_ENTER;
+		}
 
-    if (gpio_get(KEY_LEFT_GPORT,KEY_LEFT_GPIN)) {
-        result |= BTN_LEFT;
-    }
+		if (gpio_get(KEY_LEFT_GPORT,KEY_LEFT_GPIN)) {
+			result |= BTN_UP;
+		}
 
-    if (gpio_get(KEY_RIGHT_GPORT,KEY_RIGHT_GPIN)) {
-		result |= BTN_RIGHT;
-    }
+		if (gpio_get(KEY_RIGHT_GPORT,KEY_RIGHT_GPIN)) {
+			result |= BTN_DOWN;
+		}
+	} else {  // as before, the normal way
+
+		if (gpio_get(KEY_UP_GPORT,KEY_UP_GPIN)) {
+			result |= BTN_UP;
+		}
+
+		if (gpio_get(KEY_DOWN_GPORT,KEY_DOWN_GPIN)) {
+			result |= BTN_DOWN;
+		}
+
+		if (gpio_get(KEY_ENTER_GPORT,KEY_ENTER_GPIN)) {
+			result |= BTN_ENTER;
+		}
+
+		if (gpio_get(KEY_LEFT_GPORT,KEY_LEFT_GPIN)) {
+			result |= BTN_LEFT;
+		}
+
+		if (gpio_get(KEY_RIGHT_GPORT,KEY_RIGHT_GPIN)) {
+			result |= BTN_RIGHT;
+		}
+	}
 
     return result;
 }
+
 
 uint8_t getInput(void) {
     uint8_t key = BTN_NONE;
