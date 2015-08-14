@@ -14,6 +14,7 @@ APP=../flashapp/flashapp.dfu
 FILEORDER= \
     camp.b1n \
     hackrf.b1n \
+	musicapp.b1n \
     testapp.b1n
 
 gather:
@@ -23,6 +24,8 @@ gather:
 	cp ../hackrf/firmware/hackrf_usb/build/hackrf_usb.bin $(fsdir)/hackrf.b1n
 	cp ../testapp/testapp.b1n $(fsdir)/
 	cp ../campapp/camp.b1n $(fsdir)/
+	cp ../musicapp/musicapp.b1n $(fsdir)/
+	cp ../musicapp/welfare.mod $(fsdir)/
 	-cp ../l0dables/*.c1d $(fsdir)/
 	-for a in ../l0dables/*.n1k ; do b=$${a##*/}; cp $$a ${fsdir}/$${b#nick_} ; done
 	cp ../hackrf/firmware/cpld/sgpio_if/default.xsvf $(fsdir)/cpld.xsv
