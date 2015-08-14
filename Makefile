@@ -1,6 +1,7 @@
 all: lib hackrf subdirs
 
-travis: lib hackrf subdirs
+travis:
+	$(MAKE) ADDFLAGS=-Werror lib hackrf subdirs
 	$(MAKE) -C smartflash test
 
 subdirs:
