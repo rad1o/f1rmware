@@ -27,6 +27,7 @@ extern struct CDESC the_config[];
 extern char nickname[];
 extern char nickfont[];
 extern char nickl0[];
+extern char ledfile[];
 
 #define GLOBALversion      (the_config[ 0].value)
 #define GLOBALdaytrig      (the_config[ 1].value)
@@ -43,6 +44,7 @@ extern char nickl0[];
 #define GLOBALnickname     (nickname)
 #define GLOBALnickfont     (nickfont)
 #define GLOBALnickl0       (nickl0)
+#define GLOBALledfile      (ledfile)
 #define GLOBALnickfg       (the_config[12].value)
 #define GLOBALnickbg       (the_config[13].value)
 #define GLOBALvdd_fix      (the_config[14].value)

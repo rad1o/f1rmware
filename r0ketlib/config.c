@@ -36,6 +36,7 @@ struct CDESC the_config[]= {
 char nickname[MAXNICK]="anonymous";
 char nickfont[FLEN];
 char nickl0[FLEN];
+char ledfile[FLEN];
 
 #define CONFFILE "rad1o.cfg"
 #define CONF_ITER for(int i=0;the_config[i].name!=NULL;i++)

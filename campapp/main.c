@@ -114,7 +114,6 @@ void night_tick(void){
 void sys_tick_handler(void){
 	incTimer();
     night_tick();
-	rgbLedsTick();
 	generated_tick();
 };
 
@@ -154,8 +153,6 @@ int main(void) {
 	generated_init();
 
     init_nick();
-
-	rgbLedsInit();
 
     // XXX: TODO!
     // randomInit();
