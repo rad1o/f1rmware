@@ -39,8 +39,13 @@ void infoscreen(){
     lcdPrintln("DOWN: DFU mode");
     lcdNl();
     lcdPrintln("UP:   MSC");
-    lcdPrintln("  (to copy files");
-    lcdPrintln("     to badge)");
+    lcdPrintln("(copy files to badge)");
+    lcdNl();
+    if (batteryGetVoltage() < 3500) {
+      lcdPrint("Battery: low" );
+    } else {
+      lcdPrint("Battery: good" );
+    }
     lcdDisplay();
     getInputWait();
     getInputWaitRelease();
