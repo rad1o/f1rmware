@@ -42,3 +42,4 @@ f_lseek
 lcd_select
 lcd_deselect
 lcdWrite
+ws2812_sendarray
