@@ -96,7 +96,7 @@ void ram(void)
 
       // remove last, add first line
       draw_block(snake.tail[del].x, snake.tail[del].y, 0xFF);
-      draw_block(snake.tail[pos].x, snake.tail[pos].y, 0x00);
+      draw_block(snake.tail[pos].x, snake.tail[pos].y, 0b00011000);
 
       // check for obstacle hit..
       if (hitWall() || hitSelf()) {
@@ -144,13 +144,13 @@ static void reset()
   // setup the screen
   lcdClear();
   for (i=MIN_X; i<MAX_X; i++) {
-    lcdSetPixel(i,MIN_Y,0x00);
-    lcdSetPixel(i,MAX_Y,0x00);
+    lcdSetPixel(i,MIN_Y,0b000101011);
+    lcdSetPixel(i,MAX_Y,0b000101011);
   }
 
   for (i=MIN_Y; i<MAX_Y; i++) {
-    lcdSetPixel(MIN_X,i,0x00);
-    lcdSetPixel(MAX_X,i,0x00);
+    lcdSetPixel(MIN_X,i,0b000101011);
+    lcdSetPixel(MAX_X,i,0b000101011);
   }
 
   snake.speed = MIN_SPEED;
@@ -169,9 +169,9 @@ static void reset()
   snake.tail[2].y = SIZE_Y/2;
 
   // print initail tail
-  draw_block(snake.tail[0].x, snake.tail[0].y, 0x00);
-  draw_block(snake.tail[1].x, snake.tail[1].y, 0x00);
-  draw_block(snake.tail[2].x, snake.tail[2].y, 0x00);
+  draw_block(snake.tail[0].x, snake.tail[0].y, 0b00011000);
+  draw_block(snake.tail[1].x, snake.tail[1].y, 0b00011000);
+  draw_block(snake.tail[2].x, snake.tail[2].y, 0b00011000);
 
   // switch to level one
   next_level();
@@ -197,10 +197,11 @@ static void draw_block(int x, int y, int set)
 static void next_level()
 {
   food = getFood();
-  draw_block( food.x, food.y, 0x00);
+  draw_block( food.x, food.y, 0b11101000);
 
   snake.len++;
   snake.speed--;
+  setTextColor(0xff,0b11100000);
   DoString(0,0,IntToStr(++points,6,0));
 }
 
@@ -245,7 +246,7 @@ static void death_anim()
 
   while(a--) {
     //    lcdToggleFlag(LCD_INVERTED);
-    lcdFill(0x00);
+    lcdFill(0b11100000);
     lcdDisplay();
     delayms(100);
     lcdFill(0xFF);
@@ -301,10 +302,20 @@ static int showHighscore()
   score = highscore_get(nick);
 
   lcdClear();
+  setTextColor(0xff,0x00);
   DoString(0,RESY/2-33, "  Your Score");
+  // Display own score in green color, if it's higher than high score, else red
+  if (points > score) {
+    setTextColor(0xff,0b00011100);
+  } else {
+    setTextColor(0xff,0b11100000);
+  }
   DoString(RESX/2-4, RESY/2-25, IntToStr(points,6,0));
+  setTextColor(0xff,0x00);
   DoString(0,RESY/2-10, "  Highscore");
+  setTextColor(0xff,0b11100000);
   DoString(RESX/2-4, RESY/2-2, IntToStr(score,6,0));
+  setTextColor(0xff,0x00);
   DoString(0, RESY/2+18, "  UP to play ");
   DoString(0, RESY/2+26, "DOWN to quit ");
 
