@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
 # lcd2ani.pl - by <sec@42.org> 08/2015, BSD Licence
 #

@@ -18,7 +18,7 @@ libopencm3/README:
 	git submodule update
 
 libopencm3/lib/libopencm3_lpc43xx.a:
-	cd libopencm3 && make
+	$(MAKE) -C libopencm3
 
 lib: libopencm3/README libopencm3/lib/libopencm3_lpc43xx.a
 

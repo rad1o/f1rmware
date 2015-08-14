@@ -76,7 +76,7 @@ $(APP).elf: $(OBJS) $(LDSCRIPT)
 endif
 
 $(RPATH)/l0dables/jumptable.c: $(RPATH)/l0dables/EXPORTS
-	make -C $(RPATH)/l0dables jumptable.c
+	$(MAKE) -C $(RPATH)/l0dables jumptable.c
 
 $(DEPDIR):
 	mkdir $(DEPDIR)

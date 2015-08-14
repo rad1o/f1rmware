@@ -20,11 +20,12 @@
           sudo apt-get update
           ```
       `sudo apt-get install gcc-arm-none-eabi libnewlib-arm-none-eabi`
-
     * Arch: `sudo pacman -S arm-none-eabi-gcc arm-none-eabi-newlib arm-none-eabi-binutils`
+    * FreeBSD: Theory: `sudo pkg install arm-none-eabi-gcc492 arm-none-eabi-binutils` / `portmaster devel/arm-none-eabi-gcc492 devel/arm-none-eabi-binutils`; practice: `kldload linux` & see _Manual installation_
 * python-yaml (http://pyyaml.org/)
     * Debian/Ubuntu: `sudo apt-get install python-yaml`
     * Arch: `sudo pacman -S python-yaml`
+    * FreeBSD: `sudo pkg install py27-yaml` or `portmaster devel/py-yaml`
     * Alternative: via pip/virtualenv
 * libopencm3 (fork, https://github.com/rad1o/libopencm3)
     * If you are using `git`, the preferred way to install
@@ -41,9 +42,11 @@
 * xxd (optional, needed for flashapp / flash-station setup)
     * Debian: probably already installed (is a part of vim-common package)
     * Arch: `yaourt -S xxd`
+    * FreeBSD: part of `vim-lite` package / `editors/vim-lite` port
 * dfu-util (optional, convenient for development, http://dfu-util.sourceforge.net/)
     * Debian/Ubuntu: `sudo apt-get install dfu-util`
     * Arch: `sudo pacman -S dfu-util`
+    * FreeBSD: `pkg install dfu-util` / `portmaster ports/dfu-util`
     * If you want to use smartflash, instead build and install our fork from https://github.com/rad1o/dfu-util
 
       ```
@@ -65,6 +68,8 @@ git clone https://github.com/rad1o/f1rmware.git
 cd f1rmware
 make
 ```
+
+On BSD systems, use `gmake` instead of `make`.
 
 
 ## Flash rad1o
