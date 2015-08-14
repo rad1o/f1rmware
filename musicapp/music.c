@@ -1299,7 +1299,7 @@ void SAMPLES_isr(void) {
 }
 
 void samples_start(void) {
-    for(int i=0; i < SAMPLES_BANK_SIZE/2; i++) *(uint32_t*)samples = 0;
+    for(int i=0; i < SAMPLES_BANK_SIZE/2; i++) ((uint32_t*)samples)[i] = 0;
 
     samples_done = 0;
     samples_ptr = 0;
