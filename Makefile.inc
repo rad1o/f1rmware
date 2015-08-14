@@ -21,6 +21,7 @@ CFLAGS += -std=c99 -c -g -Wall -Wno-unused-function
 CFLAGS += -fno-common -ffunction-sections -fdata-sections -fno-builtin -ffreestanding
 #CFLAGS += -fmessage-length=0 
 CFLAGS += $(LFLAGS)
+CFLAGS += $(ADDFLAGS)
 
 LDSCRIPT?=$(RPATH)/libopencm3/lib/libopencm3_lpc43xx.ld
 

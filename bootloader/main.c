@@ -29,6 +29,7 @@
 #include "intrinsics.h"
 
 #include <lpcapi/msc/msc_main.h>
+#include <lpcapi/msc/msc_disk.h>
 
 #define BOOTCFG "BOOT.CFG"
 

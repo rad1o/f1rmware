@@ -38,7 +38,7 @@ void ram(void)
   int dir = 0;
   int dx,dy;
 
-
+  setExtFont(GLOBAL(nickfont));
   dx=DoString(0,0,nickname);
   dx=(RESX-dx)/2;
   if(dx<0)

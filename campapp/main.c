@@ -14,6 +14,7 @@
 #include <r0ketlib/print.h>
 #include <r0ketlib/stringin.h>
 #include <r0ketlib/night.h>
+#include <r0ketlib/render.h>
 
 #include <rad1olib/pins.h>
 #include <rad1olib/systick.h>
@@ -27,7 +28,7 @@ void infoscreen(){
     lcdClear();
     lcdPrintln("-------------------");
     lcdPrintln("-RAD1O BADGE SETUP-");
-    lcdPrintln("---- FW REV 01 ----");
+    lcdPrintln("---- FW REV 02 ----");
     lcdNl();
     lcdPrintln("To enter BOOT Menu");
     lcdPrintln("hold Joystick");
@@ -136,7 +137,6 @@ int main(void) {
 
 	inputInit();
 	fsInit(); 
-	lcdFill(0xff);
 	readConfig();
 	switch(getInputRaw()){
 		case BTN_RIGHT:
@@ -145,6 +145,7 @@ int main(void) {
 			break;
 	};
 	lcdInit();
+	lcdFill(0xff);
 	batteryInit();
 
 	generated_init();
@@ -170,6 +171,8 @@ int main(void) {
 			getInputWaitRelease();
 		};
 		fancyNickname();
+		setTextColor(0xFF,0x00);
+
 	};
 	return 0;
 }
