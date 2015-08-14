@@ -9,7 +9,7 @@
       cd projectdir
       wget https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q2-update/+download/gcc-arm-none-eabi-4_9-2015q2-20150609-linux.tar.bz2
       tar -xjf gcc-arm-none-eabi-4_9-2015q2-20150609-linux.tar.bz2
-      export PATH=`pwd`/gcc-arm-none-eabi-4_9-2015q2/bin:$PATH`
+      export PATH=`pwd`/gcc-arm-none-eabi-4_9-2015q2/bin:$PATH
       ```
     * Debian/Ubuntu: 
         * Ubuntu 14.04 users start with:
