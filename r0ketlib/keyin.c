@@ -27,7 +27,7 @@ void inputInit(void){
 };
 
 
-void keyRotate(char doit) {
+void keySetRotation(char doit) {
 	isTurned = doit;
 }
 

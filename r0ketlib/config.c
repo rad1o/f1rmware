@@ -43,25 +43,22 @@ char nickl0[FLEN];
 /**************************************************************************/
 
 void applyConfig(){
-    if(GLOBAL(lcdcontrast)>0) {
+    if(GLOBAL(lcdcontrast)>0)
         lcdSetContrast(GLOBAL(lcdcontrast));
-    };
-    if(GLOBAL(develmode)) {
+    if(GLOBAL(develmode))
         enableConfig(CFG_TYPE_DEVEL,1);
-    };
-    if(isNight()) {
+    if(isNight())
         ON(LCD_BL_EN);
-    }else {
+    else
         OFF(LCD_BL_EN);
-    };
 
     if(GLOBAL(vdd_fix))
         ON(EN_VDD);
     else
         OFF(EN_VDD);
 
-	lcdRotateLeft(GLOBAL(lcdmirror));
-	keyRotate(GLOBAL(lcdmirror));
+    lcdSetRotation(GLOBAL(lcdmirror));
+    keySetRotation(GLOBAL(lcdmirror));
 }
 
 int saveConfig(void){

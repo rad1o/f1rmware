@@ -26,8 +26,6 @@ void rotate_menu(){
 			lcdWrite(TYPE_CMD,0x36); // MDAC-Command 
 			lcdWrite(TYPE_DATA,0b01100000); // // my,mx,v,lao,rgb,x,x,x
 			lcd_deselect();
-			keyRotate(1);
-			
 			lcdDisplay();
 			break;
 		case BTN_RIGHT:
@@ -35,7 +33,6 @@ void rotate_menu(){
 			lcdWrite(TYPE_CMD,0x36); // MDAC-Command 
 			lcdWrite(TYPE_DATA,0b10100000); // // my,mx,v,lao,rgb,x,x,x
 			lcd_deselect();	
-			keyRotate(0);
 			lcdDisplay();
 			break;
 		case BTN_DOWN:
@@ -43,7 +40,6 @@ void rotate_menu(){
 			lcdWrite(TYPE_CMD,0x36); // MDAC-Command 
 			lcdWrite(TYPE_DATA,0b00000000); // // my,mx,v,lao,rgb,x,x,x
 			lcd_deselect();	
-			keyRotate(0);
 			lcdDisplay();
 			break;			
 		case BTN_UP:	
@@ -51,7 +47,6 @@ void rotate_menu(){
 			lcdWrite(TYPE_CMD,0x36); // MDAC-Command 
 			lcdWrite(TYPE_DATA,0b11000000); // // my,mx,v,lao,rgb,x,x,x
 			lcd_deselect();	
-			keyRotate(0);
 			lcdDisplay();
 			break;
 		case BTN_ENTER:   // Exit
