@@ -9,5 +9,19 @@
 #include "usetable.h"
 
 void ram(void){
-    lcdShowImageFile("nick.lcd");
+  if (lcdShowImageFile("nick.lcd") != 0) {
+    lcdClear();
+    lcdNl();
+    lcdPrintln("-------------------");
+    lcdPrintln("-   Image file    -");
+    lcdPrintln("-    nick.lcd     -");
+    lcdPrintln("-   not found.    -");
+    lcdPrintln("-                 -");
+    lcdPrintln("- Copy it here or -");
+    lcdPrintln("- choose another  -");
+    lcdPrintln("-    animation.   -");
+    lcdPrintln("-------------------");
+    lcdNl();
+    lcdDisplay();
+  }
 }
