@@ -17,9 +17,9 @@
           ```
           sudo add-apt-repository -y ppa:terry.guo/gcc-arm-embedded
           echo "Package: gcc-arm-none-eabi\n Pin: release o=LP-PPA-terry.guo-gcc-arm-embedded\n Priority: 501" |sudo tee /etc/apt/preferences.d/pin-gcc-arm-embedded
-          sudo apt-gte update
+          sudo apt-get update
           ```
-      `sudo apt-get install gcc-arm-none-eabi libnewlib-arm-none-eabi`
+      `sudo apt-get install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi`
 
     * Arch: `sudo pacman -S arm-none-eabi-gcc arm-none-eabi-newlib arm-none-eabi-binutils`
 * python-yaml (http://pyyaml.org/)
