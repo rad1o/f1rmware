@@ -13,11 +13,7 @@ unsigned int frames = 0;
 unsigned int ctr = 0;
 unsigned int framectr = 0;
 
-/**************************************************************************/
-
-void init_rgbLeds(void) {
-	readTextFile("ledfile.cfg",GLOBAL(ledfile),FLEN);
-	char filename[FLEN];
+void readRgbLedFile(void) {
 	int size = getFileSize(GLOBAL(ledfile));
 	frames = 0;
 	ctr = 0;
@@ -30,24 +26,31 @@ void init_rgbLeds(void) {
 	}
 }
 
-void tick_rgbLeds(void) {
-	if(frames > 0) {
-		if(ctr == 0) {
-			ws2812_sendarray(&leds[framectr*3*8+2], 3*8);
-			framectr++;
-			if(framectr >= frames)
-				framectr = 0;
-		}
+/**************************************************************************/
 
-		ctr++;
-		// LED delay is in leds[0:1]
-		if(ctr >= ((leds[0]<<8) + leds[1]))
-			ctr = 0;
+void init_rgbLeds(void) {
+	readTextFile("ledfile.cfg",GLOBAL(ledfile),FLEN);
+	readRgbLedFile();
+}
+
+void tick_rgbLeds(void) {
+	if(GLOBAL(rgbleds)) {
+		if(frames > 0) {
+			if(ctr == 0) {
+				ws2812_sendarray(&leds[framectr*3*8+2], 3*8);
+				framectr++;
+				if(framectr >= frames)
+					framectr = 0;
+			}
+
+			ctr++;
+			// LED delay is in leds[0:1]
+			if(ctr >= ((leds[0]<<8) + leds[1]))
+				ctr = 0;
+		}
 	}
 	return;
 }
-
-/**************************************************************************/
 
 //# MENU rgb_leds
 void selectLedFile(void){

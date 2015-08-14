@@ -30,6 +30,7 @@ struct CDESC the_config[]= {
     {"nickfg",           0,     0, 255, 1, CFG_TYPE_DEVEL},
     {"nickbg",           255,   0, 255, 1, CFG_TYPE_DEVEL},
     {"vdd_fix",          0,     0, 1,   0, 0},
+    {"rgbleds",          0,     0, 1,   0, 0},
     { NULL,              0,     0, 0  , 0, 0},
 };
 
@@ -52,6 +53,12 @@ void applyConfig(){
         ON(LCD_BL_EN);
     else
         OFF(LCD_BL_EN);
+
+	if(GLOBAL(rgbleds)) {
+		SETUPgout(RGB_LED);
+	} else {
+		SETUPgin(RGB_LED);
+	}
 
     if(GLOBAL(vdd_fix))
         ON(EN_VDD);
