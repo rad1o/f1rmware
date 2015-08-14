@@ -4,6 +4,7 @@
 #include <r0ketlib/render.h>
 #include <r0ketlib/idle.h>
 #include <r0ketlib/keyin.h>
+#include <rad1olib/light_ws2812_cortex.h>
 
 #include "usetable.h"
 
@@ -23,6 +24,25 @@
 #define NICKNAME_ACTION_HIDE 2
 
 void ram(void){
+  static uint8_t pattern[] = {
+                  255, 0, 0,
+                  0, 0, 0,
+                  0, 0, 0,
+                  0, 0, 0,
+                  255, 0, 0,
+                  0, 0, 0,
+                  0, 0, 0,
+                  0, 0, 0,
+                  255, 0, 0,
+                  0, 0, 0,
+                  0, 0, 0,
+                  0, 0, 0,
+                  255, 0, 0,
+                  0, 0, 0,
+                  0, 0, 0,
+                  0, 0, 0,
+                  };
+  static int PATTERN_SIZE = sizeof(pattern);
 	lcdClear();
   lcdFill(0x00);
 	// nickname helper variables
@@ -90,6 +110,20 @@ void ram(void){
 			}
 		}
 		lcdDisplay();
+
+    // Animate das blinkenlights
+    int g1 = pattern[0];
+    int b1 = pattern[1];
+    int r1 = pattern[2];
+
+    for (int i=0; i < PATTERN_SIZE - 3; ++i) {
+      pattern[i] = pattern[i+3];
+    }
+    pattern[PATTERN_SIZE - 3] = g1;
+    pattern[PATTERN_SIZE - 2] = b1;
+    pattern[PATTERN_SIZE - 1] = r1;
+    ws2812_sendarray(pattern, PATTERN_SIZE);
+
 		// show and hide nickname
 		ticks_until_next_nickname_action--;
 		if (ticks_until_next_nickname_action <= 0) {
