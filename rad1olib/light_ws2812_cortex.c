@@ -111,6 +111,6 @@ void ws2812_sendarray(uint8_t *data,int datlen)
 			);
 	}
 	/* Reset CPU speed to previous */
-	cpu_clock_set(_cpu_speed);
+	cpu_clock_set(old_cpu_speed);
 }
 
