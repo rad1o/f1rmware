@@ -6,6 +6,7 @@ void lcdPrint(const char *string);
 void lcdNl(void);
 void lcdCheckNl(void);
 void lcdPrintln(const char *string);
+void lcdPrintInt(int number);
 void lcdClear();
 void lcdRefresh();
 void lcdMoveCrsr(signed int dx,signed int dy);
