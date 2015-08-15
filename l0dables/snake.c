@@ -217,7 +217,8 @@ static void next_level()
   strcpy (highscore_string,"HI: ");
   strcat (highscore_string,IntToStr(highscore,6,0));
 
-  snake.len++;
+  if(snake.len < MAX_SNAKE_LEN-2)
+    snake.len++;
   if(snake.speed >= MAX_SPEED)
     snake.speed--;
 
