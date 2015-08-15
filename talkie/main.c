@@ -42,9 +42,67 @@
 
 #define PI 3.14159265358979323846
 #define NB_SAMPLES 22728
+#define DEFAULT_SAMPLE_RATE_HZ (10000000) /* 10MHz default sample rate */
+#define DEFAULT_BASEBAND_FILTER_BANDWIDTH (5000000) /* 5MHz default */
+
 //#define BUFFER_SIZE = 4096
 
+typedef struct {
+	uint32_t bandwidth_hz;
+} max2837_ft_t;
+
 uint32_t g_freq = 2537000000U;
+const uint64_t g_freq64 = (const uint64_t)2537000000U;
+uint32_t baseband_filter_bw_hz = 0;
+uint32_t sample_rate_hz;
+
+/* Required for baseband bandwidth cal. */
+static const max2837_ft_t max2837_ft[] = {
+	{ 1750000  },
+	{ 2500000  },
+	{ 3500000  },
+	{ 5000000  },
+	{ 5500000  },
+	{ 6000000  },
+	{ 7000000  },
+	{ 8000000  },
+	{ 9000000  },
+	{ 10000000 },
+	{ 12000000 },
+	{ 14000000 },
+	{ 15000000 },
+	{ 20000000 },
+	{ 24000000 },
+	{ 28000000 },
+	{ 0        }
+};
+
+
+/*
+ * Return final bw round down and less than expected bw.
+ *
+ * (this one was originally implemented in the libhackrf source)
+ */
+uint32_t hackrf_compute_baseband_filter_bw_round_down_lt(const uint32_t bandwidth_hz)
+{
+	const max2837_ft_t* p = max2837_ft;
+	while( p->bandwidth_hz != 0 )
+	{
+		if( p->bandwidth_hz >= bandwidth_hz )
+		{
+			break;
+		}
+		p++;
+	}
+	/* Round down (if no equal to first entry) */
+	if(p != max2837_ft)
+	{
+		p--;
+	}
+	return p->bandwidth_hz;
+}
+
+
 
 void night_tick(void){
     static int ctr;
@@ -130,7 +188,7 @@ void sys_tick_handler(void){
 void talkie_init(void)
 {
     /* Hack RF cpu_clock_init mix with rad10lib. */
-	
+
     /* use IRC as clock source for APB1 (including I2C0) */
 	CGU_BASE_APB1_CLK = CGU_BASE_APB1_CLK_CLK_SEL(CGU_SRC_IRC);
 
@@ -233,7 +291,7 @@ void talkie_init(void)
 
 	/* set DIV C to 40.8 MHz */
 	CGU_IDIVC_CTRL= CGU_IDIVC_CTRL_CLK_SEL(CGU_SRC_PLL1)
-		| CGU_IDIVC_CTRL_AUTOBLOCK(1) 
+		| CGU_IDIVC_CTRL_AUTOBLOCK(1)
 		| CGU_IDIVC_CTRL_IDIV(5-1)
 		| CGU_IDIVC_CTRL_PD(0)
 		;
@@ -243,7 +301,7 @@ void talkie_init(void)
 
     /* Set DIV B to 102MHz */
 	CGU_IDIVB_CTRL= CGU_IDIVB_CTRL_CLK_SEL(CGU_SRC_PLL1)
-		| CGU_IDIVB_CTRL_AUTOBLOCK(1) 
+		| CGU_IDIVB_CTRL_AUTOBLOCK(1)
 		| CGU_IDIVB_CTRL_IDIV(2-1)
 		| CGU_IDIVB_CTRL_PD(0)
 		;
@@ -254,58 +312,61 @@ void talkie_init(void)
  */
 
 void transmit(void) {
-    volatile uint32_t buffer[NB_SAMPLES];
+    char sz_freq[11];
+    volatile uint32_t buffer[4096];
 
-    double amp=0.5, d_phi=(2*PI)/NB_SAMPLES, phi_zero=PI/4.0,r0;
-    unsigned int I0,Q0;
+    /* LED setup (debug :) */
+    SETUPgout(LED4);
+    ON(LED4);
 
-    char sz_freq[12];
-    uint16_t samples[16];
-    uint32_t* const p = (uint32_t*)&samples;
-    int i;
-
+    /* HackRF setup as found in hackrf_core.c */
     pin_setup();
     enable_1v8_power();
     enable_rf_power();
     delay(1000000);
-
-    SETUPgout(LED4);
-    ON(LED4);
-
     cpu_clock_init();
 
+    /* Required by the LCD. */
     cpu_clock_set(204);
+
+    /* Mic amplifier enabled. */
     SETUPgout(MIC_AMP_DIS);
     OFF(MIC_AMP_DIS);
+
+    /* DAC enabled (in order to make some sound). *.
     dac_init(false);
 
+    /* Found in hackrf_usb: main. */
     ssp1_init();
     rf_path_init();
-    //baseband_streaming_disable();
-    rf_path_set_direction(RF_PATH_DIRECTION_TX);
-    //si5351c_activate_best_clock_source();
-    //baseband_streaming_enable();
-    
-    //ssp1_set_mode_max2837();
-    //max2837_setup();
-    //max2837_set_frequency(g_freq);
 
+    /* Set sample rate and frac.
+     * Found in hackrf_transfer.c
+     */
+     sample_rate_frac_set(2*g_freq, 1);
+
+     /* Compute default value depending on sample rate */
+     baseband_filter_bw_hz = hackrf_compute_baseband_filter_bw_round_down_lt(sample_rate_hz);
+
+     /* Set carrier frequency. */
+     set_freq(g_freq64);
+
+    /* Found in hackrf_usb: set_transceiver_mode.
+     * Called by hackrf_start_tx().
+     */
+    baseband_streaming_disable();
+    rf_path_set_direction(RF_PATH_DIRECTION_TX);
+    si5351c_activate_best_clock_source();
+    baseband_streaming_enable();
+
+    // Enable amplification (TX)
+    rf_path_set_lna(1);
     // Enable antenna
     rf_path_set_antenna(1);
 
-    
-    // Enable amplification (TX)
-    rf_path_set_lna(1);
-    max2837_start();
-    max2837_tx();
+    /* JUSQUE LA, TOUT VA BIEN :) */
     OFF(LED4);
-   
-    /* Tune the max2837. */
-    {
-    const uint64_t g_freq64 = ( const uint64_t)g_freq;
-        set_freq(g_freq64);
-    }
-    
+
     sz_freq[0]='2';
     sz_freq[1]='5';
     sz_freq[2]='4';
@@ -320,7 +381,7 @@ void transmit(void) {
     lcdPrintln("=== Transmit RF ===");
     lcdPrintln(IntToStr(g_freq/1000000, 5, F_LONG));
     lcdDisplay();
-    
+
     while (1){
 #if 0
         /* Handles joystick up and down, inc/dec frequency when pressed. */
@@ -402,30 +463,21 @@ void transmit(void) {
               [p] "l" (p)
             : "r0"
         );
-#endif
 	//sgpio_set_slice_mode(false);
     //SGPIO_SET_EN_1 &= (~(1 << SGPIO_SLICE_A));
 	//sgpio_configure(TRANSCEIVER_MODE_TX);
-	
+#endif
+
+  buffer[0] = 0xda808080;
+  buffer[1] = 0xda80ff80;
+  buffer[2] = 0x26808080;
+  buffer[3] = 0x26800180;
+
     uint32_t i = 0;
-
-    /* We generate 22727 samples, with a increase of phi of 0.000276 */
-    for (i=0; i<NB_SAMPLES; i++) {
-        r0 = 2*amp*cos(d_phi*i - phi_zero);
-        I0 = 0x7FFF * (r0*cos(d_phi*i)+0.5);
-        Q0 = 0x7FFF * (r0*sin(d_phi*i)+0.5);
-        buffer[i] = (I0 & 0xFF);
-        buffer[i] |= (Q0 & 0xFF)<<8;
-        buffer[i] |= (I0 & 0xFF00)<<8;
-        buffer[i] |= (Q0 & 0xFF00)<<16;
-    }
-    i = 0;
-
-	sgpio_cpld_stream_enable();
 
 	while(true) {
 		while(SGPIO_STATUS_1 == 0);
-		SGPIO_REG_SS(SGPIO_SLICE_A) = buffer[(i++) % NB_SAMPLES];
+		SGPIO_REG_SS(SGPIO_SLICE_A) = buffer[(i++) &3];
 		SGPIO_CLR_STATUS_1 = 1;
 	}
     }
@@ -447,7 +499,7 @@ int main(void) {
 	inputInit();
 	lcdInit();
 	lcdFill(0xff);
-	
+
     /* Required by the tick-based callbacks. */
 	generated_init();
 
@@ -457,7 +509,7 @@ int main(void) {
     lcdDisplay();
 
     /* Transmit. */
-    while(1) transmit(); 
+    while(1) transmit();
 
     return 0;
 }
