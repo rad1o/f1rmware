@@ -96,7 +96,7 @@ void si_en(){
 };
 
 int main(void) {
-	cpu_clock_init();
+	cpu_clock_init_();
 	ssp_clock_init();
 
 	systickInit();
@@ -205,10 +205,10 @@ void doSpeed(){
 				while(1){
 					cpu_clock_set(102);
 					TOGGLE(LED1);
-					delay(1000);
+					delayNop(1000);
 					cpu_clock_set(12);
 					TOGGLE(LED1);
-					delay(1000);
+					delayNop(1000);
 				};
 				break;
 			case BTN_RIGHT:
@@ -409,9 +409,9 @@ void doLCD(){
 	while(1){
 
 		OFF(LCD_BL_EN);
-		delay(10000+pwm*100);
+		delayNop(10000+pwm*100);
 		ON(LCD_BL_EN);
-		delay(10000-pwm*100);
+		delayNop(10000-pwm*100);
 
 		switch(getInput()){
 			case BTN_NONE:
@@ -740,9 +740,9 @@ void doFeld(){
 		if (page>2){page=0;}
 
 		ON(LED1);
-		delay(200000);
+		delayNop(200000);
 		OFF(LED1);
-		delay(200000);
+		delayNop(200000);
 
 		ctr++;
 		lcdNl();

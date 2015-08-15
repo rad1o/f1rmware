@@ -33,7 +33,7 @@
 int main(void)
 {
 	int i;
-	cpu_clock_init();
+	cpu_clock_init_();
 	cpu_clock_set(204);
 
 	scu_pinmux(P4_2,SCU_GPIO_NOPULL|SCU_CONF_FUNCTION0);
@@ -53,13 +53,13 @@ int main(void)
 		    gpio_set(PORT_LED1, PIN_LED1); /* LED off */
             dac_set(data);
             //dac_set(i);
-		    delay(765);
+		    delayNop(765);
 		    gpio_clear(PORT_LED1, PIN_LED1); /* LED off */
         }
         dac_set(0x3FF);
-		//delay(5);
+		//delayNop(5);
         dac_set(0x0);
-		//delay(5);
+		//delayNop(5);
 	}
 
 	return 0;
