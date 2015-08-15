@@ -249,6 +249,9 @@ void talkie_init(void)
 void transmit(void) {
 
     char sz_freq[12];
+    uint16_t samples[16];
+    uint32_t* const p = (uint32_t*)&samples;
+    int i;
 
     pin_setup();
     enable_1v8_power();
@@ -267,6 +270,11 @@ void transmit(void) {
 
     ssp1_init();
     rf_path_init();
+    baseband_streaming_disable();
+    rf_path_set_direction(RF_PATH_DIRECTION_TX);
+    //si5351c_activate_best_clock_source();
+    //baseband_streaming_enable();
+    
     ssp1_set_mode_max2837();
     max2837_setup();
     max2837_set_frequency(g_freq);
@@ -293,6 +301,7 @@ void transmit(void) {
     lcdPrintln("=== Transmit RF ===");
     lcdPrintln(IntToStr(g_freq/1000000, 5, F_LONG));
     lcdDisplay();
+    
     while (1){
         /* Handles joystick up and down, inc/dec frequency when pressed. */
         if ((getInputRaw() & BTN_UP) == BTN_UP) {
@@ -341,17 +350,37 @@ void transmit(void) {
             }
         }
         
-        if ((adc_get_single(ADC0, ADC_CR_CH7)>>2) > 200)
+        if ((adc_get_single(ADC0, ADC_CR_CH7)>>2) > 127)
             ON(LED4);
         else
             OFF(LED4);
+        /* We read 8 samples from the ADC. */
+        for (i=0; i<8; i++)
+            samples[i] = (i%4)?0xff:0x00;
 
-        /* Start TX with a duty cycle of 0.5 . */
-        max2837_start();
-        max2837_tx();
-        delay(10000);
-        max2837_stop();
-        delay(10000);
+        /* We transfer this to the SGPIO. */
+        __asm__(
+            "ldr r0, [%[p], #0]\n\t"
+            "str r0, [%[SGPIO_REG_SS], #44]\n\t"
+            "ldr r0, [%[p], #4]\n\t"
+            "str r0, [%[SGPIO_REG_SS], #20]\n\t"
+            "ldr r0, [%[p], #8]\n\t"
+            "str r0, [%[SGPIO_REG_SS], #40]\n\t"
+            "ldr r0, [%[p], #12]\n\t"
+            "str r0, [%[SGPIO_REG_SS], #8]\n\t"
+            "ldr r0, [%[p], #16]\n\t"
+            "str r0, [%[SGPIO_REG_SS], #36]\n\t"
+            "ldr r0, [%[p], #20]\n\t"
+            "str r0, [%[SGPIO_REG_SS], #16]\n\t"
+            "ldr r0, [%[p], #24]\n\t"
+            "str r0, [%[SGPIO_REG_SS], #32]\n\t"
+            "ldr r0, [%[p], #28]\n\t"
+            "str r0, [%[SGPIO_REG_SS], #0]\n\t"
+            :
+            : [SGPIO_REG_SS] "l" (SGPIO_PORT_BASE + 0x100),
+              [p] "l" (p)
+            : "r0"
+        );
     }
 }
 
