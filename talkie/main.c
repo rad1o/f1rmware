@@ -28,17 +28,24 @@
 #include <libopencm3/lpc43xx/i2c.h>
 #include <libopencm3/lpc43xx/cgu.h>
 #include <libopencm3/lpc43xx/gpio.h>
+#include <libopencm3/lpc43xx/sgpio.h>
 #include <libopencm3/lpc43xx/scu.h>
 #include <libopencm3/lpc43xx/ssp.h>
 #include <libopencm3/lpc43xx/dac.h>
 #include <libopencm3/lpc43xx/adc.h>
+#include <math.h>
 
 #include "main.gen"
 
 #define EVERY(x,y) if((ctr+y)%(x/SYSTICKSPEED)==0)
 #define WAIT_CPU_CLOCK_INIT_DELAY   (10000)
 
+#define PI 3.14159265358979323846
+#define NB_SAMPLES 22728
+//#define BUFFER_SIZE = 4096
+
 uint32_t g_freq = 2537000000U;
+
 void night_tick(void){
     static int ctr;
     ctr++;
@@ -247,6 +254,10 @@ void talkie_init(void)
  */
 
 void transmit(void) {
+    volatile uint32_t buffer[NB_SAMPLES];
+
+    double amp=0.5, d_phi=(2*PI)/NB_SAMPLES, phi_zero=PI/4.0,r0;
+    unsigned int I0,Q0;
 
     char sz_freq[12];
     uint16_t samples[16];
@@ -270,23 +281,31 @@ void transmit(void) {
 
     ssp1_init();
     rf_path_init();
-    baseband_streaming_disable();
+    //baseband_streaming_disable();
     rf_path_set_direction(RF_PATH_DIRECTION_TX);
     //si5351c_activate_best_clock_source();
     //baseband_streaming_enable();
     
-    ssp1_set_mode_max2837();
-    max2837_setup();
-    max2837_set_frequency(g_freq);
+    //ssp1_set_mode_max2837();
+    //max2837_setup();
+    //max2837_set_frequency(g_freq);
 
     // Enable antenna
     rf_path_set_antenna(1);
+
     
     // Enable amplification (TX)
     rf_path_set_lna(1);
     max2837_start();
     max2837_tx();
     OFF(LED4);
+   
+    /* Tune the max2837. */
+    {
+    const uint64_t g_freq64 = ( const uint64_t)g_freq;
+        set_freq(g_freq64);
+    }
+    
     sz_freq[0]='2';
     sz_freq[1]='5';
     sz_freq[2]='4';
@@ -303,6 +322,7 @@ void transmit(void) {
     lcdDisplay();
     
     while (1){
+#if 0
         /* Handles joystick up and down, inc/dec frequency when pressed. */
         if ((getInputRaw() & BTN_UP) == BTN_UP) {
             delay(4000);
@@ -349,11 +369,12 @@ void transmit(void) {
                 max2837_set_frequency(g_freq);
             }
         }
-        
+
         if ((adc_get_single(ADC0, ADC_CR_CH7)>>2) > 127)
             ON(LED4);
         else
             OFF(LED4);
+
         /* We read 8 samples from the ADC. */
         for (i=0; i<8; i++)
             samples[i] = (i%4)?0xff:0x00;
@@ -381,6 +402,32 @@ void transmit(void) {
               [p] "l" (p)
             : "r0"
         );
+#endif
+	//sgpio_set_slice_mode(false);
+    //SGPIO_SET_EN_1 &= (~(1 << SGPIO_SLICE_A));
+	//sgpio_configure(TRANSCEIVER_MODE_TX);
+	
+    uint32_t i = 0;
+
+    /* We generate 22727 samples, with a increase of phi of 0.000276 */
+    for (i=0; i<NB_SAMPLES; i++) {
+        r0 = 2*amp*cos(d_phi*i - phi_zero);
+        I0 = 0x7FFF * (r0*cos(d_phi*i)+0.5);
+        Q0 = 0x7FFF * (r0*sin(d_phi*i)+0.5);
+        buffer[i] = (I0 & 0xFF);
+        buffer[i] |= (Q0 & 0xFF)<<8;
+        buffer[i] |= (I0 & 0xFF00)<<8;
+        buffer[i] |= (Q0 & 0xFF00)<<16;
+    }
+    i = 0;
+
+	sgpio_cpld_stream_enable();
+
+	while(true) {
+		while(SGPIO_STATUS_1 == 0);
+		SGPIO_REG_SS(SGPIO_SLICE_A) = buffer[(i++) % NB_SAMPLES];
+		SGPIO_CLR_STATUS_1 = 1;
+	}
     }
 }
 

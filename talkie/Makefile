@@ -39,6 +39,7 @@ OBJS += ../hackrf/firmware/common/max2837.o
 OBJS += ../hackrf/firmware/common/max5864.o
 OBJS += ../hackrf/firmware/common/rf_path.o
 OBJS += ../hackrf/firmware/common/sgpio.o
+OBJS += ../hackrf/firmware/common/tuning.o
 OBJS += ../hackrf/firmware/common/streaming.o
 OBJS += ../lpcapi/cdc/cdc_desc.o
 OBJS += ../lpcapi/cdc/cdc_main.o
