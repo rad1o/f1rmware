@@ -11,10 +11,24 @@
 #include "usetable.h"
 
 static void redraw(uint8_t brightness);
+static void blink_shift();
+
+uint8_t pattern[] = {
+        255, 255, 0,
+        255, 0, 255,
+        0,   128,   255,
+        128,   128,   128,
+        0,   255,  255,
+        255,   255,   0,
+        0,   0,   255,
+        255, 0,   0
+    };
+
+
 
 //# MENU ws2812b
 void ram(void){
-    uint8_t brightness = 0;
+    uint8_t brightness = 5;
 
     getInputWaitRelease();
 
@@ -25,6 +39,7 @@ void ram(void){
         lcdPrintln("WS2812B LEDs");
         lcdPrintln("UP: brighter");
         lcdPrintln("DOWN: darker");
+        lcdPrintln("RIGHT: blink");
         lcdPrintln("ENTER: exit");
         lcdDisplay();
 
@@ -37,9 +52,10 @@ void ram(void){
                 if(brightness > 0)
                     redraw(--brightness);
                 break;
-            case BTN_LEFT:
-                return;
             case BTN_RIGHT:
+                    while(getInput()==BTN_NONE) {
+                        blink_shift();
+                     }
                 break;
             case BTN_ENTER:
                 return;
@@ -49,21 +65,29 @@ void ram(void){
 };
 
 static void redraw(uint8_t brightness){
-    uint8_t pattern[] = {
-        255, 255, 0,
-        255, 255, 0,
-
-        0,   0,   255,
-        0,   0,   255,
-        0,   0,   255,
-        0,   0,   255,
-        0,   0,   255,
-        255, 0,   0
-    };
 
     for(uint8_t i=0; i<sizeof(pattern); i++){
         pattern[i] = pattern[i] * brightness / 10;
     }
+
+    ws2812_sendarray(pattern, sizeof(pattern));
+}
+
+static void blink_shift(){
+
+    int pattern_size = sizeof(pattern);
+    uint8_t swap[] = { pattern[0], pattern[1], pattern[2], };
+
+    for(uint8_t i=0; i<pattern_size; i = i+3){
+            pattern[i] = pattern[i+3];
+            pattern[i+1] = pattern[i+4];
+            pattern[i+2] = pattern[i+5];
+    }
+    pattern[pattern_size-3] = swap[0];
+    pattern[pattern_size-2] = swap[1];
+    pattern[pattern_size-1] = swap[2];
+
+    lcdDisplay();
 
     ws2812_sendarray(pattern, sizeof(pattern));
 }
