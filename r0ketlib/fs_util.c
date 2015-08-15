@@ -99,3 +99,14 @@ int writeFile(char * filename, const char * data, int len){
 	return writebytes;
 }
 
+int getFileSize(char * filename){
+    FIL file;
+    int res;
+
+    res=f_open(&file, filename, FA_READ);
+    if(res){
+        return -1;
+    }
+
+    return file.fsize;
+}
