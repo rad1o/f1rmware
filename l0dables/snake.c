@@ -199,7 +199,8 @@ static void next_level()
   food = getFood();
   draw_block( food.x, food.y, 0b11101000);
 
-  snake.len++;
+  if(snake.len < MAX_SNAKE_LEN-2)
+    snake.len++;
   if(snake.speed >= MAX_SPEED)
     snake.speed--;
   setTextColor(0xff,0b11100000);
