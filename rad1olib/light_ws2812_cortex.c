@@ -7,26 +7,22 @@
 
 #include "light_ws2812_cortex.h"
 /*
-* The total length of each bit is 1.25µs (25 cycles @ 20Mhz)
-* At 0µs the dataline is pulled high.
-* To send a zero the dataline is pulled low after 0.375µs
-* To send a one the dataline is pulled low after 0.625µs
-*/
-
-#define ws2812_ctot	(((ws2812_cpuclk/1000)*1250)/1000000)
-#define ws2812_t1	(((ws2812_cpuclk/1000)*375 )/1000000)		// floor
-#define ws2812_t2	(((ws2812_cpuclk/1000)*625+500000)/1000000) // ceil
-
-#define w1 (ws2812_t1-2)
-#define w2 (ws2812_t2-ws2812_t1-2)
-#define w3 (ws2812_ctot-ws2812_t2-5)
+ * Based on:
+ * https://www.adafruit.com/datasheets/WS2812B.pdf
+ */
 
 #define ws2812_DEL1 "	nop		\n\t"
 #define ws2812_DEL2 "   nop \n\t nop \n\t"
 #define ws2812_DEL4 ws2812_DEL2 ws2812_DEL2
 #define ws2812_DEL8 ws2812_DEL4 ws2812_DEL4
 #define ws2812_DEL16 ws2812_DEL8 ws2812_DEL8
+#define ws2812_DEL32 ws2812_DEL16 ws2812_DEL16
 
+#define us400	(((ws2812_cpuclk/1000)*400)/1000000)-1
+#define us850	(((ws2812_cpuclk/1000)*850)/1000000)-7
+
+#define us800	(((ws2812_cpuclk/1000)*800)/1000000)-2
+#define us450	(((ws2812_cpuclk/1000)*450)/1000000)-4
 
 void ws2812_sendarray(uint8_t *data,int datlen)
 {
@@ -52,57 +48,85 @@ void ws2812_sendarray(uint8_t *data,int datlen)
 			"ilop%=:							\n\t"
 			"		movs   %[dat], %[dat], lsl #1 \n\t"
 			"		str %[maskhi], [%[set]]		\n\t"
-#if (w1&1)
-			ws2812_DEL1
-#endif
-#if (w1&2)
-			ws2812_DEL2
-#endif
-#if (w1&4)
-			ws2812_DEL4
-#endif
-#if (w1&8)
-			ws2812_DEL8
-#endif
-#if (w1&16)
-			ws2812_DEL16
-#endif
 			"		bcs one%=					\n\t"
+#if (us400&1)
+			ws2812_DEL1
+#endif
+#if (us400&2)
+			ws2812_DEL2
+#endif
+#if (us400&4)
+			ws2812_DEL4
+#endif
+#if (us400&8)
+			ws2812_DEL8
+#endif
+#if (us400&16)
+			ws2812_DEL16
+#endif
+#if (us400&32)
+			ws2812_DEL32
+#endif
 			"		str %[masklo], [%[clr]]		\n\t"
+#if (us850&1)
+			ws2812_DEL1
+#endif
+#if (us850&2)
+			ws2812_DEL2
+#endif
+#if (us850&4)
+			ws2812_DEL4
+#endif
+#if (us850&8)
+			ws2812_DEL8
+#endif
+#if (us850&16)
+			ws2812_DEL16
+#endif
+#if (us850&32)
+			ws2812_DEL32
+#endif
+			"		b done%=					\n\t"
 			"one%=:								\n\t"
-#if (w2&1)
+#if (us800&1)
 			ws2812_DEL1
 #endif
-#if (w2&2)
+#if (us800&2)
 			ws2812_DEL2
 #endif
-#if (w2&4)
+#if (us800&4)
 			ws2812_DEL4
 #endif
-#if (w2&8)
+#if (us800&8)
 			ws2812_DEL8
 #endif
-#if (w2&16)
+#if (us800&16)
 			ws2812_DEL16
+#endif
+#if (us800&32)
+			ws2812_DEL32
 #endif
 			"		str %[masklo], [%[clr]]		\n\t"
-			"		subs %[ctr], #1				\n\t"
-			ws2812_DEL1
-#if (w3&1)
+#if (us450&1)
 			ws2812_DEL1
 #endif
-#if (w3&2)
+#if (us450&2)
 			ws2812_DEL2
 #endif
-#if (w3&4)
+#if (us450&4)
 			ws2812_DEL4
 #endif
-#if (w3&8)
+#if (us450&8)
 			ws2812_DEL8
 #endif
-#if (w3&16)
+#if (us450&16)
 			ws2812_DEL16
 #endif
+#if (us450&32)
+			ws2812_DEL32
+#endif
+            " done%=:"
+			"		subs %[ctr], #1				\n\t"
 			"		bne 	ilop%=					\n\t"
 			"end%=:								\n\t"
             "CPSIE I \n\t"
