@@ -15,6 +15,7 @@
 #include <r0ketlib/stringin.h>
 #include <r0ketlib/night.h>
 #include <r0ketlib/render.h>
+#include <r0ketlib/itoa.h>
 
 #include <rad1olib/pins.h>
 #include <rad1olib/systick.h>
@@ -38,11 +39,11 @@
 #define WAIT_CPU_CLOCK_INIT_DELAY   (10000)
 
 uint32_t g_freq = 2537000000U;
-
 void night_tick(void){
     static int ctr;
     ctr++;
 
+    /*
     EVERY(1024,0){
         //if(!adcMutex){
             batteryVoltageCheck();
@@ -64,7 +65,7 @@ void night_tick(void){
            };
         };
     };
-
+    */
     EVERY(50,0){
         if(GLOBAL(chargeled)){
             //char iodir= (GPIO_GPIO1DIR & (1 << (11) ))?1:0;
@@ -247,6 +248,8 @@ void talkie_init(void)
 
 void transmit(void) {
 
+    char sz_freq[12];
+
     pin_setup();
     enable_1v8_power();
     enable_rf_power();
@@ -276,6 +279,20 @@ void transmit(void) {
     max2837_start();
     max2837_tx();
     OFF(LED4);
+    sz_freq[0]='2';
+    sz_freq[1]='5';
+    sz_freq[2]='4';
+    sz_freq[3]='1';
+    sz_freq[4]='\0';
+
+    /* Select the lcd display. */
+    lcdInit();
+    lcd_select();
+    lcdFill(0xff);
+    lcdClear();
+    lcdPrintln("=== Transmit RF ===");
+    lcdPrintln(IntToStr(g_freq/1000000, 5, F_LONG));
+    lcdDisplay();
     while (1){
         /* Handles joystick up and down, inc/dec frequency when pressed. */
         if ((getInputRaw() & BTN_UP) == BTN_UP) {
@@ -285,6 +302,18 @@ void transmit(void) {
                 delay(1000000);
                 OFF(LED4);
                 g_freq += 500000;
+
+                /* Select the lcd display. */
+                ssp_clock_init();
+                lcdFill(0xff);
+                lcdClear();
+                lcdPrintln("=== Transmit RF ===");
+                lcdPrintln(IntToStr(g_freq/1000000, 5, F_LONG));
+                lcdDisplay();
+
+                /* Select the max2837. */
+                ssp1_init();
+                ssp1_set_mode_max2837();
                 max2837_set_frequency(g_freq);
             }
         }
@@ -295,6 +324,19 @@ void transmit(void) {
                 delay(1000000);
                 OFF(LED4);
                 g_freq -= 500000;
+
+                /* Select the lcd display. */
+                ssp_clock_init();
+                //lcdInit();
+                lcdFill(0xff);
+                lcdClear();
+                lcdPrintln("=== Transmit RF ===");
+                lcdPrintln(IntToStr(g_freq/1000000, 5, F_LONG));
+                lcdDisplay();
+
+                /* Select the max2837. */
+                ssp1_init();
+                ssp1_set_mode_max2837();
                 max2837_set_frequency(g_freq);
             }
         }
@@ -326,14 +368,10 @@ int main(void) {
     //OFF(MIC_AMP_DIS);
     OFF(LED4);
 
-    //cpu_clock_set(204);
-
 	inputInit();
 	lcdInit();
 	lcdFill(0xff);
 	
-    //batteryInit();
-
     /* Required by the tick-based callbacks. */
 	generated_init();
 
@@ -341,8 +379,6 @@ int main(void) {
     lcdClear();
     lcdPrintln("=== Transmit RF ===");
     lcdDisplay();
-
-    //dac_init(false);
 
     /* Transmit. */
     while(1) transmit(); 
