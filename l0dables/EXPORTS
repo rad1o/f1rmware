@@ -43,3 +43,6 @@ lcd_select
 lcd_deselect
 lcdWrite
 ws2812_sendarray
+drawHLine
+drawVLine
+drawRectFill
