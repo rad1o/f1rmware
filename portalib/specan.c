@@ -54,6 +54,9 @@ typedef struct specan_state_t {
 } specan_state_t;
 
 static const float log_k = 0.00000000001f; // to prevent log10f(0), which is bad...
+uint8_t tmpBuf[256];
+
+extern void spectrum_callback(uint8_t* buf, int bufLen); // in testapp/spectrum.c
 
 void specan_init(void* const _state) {
 	specan_state_t* const state = (specan_state_t*)_state;
@@ -66,10 +69,12 @@ void specan_init(void* const _state) {
 	}
 	state->sample_frames = 16;
 	state->frame_count = 0;
-	const float mag_scale = 0.7071067811865476f / (256.0f * state->sample_frames);
-	state->mag_2_scale = mag_scale * mag_scale;
-	state->spectrum_floor = -4.5f;
-	state->spectrum_gain = 50.0f;
+	//const float mag_scale = 0.7071067811865476f / (256.0f * state->sample_frames);
+	const float mag_scale = 1.4142f / (256.0f * state->sample_frames);
+	state->mag_2_scale = (mag_scale * mag_scale); // * (1.0f/50.0f/0.001f);
+	//state->spectrum_floor = -4.5f;
+	state->spectrum_floor = -10.0f;
+	state->spectrum_gain = 8.0f;
 }
 
 void specan_acknowledge_frame(void* const _state) {
@@ -81,7 +86,7 @@ static void specan_calculate_averages(specan_state_t* const state) {
 	for(size_t i=0; i<256; i++) {
 		const float avg = state->avg[i];
 		state->avg[i] = log_k;
-		const float avg_log = log10f(avg * state->mag_2_scale);
+		const float avg_log = 10.0f * log10f(avg * state->mag_2_scale);
 		const int avg_log_n = (int)roundf((avg_log - state->spectrum_floor) * state->spectrum_gain);
 		const uint8_t avg_n_log_sat = max(min(avg_log_n, 255), 0);
 		state->avg_log[i] = avg_n_log_sat;
@@ -103,7 +108,7 @@ void specan_baseband_handler(void* const _state, complex_s8_t* const in, const s
 	specan_state_t* const state = (specan_state_t*)_state;
 	(void)sample_count_in;
 	(void)timestamps;
-#if 0 
+#if 1
 
 	// avg_log should be:
 	// 		-9 (bin_mag=0)
@@ -120,6 +125,8 @@ void specan_baseband_handler(void* const _state, complex_s8_t* const in, const s
 		specan_calculate_peaks(state);
 		state->frame_count += 1;
 //		ipc_command_spectrum_data(&device_state->ipc_m0, state->avg_log, state->peak_log, 256);
+		spectrum_callback(state->avg_log, 256);
+		state->frame_count = 0; // hack; next if below is otherwise not reached due to missing UI thread
 		return;
 	}
 
@@ -134,11 +141,13 @@ void specan_baseband_handler(void* const _state, complex_s8_t* const in, const s
 
 		const int32_t real = in[i].i;
 		const float real_f = (float)real;
-		spectrum[i_rev].r = real_f * window[i];
+		//spectrum[i_rev].r = real_f * window[i];
+		spectrum[i_rev].r = real_f; // "rectangular" window (no window ;-)
 		
 		const int32_t imag = in[i].q;
 		const float imag_f = (float)imag;
-		spectrum[i_rev].i = imag_f * window[i];
+		//spectrum[i_rev].i = imag_f * window[i];
+		spectrum[i_rev].i = imag_f; // "rectangular" window (no window ;-)
 	}
 	
 	fft_c_preswapped((float*)spectrum, 256);
