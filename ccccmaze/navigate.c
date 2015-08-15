@@ -7,6 +7,7 @@
 
 // separation of code....change this?
 
+
 #include "modules/navigate/initialize.h"
 #include "modules/navigate/room.h"
 #include "modules/navigate/maze.h"
@@ -14,11 +15,10 @@
 //# MENU navigate
 void navigate_menu(){
 	lcdClear();
-	debug("loading...");
 
 	getInputWaitRelease();
 	
-	//initialize();
+	initialize();
 
 	while(1){
 		mazeShow();
