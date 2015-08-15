@@ -99,10 +99,10 @@ uint8_t execute_file (const char * fname){
 void executeSelect(const char *ext){
     char filename[FLEN];
 
-    if( selectFile(filename,ext) == 0){
+    if( selectFile(filename,ext) >= 0){
         if(execute_file(filename)!=0){
-	    getInputWait();
-	};
+            getInputWait();
+        };
     };
 }
 
