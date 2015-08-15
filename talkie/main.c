@@ -40,12 +40,11 @@
 #define EVERY(x,y) if((ctr+y)%(x/SYSTICKSPEED)==0)
 #define WAIT_CPU_CLOCK_INIT_DELAY   (10000)
 
-#define PI 3.14159265358979323846
-#define NB_SAMPLES 22728
 #define DEFAULT_SAMPLE_RATE_HZ (10000000) /* 10MHz default sample rate */
 #define DEFAULT_BASEBAND_FILTER_BANDWIDTH (5000000) /* 5MHz default */
 
-//#define BUFFER_SIZE = 4096
+#define PI 3.14159265358979323846
+#define NB_SAMPLES 50000
 
 typedef struct {
 	uint32_t bandwidth_hz;
@@ -313,7 +312,10 @@ void talkie_init(void)
 
 void transmit(void) {
     char sz_freq[11];
-    volatile uint32_t buffer[4096];
+    volatile uint32_t buffer[1];
+    double amp=0.8;
+    double r0, d_phi = (2*PI)/NB_SAMPLES, phi_zero=PI/4.0;
+    int I0, Q0,i;
 
     /* LED setup (debug :) */
     SETUPgout(LED4);
@@ -468,18 +470,22 @@ void transmit(void) {
 	//sgpio_configure(TRANSCEIVER_MODE_TX);
 #endif
 
-  buffer[0] = 0xda808080;
-  buffer[1] = 0xda80ff80;
-  buffer[2] = 0x26808080;
-  buffer[3] = 0x26800180;
-
-    uint32_t i = 0;
-
-	while(true) {
-		while(SGPIO_STATUS_1 == 0);
-		SGPIO_REG_SS(SGPIO_SLICE_A) = buffer[(i++) &3];
-		SGPIO_CLR_STATUS_1 = 1;
-	}
+    /* We generate 22727 samples, with a increase of phi of 0.000276 */
+    while(true) {
+    for (i=0; i<NB_SAMPLES; i++) {
+        r0 = 2*amp*cos(d_phi*i - phi_zero);
+        I0 = 0x7FFF * (r0*cos(d_phi*i)+0.5);
+        Q0 = 0x7FFF * (r0*sin(d_phi*i)+0.5);
+        buffer[0] = (I0 & 0xFF);
+        buffer[0] |= (Q0 & 0xFF)<<8;
+        buffer[0] |= (I0 & 0xFF00)<<8;
+        buffer[0] |= (Q0 & 0xFF00)<<16;
+        while(SGPIO_STATUS_1 == 0);
+    		SGPIO_REG_SS(SGPIO_SLICE_A) = buffer[0];
+    		SGPIO_CLR_STATUS_1 = 1;
+    }
+    d_phi = 0;
+  }
     }
 }
 
