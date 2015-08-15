@@ -3,6 +3,7 @@
 #include <r0ketlib/render.h>
 #include <r0ketlib/fonts.h>
 #include <r0ketlib/fonts/smallfonts.h>
+#include <r0ketlib/itoa.h>
 
 int x=0;
 int y=0;
@@ -32,7 +33,13 @@ void lcdPrintln(const char *string){
   lcdPrint(string);
   lcdNl();
 }
-  
+
+void lcdPrintInt(int number){
+  // On the ARM chips, int has 32 bits.
+  const char* string = IntToStr(number, 10, 0);
+  lcdPrint(string);
+}
+
 void lcdClear(){
   x=0;y=0;
   lcdFill(0xff);
