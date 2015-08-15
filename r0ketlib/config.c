@@ -10,6 +10,10 @@
 #include <fatfs/ff.h>
 #include <string.h>
 #include <stdint.h>
+#if DEBUG
+#include <r0ketlib/idle.h>
+#include <r0ketlib/print.h>
+#endif
 
 #define CFGVER 3
 
@@ -110,6 +114,8 @@ int saveConfig(void){
 #if DEBUG
 	lcdPrint("close:");
 	lcdPrintln(f_get_rc_string(res));
+  lcdDisplay();
+  delayms(2000);
 #endif
 	if(res){
 		return 1;
