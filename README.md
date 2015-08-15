@@ -21,6 +21,8 @@ IRC channel: irc://irc.darkfasel.net/#rad1o (Port 6697 oder 9999, TLS-only, IPv6
 
 ## instructions in how to create your own loadables and update them to the rad1o
 
+first follow these steps: https://github.com/rad1o/f1rmware/blob/master/doc/build.md
+
 add your .c file to f1rmware/l0adables
 
 add the n1c and c1d to the Makefile in f1rmware/l0adables
