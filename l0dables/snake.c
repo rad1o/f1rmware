@@ -218,7 +218,8 @@ static void next_level()
   strcat (highscore_string,IntToStr(highscore,6,0));
 
   snake.len++;
-  snake.speed--;
+  if(snake.speed >= MAX_SPEED)
+    snake.speed--;
 
   // Display point color based on compare with highscore
   if (points<highscore || (points==1 && highscore==1)) {
