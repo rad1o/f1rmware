@@ -43,3 +43,8 @@ lcd_select
 lcd_deselect
 lcdWrite
 ws2812_sendarray
+batteryCharging
+batteryGetVoltage
+drawHLine
+drawVLine
+drawRectFill
