@@ -1,9 +1,7 @@
 /*
- * Copyright 2012 Michael Ossmann <mike@ossmann.com>
- * Copyright 2012 Benjamin Vernoux <titanmkd@gmail.com>
- * Copyright 2012 Jared Boone <jared@sharebrained.com>
+ * Copyright (C) 2013 Jared Boone, ShareBrained Technology, Inc.
  *
- * This file is part of HackRF.
+ * This file is part of PortaPack.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,21 +19,11 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __SETUP_H
-#define __SETUP_H
+#ifndef __FXPT_ATAN2_H__
+#define __FXPT_ATAN2_H__
 
 #include <stdint.h>
-#include <stdbool.h>
 
-extern uint8_t _cpu_speed;
-void delayNop(uint32_t duration);
+int16_t fxpt_atan2(const int32_t y, const int32_t x);
 
-void cpuClockInit(void);
-void ssp_clock_init(void);
-void cpu_clock_set(uint32_t target_mhz);
-void usb_clock_init(void);
-void hackrf_clock_init(void);
-void si5351_init(void);
-
-
-#endif
+#endif/*__FXPT_ATAN2_H__*/

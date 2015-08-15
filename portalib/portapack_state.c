@@ -1,9 +1,7 @@
 /*
- * Copyright 2012 Michael Ossmann <mike@ossmann.com>
- * Copyright 2012 Benjamin Vernoux <titanmkd@gmail.com>
- * Copyright 2012 Jared Boone <jared@sharebrained.com>
+ * Copyright (C) 2014 Jared Boone, ShareBrained Technology, Inc.
  *
- * This file is part of HackRF.
+ * This file is part of PortaPack.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,21 +19,16 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __SETUP_H
-#define __SETUP_H
+#include "portapack_driver.h"
 
-#include <stdint.h>
-#include <stdbool.h>
+#include <libopencm3/lpc43xx/gpio.h>
+#include <libopencm3/lpc43xx/i2c.h>
+#include <libopencm3/lpc43xx/scu.h>
 
-extern uint8_t _cpu_speed;
-void delayNop(uint32_t duration);
-
-void cpuClockInit(void);
-void ssp_clock_init(void);
-void cpu_clock_set(uint32_t target_mhz);
-void usb_clock_init(void);
-void hackrf_clock_init(void);
-void si5351_init(void);
-
-
-#endif
+int8_t* const sample_buffer_0 = (int8_t*)0x20008000;
+int8_t* const sample_buffer_1 = (int8_t*)0x2000c000;
+device_state_t* const device_state = (device_state_t*)0x20007000;
+uint8_t* const ipc_m4_buffer = (uint8_t*)0x20007c00;
+uint8_t* const ipc_m0_buffer = (uint8_t*)0x20007800;
+//const size_t ipc_m4_buffer_size = 1024;
+//const size_t ipc_m0_buffer_size = 1024;
