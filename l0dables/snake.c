@@ -200,7 +200,8 @@ static void next_level()
   draw_block( food.x, food.y, 0b11101000);
 
   snake.len++;
-  snake.speed--;
+  if(snake.speed >= MAX_SPEED)
+    snake.speed--;
   setTextColor(0xff,0b11100000);
   DoString(0,0,IntToStr(++points,6,0));
 }
