@@ -11,6 +11,7 @@
 #define BTN_RIGHT (1<<3)
 #define BTN_ENTER (1<<4)
 
+void keySetRotation(char doit);
 uint8_t getInputRaw(void);
 uint8_t getInput(void);
 void inputInit(void);

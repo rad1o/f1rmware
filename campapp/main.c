@@ -135,6 +135,8 @@ int main(void) {
 	SETUPgout(LED3);
 	SETUPgout(LED4);
 
+	SETUPgout(RGB_LED);
+
 	inputInit();
 	fsInit(); 
 	readConfig();

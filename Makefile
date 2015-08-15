@@ -7,6 +7,7 @@ travis:
 subdirs:
 	$(MAKE) -C campapp
 	$(MAKE) -C testapp
+	$(MAKE) -C musicapp
 	$(MAKE) -C bootloader
 	$(MAKE) -C flashapp
 	$(MAKE) -C l0dables
@@ -17,7 +18,7 @@ libopencm3/README:
 	git submodule update
 
 libopencm3/lib/libopencm3_lpc43xx.a:
-	cd libopencm3 && make
+	$(MAKE) -C libopencm3
 
 lib: libopencm3/README libopencm3/lib/libopencm3_lpc43xx.a
 
@@ -33,6 +34,7 @@ hackrf: hackrf/Readme.md hackrf/firmware/hackrf_usb/build/hackrf_usb.bin
 clean:
 	$(MAKE) -C campapp clean
 	$(MAKE) -C testapp clean
+	$(MAKE) -C musicapp clean
 	$(MAKE) -C bootloader clean
 	$(MAKE) -C flashapp clean
 	$(MAKE) -C l0dables clean

@@ -19,6 +19,8 @@ void lcdSetPixel(char x, char y, uint8_t f);
 uint8_t lcdGetPixel(char x, char y);
 void lcdShift(int x, int y, int wrap);
 void lcdSetContrast(int c);
+void lcdSetRotation(char doit);
+void lcdRotate(void);
 
 void lcd_select();
 void lcd_deselect();
