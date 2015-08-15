@@ -310,7 +310,7 @@ void portapack_init() {
 	
 // 	portapack_cpld_jtag_io_init();
 
-	device_state->tuned_hz = 96800000;
+	device_state->tuned_hz = 2450000000;
 	device_state->lna_gain_db = 0;
 	device_state->if_gain_db = 32;
 	device_state->bb_gain_db = 32;
@@ -324,6 +324,7 @@ void portapack_init() {
 
 	sgpio_set_slice_mode(false);
 
+	ssp1_init();
 	rf_path_init();
 	rf_path_set_direction(RF_PATH_DIRECTION_RX);
 
@@ -354,8 +355,8 @@ void portapack_init() {
 //	nvic_set_priority(NVIC_M0CORE_IRQ, 255);
 //	nvic_enable_irq(NVIC_M0CORE_IRQ);
 
-//	set_rx_mode(RECEIVER_CONFIGURATION_SPEC);
-	set_rx_mode(RECEIVER_CONFIGURATION_WBFM);
+	set_rx_mode(RECEIVER_CONFIGURATION_SPEC);
+//	set_rx_mode(RECEIVER_CONFIGURATION_WBFM);
 
 	set_frequency(device_state->tuned_hz);
 
