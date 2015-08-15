@@ -30,10 +30,11 @@
 #include <libopencm3/lpc43xx/ssp.h>
 #include <stdint.h>
 
-#define WAIT_CPU_CLOCK_INIT_DELAY   (10000)
+#define WAIT_CPU_CLOCK_INIT_delay   (10000)
 
 uint8_t _cpu_speed=0;
 
+#ifndef RAD10_TALKIE
 void delay(uint32_t duration)
 {
 	uint32_t i;
@@ -41,14 +42,16 @@ void delay(uint32_t duration)
 	for (i = 0; i < duration; i++)
 		__asm__("nop");
 }
+#endif
 
+#ifndef RAD10_TALKIE
 void cpu_clock_init(void) {
 	/* initialisation similar to UM10503 v1.9 sec. 13.2.1.1 */
 	CGU_BASE_M4_CLK = (CGU_BASE_M4_CLK_CLK_SEL(CGU_SRC_IRC) | CGU_BASE_M4_CLK_AUTOBLOCK(1));
 
 	/* Enable XTAL */
 	CGU_XTAL_OSC_CTRL &= ~(CGU_XTAL_OSC_CTRL_HF_MASK|CGU_XTAL_OSC_CTRL_ENABLE_MASK);
-	delay(WAIT_CPU_CLOCK_INIT_DELAY); /* should be 250us / 3000 cycles @ 12MhZ*/
+	delay(WAIT_CPU_CLOCK_INIT_delay); /* should be 250us / 3000 cycles @ 12MhZ*/
 
 	/* Set PLL1 up for 204 MHz */
 	CGU_PLL1_CTRL= CGU_PLL1_CTRL_CLK_SEL(CGU_SRC_XTAL)
@@ -79,8 +82,9 @@ void cpu_clock_init(void) {
 
 	CGU_BASE_M4_CLK = (CGU_BASE_M4_CLK_CLK_SEL(CGU_SRC_IDIVB) | CGU_BASE_M4_CLK_AUTOBLOCK(1));
 
-	delay(WAIT_CPU_CLOCK_INIT_DELAY); /* should be 50us / 5100 @ 102MhZ */
+	delay(WAIT_CPU_CLOCK_INIT_delay); /* should be 50us / 5100 @ 102MhZ */
 };
+#endif
 
 void ssp_clock_init(void) {
 	/* set DIV C to 40.8 MHz */
@@ -107,7 +111,7 @@ void cpu_clock_set(uint32_t target_mhz){ // rounds up
 
 	if(divider==1 && _cpu_speed<102){ // Do not go to 204 in one step
 		cpu_clock_set(102);
-		delay(WAIT_CPU_CLOCK_INIT_DELAY);
+		delay(WAIT_CPU_CLOCK_INIT_delay);
 	};
 
 	CGU_IDIVB_CTRL= CGU_IDIVB_CTRL_CLK_SEL(CGU_SRC_PLL1)

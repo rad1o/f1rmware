@@ -28,7 +28,10 @@
 #include <stdbool.h>
 
 extern uint8_t _cpu_speed;
+
+#ifndef RAD10_TALKIE
 void delay(uint32_t duration);
+#endif
 
 void cpu_clock_init(void);
 void ssp_clock_init(void);
