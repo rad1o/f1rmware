@@ -54,8 +54,6 @@ CFLAGS=-Wno-unused-variable -DRAD1O -DLPC43XX_M4
 OBJS += ../hackrf/firmware/common/w25q80bv.o
 OBJS += ../hackrf/firmware/common/max2871.o
 
-OBJS += ../l0dables/jumptable.o
-
 LDSCRIPT=../ld/app.ld
 RPATH=..
 include ../Makefile.inc
