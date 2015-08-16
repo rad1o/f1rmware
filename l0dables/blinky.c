@@ -31,7 +31,7 @@ void ram(void){
 		    break;
 		case BTN_RIGHT:
 		    TOGGLE(LED3);
-		    delay(10000000);
+		    delayNop(10000000);
 		    break;
 		case BTN_UP:
 		    ON(LED3);
