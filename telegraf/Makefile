@@ -1,4 +1,4 @@
-APP=telegraph
+APP=telegraf
 
 # our code
 OBJS =
