@@ -93,5 +93,5 @@ void ram(void)
 		lcdSetPixel(j, i + 100, palette[fire[i * WIDTH + j]]);
 	    }
 	}
-    } while (getInputRaw() != BTN_ENTER + BTN_LEFT);
+    } while (getInputRaw() == BTN_NONE);
 }
