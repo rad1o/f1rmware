@@ -52,3 +52,9 @@ readTextFile
 writeFile
 drawLine
 lcdMoveCrsr
+DoRect
+DoLine
+DoCube
+DoMesh
+getMeshSizes
+getMesh

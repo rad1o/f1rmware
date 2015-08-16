@@ -28,6 +28,7 @@ OBJS += ../r0ketlib/stringin.o
 OBJS += ../r0ketlib/colorin.o
 OBJS += ../r0ketlib/random.o
 OBJS += ../r0ketlib/image.o
+OBJS += ../r0ketlib/mesh.o
 OBJS += ../r0ketlib/night.o
 OBJS += ../lpcapi/msc/msc_desc.o
 OBJS += ../lpcapi/msc/msc_main.o

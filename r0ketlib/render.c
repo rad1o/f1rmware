@@ -11,6 +11,60 @@
 #include <r0ketlib/display.h>
 #include <rad1olib/assert.h>
 
+#include "math.h"
+
+void swap( int * a, int * b )
+{
+    int x = *a;
+    *a = *b;
+    *b = x;
+}
+
+void swapd( float * a, float * b )
+{
+    float x = *a;
+    *a = *b;
+    *b = x;
+}
+
+typedef struct
+{
+    float x, y, z;
+} Vector3D;
+
+Vector3D addVec3D( Vector3D a, Vector3D b )
+{
+    Vector3D v = {a.x+b.x, a.y+b.y, a.z+b.z};
+    return v;
+}
+
+Vector3D subVec3D( Vector3D a, Vector3D b )
+{
+    Vector3D v = {a.x-b.x, a.y-b.y, a.z-b.z};
+    return v;
+}
+
+float lengthVec3D( Vector3D v )
+{
+    return sqrt( v.x*v.x + v.y*v.y + v.z*v.z );
+}
+
+Vector3D roundVec3D( Vector3D v )
+{
+    Vector3D r = { (int)(v.x + 0.5),
+                   (int)(v.y + 0.5),
+                   (int)(v.z + 0.5) };
+    return r;
+}
+
+Vector3D multMat3DVec3D( float* mat, Vector3D v )
+{
+    Vector3D r = { mat[0] * v.x + mat[1] * v.y + mat[2] * v.z,
+                   mat[3] * v.x + mat[4] * v.y + mat[5] * v.z,
+                   mat[6] * v.x + mat[7] * v.y + mat[8] * v.z };
+    return r;
+}
+
 /* Global Variables */
 const struct FONT_DEF * font = NULL;
 
@@ -360,4 +414,208 @@ int DoString(int sx, int sy, const char *s){
 		sx=DoChar(sx,sy,*c);
 	};
 	return sx;
+}
+
+void DoRect( int x, int y, int width, int height )
+{
+    for(int py = y; py < y+height; ++py)
+    {
+        uint8_t * p = &lcdBuffer[py*RESX];
+        for(int px = x; px < x+width; ++px)
+        {
+            p[px] = color_fg;
+        }
+    }
+}
+
+int abs( int x )
+{
+    return x < 0 ? -x : x;
+}
+
+void DoLine(int x1, int y1, int x2, int y2 )
+{
+    if( (x1 < 0 && x2 < 0)
+     || (y1 < 0 && y2 < 0)
+     || (x1 >= RESX  && x2 >= RESX )
+     || (y1 >= RESY && y2 >= RESY )) return;
+
+    int dx = abs(x2-x1), sx = x1<x2 ? 1 : -1;
+    int dy = abs(y2-y1), sy = y1<y2 ? 1 : -1;
+
+    if(dx != 0)
+    {
+        float m = dy/(float)(dx*sx*sy);
+        float n = y1 - m*x1+0.5;
+        // y = mx+n
+        if( x1 < 0 )
+        {
+            x1 = 0; y1 = (int)(n);
+        }
+        else if( x1 >= RESX )
+        {
+            x1 = RESX - 1; y1 = (int)(x1*m + n);
+        }
+
+        if( x2 < 0 )
+        {
+            x2 = 0; y2 = (int)(n);
+        }
+        else if( x2 >= RESX)
+        {
+            x2 = RESX - 1; y2 = (int)(x2*m + n);
+        }
+    }
+
+    if(dy != 0)
+    {
+        float q = dx/(float)(dy*sx*sy);
+        float r = x1 - q*y1+0.5;
+        // x = qy+r
+        if( y1 < 0 )
+        {
+            y1 = 0; x1 = (int)(r);
+        }
+        else if( y1 >= RESY)
+        {
+            y1 = RESY - 1; x1 = (int)(y1*q + r);
+        }
+
+        if( y2 < 0 )
+        {
+            y2 = 0; x2 = (int)(r);
+        }
+        else if( y2 >= RESY)
+        {
+            y2 = RESY - 1; x2 = (int)(y2*q + r);
+        }
+    }
+
+    if(x1 < 0 || y1 < 0 || x2 < 0 || y2 < 0
+       || x1 >= RESX || y1 >= RESY
+       || x2 >= RESX || y2 >= RESY)
+        return;
+
+    if(y1>y2)
+    {
+        int xz = x1, yz = y1;
+        x1 = x2;     y1 = y2;
+        x2 = xz;     y2 = yz;
+    }
+
+    dx =  abs(x2-x1); sx = x1<x2 ? 1 : -1;
+    dy = y1-y2; sy = y1<y2 ? 1 : -1;
+    int err = dx+dy, e2;
+
+    int* pxmin = x1<x2 ? &x1: &x2;
+    int* pxmax = x1>x2 ? &x1: &x2;
+
+    while(*pxmin < *pxmax || y1 < y2)
+    {
+        lcdBuffer[xy_(x1,y1)]=color_fg;
+        e2 = 2*err;
+        if (e2 > dy) { err += dy; x1 += sx; }
+        if (e2 < dx) { err += dx; y1 ++; }
+    }
+}
+
+void DoCube( int* p, int len, float* r )
+{
+    int px = p[0];
+    int py = p[1];
+    int pz = p[2];
+
+    float rx = r[0];
+    float ry = r[1];
+    float rz = r[2];
+
+    float cx = cos(rx), sx = sin(rx);
+    float cy = cos(ry), sy = sin(ry);
+    float cz = cos(rz), sz = sin(rz);
+    float rotation[9] = { cy*cz,         -cy*sz,          sy,
+                          cx*sz+cz*sx*sy, cx*cz-sx*sy*sz, -cy*sx,
+                          sx*sz-cx*cz*sy, cz*sx+cx*sy*sz, cx*cy };
+    Vector3D xAxis = { len * 0.5, 0, 0 };
+    Vector3D yAxis = { 0, len * 0.5, 0 };
+    Vector3D zAxis = { 0, 0, len * 0.5 };
+    xAxis = multMat3DVec3D( rotation, xAxis );
+    yAxis = multMat3DVec3D( rotation, yAxis );
+    zAxis = multMat3DVec3D( rotation, zAxis );
+    Vector3D p000 = { px, py, pz };
+    Vector3D p100 = { px, py, pz };
+    Vector3D p010 = { px, py, pz };
+    Vector3D p110 = { px, py, pz };
+    Vector3D p001 = { px, py, pz };
+    Vector3D p101 = { px, py, pz };
+    Vector3D p011 = { px, py, pz };
+    Vector3D p111 = { px, py, pz };
+
+    p000 = roundVec3D( subVec3D( subVec3D( subVec3D( p000, xAxis ), yAxis ), zAxis ) );
+    p100 = roundVec3D( subVec3D( subVec3D( addVec3D( p100, xAxis ), yAxis ), zAxis ) );
+    p010 = roundVec3D( subVec3D( addVec3D( subVec3D( p010, xAxis ), yAxis ), zAxis ) );
+    p110 = roundVec3D( subVec3D( addVec3D( addVec3D( p110, xAxis ), yAxis ), zAxis ) );
+    p001 = roundVec3D( addVec3D( subVec3D( subVec3D( p001, xAxis ), yAxis ), zAxis ) );
+    p101 = roundVec3D( addVec3D( subVec3D( addVec3D( p101, xAxis ), yAxis ), zAxis ) );
+    p011 = roundVec3D( addVec3D( addVec3D( subVec3D( p011, xAxis ), yAxis ), zAxis ) );
+    p111 = roundVec3D( addVec3D( addVec3D( addVec3D( p111, xAxis ), yAxis ), zAxis ) );
+
+
+    //    010_________110
+    //      /|       /|
+    //     / |      / |
+    // 000/__+____/100|
+    //    |  |    |   |
+    //    011|____|___|111
+    //    |  /    |  /
+    //    | /     | /
+    //    |/______|/
+    //  001        101
+
+    DoLine( p000.x, p000.y, p100.x, p100.y );
+    DoLine( p000.x, p000.y, p010.x, p010.y );
+    DoLine( p000.x, p000.y, p001.x, p001.y );
+
+    DoLine( p111.x, p111.y, p011.x, p011.y );
+    DoLine( p111.x, p111.y, p101.x, p101.y );
+    DoLine( p111.x, p111.y, p110.x, p110.y );
+
+    DoLine( p011.x, p011.y, p001.x, p001.y );
+    DoLine( p011.x, p011.y, p010.x, p010.y );
+    DoLine( p010.x, p010.y, p110.x, p110.y );
+
+    DoLine( p100.x, p100.y, p110.x, p110.y );
+    DoLine( p100.x, p100.y, p101.x, p101.y );
+    DoLine( p001.x, p001.y, p101.x, p101.y );
+}
+
+void DoMesh( float* verts, int numbVerts, int* faces, int numbfaces, float* rot, int* p, int scale )
+{
+    float rx = rot[0];
+    float ry = rot[1];
+    float rz = rot[2];
+
+    float cx = cos(rx), sx = sin(rx);
+    float cy = cos(ry), sy = sin(ry);
+    float cz = cos(rz), sz = sin(rz);
+    float rotation[9] = { scale*cy*cz,          scale*-cy*sz,         -scale*sy,
+                          scale*cx*sz+cz*sx*sy, scale*cx*cz-sx*sy*sz, -scale*-cy*sx,
+                          scale*sx*sz-cx*cz*sy, scale*cz*sx+cx*sy*sz, -scale*cx*cy };
+
+    Vector3D transformed[numbVerts];
+    Vector3D* vertsVec = (Vector3D*)verts;
+    Vector3D pos = {p[0], p[1], p[2] };
+    for( int i = 0; i < numbVerts; ++i )
+    {
+        transformed[i] = roundVec3D( addVec3D( multMat3DVec3D( rotation, vertsVec[i]), pos ) );
+    }
+    for( int i = 0; i < numbfaces; ++i )
+    {
+        Vector3D v1 = transformed[ faces[i*3 + 0] ];
+        Vector3D v2 = transformed[ faces[i*3 + 1] ];
+        Vector3D v3 = transformed[ faces[i*3 + 2] ];
+
+        DoLine( v1.x, v1.y, v2.x, v2.y );
+        DoLine( v2.x, v2.y, v3.x, v3.y );
+        DoLine( v3.x, v3.y, v1.x, v1.y );
+    }
 }
