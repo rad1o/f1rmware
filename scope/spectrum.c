@@ -22,13 +22,17 @@
 
 #include <portalib/complex.h>
 
+#include "display.h"
+
 volatile int64_t freq = 2450000000;
+uint8_t spectrum_y = 0;
+uint8_t spectrum[RESY][128];
+int acc = 0;
 
 void spectrum_callback(uint8_t* buf, int bufLen)
 {
 	TOGGLE(LED2);
 
-	lcdClear();
 	for(int i = 0; i < 128; i++) // display 128 FFT magnitude points
 	{
 		// FFT unwrap:
@@ -37,16 +41,17 @@ void spectrum_callback(uint8_t* buf, int bufLen)
 			v = buf[(bufLen/2)+64+i];
 		else // positive frequencies
 			v = buf[i-64];
-		
-		// fill display	
-		for(int j = 0; j < (v/2); j++)
-			lcdBuffer[i+RESX*(RESY-j)] = 0x00;
+
+                spectrum[spectrum_y][i] += v >> 3;
+                /* spectrum[spectrum_y][i] = v; */
 	}
-	
-	// text info
-	lcdPrint("f=");
-	lcdPrint(IntToStr(freq/1000000,4,F_LONG));
-	lcdPrintln("MHz");
-	lcdPrintln("-5MHz    0    +5MHz");
-	lcdDisplay();
+
+        acc++;
+        if (acc >= 8) {
+          acc = 0;
+          spectrum_y++;
+          if (spectrum_y >= RESY)
+            spectrum_y = 0;
+          memset(spectrum[spectrum_y], 0, 128);
+        }
 }

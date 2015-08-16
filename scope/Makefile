@@ -3,7 +3,6 @@ APP=scope
 # our code
 OBJS =
 OBJS += ../rad1olib/setup.o
-OBJS += ../r0ketlib/display.o
 OBJS += ../r0ketlib/render.o
 OBJS += ../r0ketlib/fonts/smallfonts.o
 OBJS += ../r0ketlib/fonts/orbitron14.o
@@ -55,8 +54,6 @@ OBJS += $(SOBJS)
 CFLAGS=-Wno-unused-variable -DRAD1O -DLPC43XX_M4
 OBJS += ../hackrf/firmware/common/w25q80bv.o
 OBJS += ../hackrf/firmware/common/max2871.o
-
-OBJS += ../l0dables/jumptable.o
 
 CFLAGS+=-I../portalib
 CFLAGS+=-I../hackrf/firmware/common

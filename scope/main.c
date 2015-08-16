@@ -6,7 +6,6 @@
 #include <unistd.h>
 
 #include <rad1olib/setup.h>
-#include <r0ketlib/display.h>
 #include <r0ketlib/print.h>
 #include <r0ketlib/itoa.h>
 #include <r0ketlib/keyin.h>
@@ -28,13 +27,54 @@
 
 #include <portalib/complex.h>
 
+#include "display.h"
+
 extern uint32_t sctr;
 extern complex_s8_t *s8ram;
 extern volatile int64_t freq;
+extern uint8_t spectrum_y;
+extern uint8_t spectrum[RESY][128];
 
 void sys_tick_handler(void){
 	incTimer();
 };
+
+
+void draw(void) {
+  int sy = spectrum_y;
+  startPixels();
+  for(int y = 0; y < RESY; y++) {
+    for(int x = 0; x < RESX; x++) {
+      uint8_t v = (x >= 1 && x <= 128) ? spectrum[sy][x - 1] : 0;
+      uint8_t r;
+      uint8_t g;
+      uint8_t b;
+      if (v < 0x40) {
+        r = 0;
+        g = 0;
+        b = v << 2;
+      } else if (v < 0x80) {
+        r = (v - 0x40) << 2;
+        g = 0;
+        b = 255 - (v << 2);
+      } else if (v < 0xC0) {
+        r = 255;
+        g = (v - 0x80) << 2;
+        b = 0;
+      } else {
+        r = 255;
+        g = 255;
+        b = (v - 0xC0) << 2;
+      }
+      emitPixel(r, g, b);
+      /* lcdSetPixel(x + 1, y, (r & 0b11100000) | ((g >> 3) & 0b11100) | ((b >> 6) & 0b11)); */
+    }
+    sy--;
+    if (sy < 0)
+      sy = RESY - 1;
+  }
+  stopPixels();
+}
 
 int main(void) {
 	cpu_clock_init_(); /* CPU Clock is now 104 MHz */
@@ -53,10 +93,11 @@ int main(void) {
 	SETUPgout(LED4);
 
 	inputInit();
-	lcdInit();
-	fsInit(); 
-	lcdFill(0xff);
-	readConfig();
+	/* lcdInit(); */
+	/* fsInit();  */
+	/* lcdFill(0); */
+	/* readConfig(); */
+        memset(spectrum, RESY * 128, 0);
 
 	cpu_clock_set(204); // WARP SPEED! :-)
 	hackrf_clock_init();
@@ -75,6 +116,7 @@ int main(void) {
         portapack_init();
         
 	while(1){
+		TOGGLE(LED1);
 		switch(getInputRaw())
 		{
 			case BTN_LEFT:
@@ -88,6 +130,7 @@ int main(void) {
 				set_freq(freq);
 				break;
 		}
-		TOGGLE(LED2);
+
+                draw();
 	};
 };
