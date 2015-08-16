@@ -5,8 +5,15 @@
 
 #define FLEN 13
 
+typedef struct {
+    DWORD total;
+    DWORD free;
+} FS_USAGE;
+
 void fsInit(void);
 void fsReInit(void);
+int fsInfo(FATFS *fs);
+int fsUsage(FATFS *fs, FS_USAGE *fs_usage);
 int readFile(char * filename, char * data, int len);
 int readTextFile(char * filename, char * data, int len);
 int writeFile(char * filename, const char * data, int len);

@@ -2,10 +2,12 @@
 #include <r0ketlib/print.h>
 #include <r0ketlib/keyin.h>
 #include <r0ketlib/display.h>
+#include <r0ketlib/fs_util.h>
 #include <stdint.h>
 #include <string.h>
 
 FATFS FatFs;          /* File system object for logical drive */
+FS_USAGE FsUsage;
 
 const TCHAR *rcstrings =
     _T("OK\0DISK_ERR\0INT_ERR\0NOT_READY\0NO_FILE\0NO_PATH\0INVALID_NAME\0")
@@ -41,6 +43,35 @@ void fsInit(){
 
 void fsReInit(){
 	f_mount(&FatFs,"/",0);
+}
+
+int fsInfo(FATFS *fs)
+{
+    memcpy(fs, &FatFs, sizeof(FATFS));
+    return 0;
+}
+int fsUsage(FATFS *fs, FS_USAGE *fs_usage)
+{
+    FRESULT res;
+    DWORD tot_clust, fre_clust, sec_size;
+
+    res = f_getfree("/", &fre_clust, &fs);
+    if(res != FR_OK)
+        return -res;
+
+    // sectore size = sectors per cluster *  sector size
+#if _MAX_SS == _MIN_SS
+    sec_size = fs->csize * _MAX_SS;
+#else
+    sec_size = fs->csize * fs.ssize;
+#endif
+
+    // total/free sectors * sectore size
+    tot_clust = fs->n_fatent - 2;
+    fs_usage->total = tot_clust * sec_size; //FatFs.ssize;
+    fs_usage->free = fre_clust * sec_size; //FatFs.ssize;
+
+    return 0;
 }
 
 int readFile(char * filename, char * data, int len){
