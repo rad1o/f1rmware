@@ -5,6 +5,7 @@
 
 #include <unistd.h>
 #include <string.h>
+#include <math.h>
 
 #include <rad1olib/setup.h>
 #include <r0ketlib/print.h>
@@ -33,18 +34,22 @@
 
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
 
-#define KEEP_SAMPLES 128
+#define USE_SAMPLES 128
+#define KEEP_SAMPLES 119
 
 volatile int64_t freq = 2450000000;
-uint16_t spectrum_y = 0;
-uint8_t spectrum[RESY][KEEP_SAMPLES];
+uint8_t spectrum_y = 0;
+uint8_t spectrum[KEEP_SAMPLES][USE_SAMPLES];
+int acc = 0;
+int acc_bits = 3;
+int acc_max = 8;
 
 
 void spectrum_callback(uint8_t* buf, int bufLen)
 {
 	OFF(LED2);
 
-	for(int i = 0; i < KEEP_SAMPLES; i++) // display 128 FFT magnitude points
+	for(int i = 0; i < USE_SAMPLES; i++) // display 128 FFT magnitude points
 	{
 		// FFT unwrap:
 		uint8_t v;
@@ -53,20 +58,35 @@ void spectrum_callback(uint8_t* buf, int bufLen)
 		else // positive frequencies
 			v = buf[i-63];
 
-                spectrum[spectrum_y][i] += v;
+                spectrum[spectrum_y][i] += v >> acc_bits;
 	}
 
-        spectrum_y++;
-        if (spectrum_y >= RESY)
-          spectrum_y = 0;
-        memset(spectrum[spectrum_y], 0, KEEP_SAMPLES * sizeof(spectrum[0][0]));
-
+        acc++;
+        if (acc >= acc_max) {
+          acc = 0;
+          spectrum_y++;
+          if (spectrum_y >= KEEP_SAMPLES)
+            spectrum_y = 0;
+          memset(spectrum[spectrum_y], 0, USE_SAMPLES * sizeof(spectrum[0][0]));
+        }
+        
         ON(LED2);
 }
 
 void sys_tick_handler(void){
 	incTimer();
 };
+
+
+void draw_rect(int x1, int y1, int x2, int y2, uint8_t c) {
+  for(int y = y1; y <= y2; y++) {
+    for(int x = x1; x <= x2; x++) {
+      lcdSetPixel(x, y, c);
+    }
+  }
+}
+
+void draw_opt_bar(int content_y);
 
 uint8_t v_to_rgb[255];
 
@@ -96,42 +116,120 @@ void init_v_to_rgb() {
   }
 }
 
-void draw(void) {
-  int x, y;
-  lcdFill(RGB_TO_8BIT(0, 0, 255));
 
-  int max_grade = 0;
-  for(y = 0; y < RESY; y++) {
-    for(x = 0; x < KEEP_SAMPLES; x++) {
-      uint16_t v = spectrum[y][x];
-      while(v > (1 << max_grade))
-        max_grade++;
-    }
+
+void opt_freq_input(int key, int step_size) {
+  switch(key)
+  {
+  case BTN_UP:
+    freq += step_size * 1000000;
+    ssp1_set_mode_max2837();
+    set_freq(freq);
+    break;
+  case BTN_DOWN:
+    freq -= step_size * 1000000;
+    ssp1_set_mode_max2837();
+    set_freq(freq);
+    break;
   }
+}
+
+void opt_freq_input1(int key) {
+  opt_freq_input(key, 1);
+}
+void opt_freq_input10(int key) {
+  opt_freq_input(key, 10);
+}
+void opt_freq_input100(int key) {
+  opt_freq_input(key, 100);
+}
+void opt_freq_draw(int step_size) {
+  draw_opt_bar(122);
+  lcdSetCrsr(0, 123);
+  setTextColor(0xff, RGB_TO_8BIT(0x7f, 0, 0));
+  lcdPrint(IntToStr(freq/1000000,4,F_LONG));
+  lcdPrint(" MHz");
+  setTextColor(0xff, RGB_TO_8BIT(0, 0x7f, 0));
+  lcdPrint("   +-");
+  lcdPrint(IntToStr(step_size, 3, 0));
+}
+
+void opt_freq_draw1() {
+  opt_freq_draw(1);
+}
+void opt_freq_draw10() {
+  opt_freq_draw(10);
+}
+void opt_freq_draw100() {
+  opt_freq_draw(100);
+}
+
+void opt_acc_input(int key) {
+  if (key == BTN_UP && acc_bits > 0) {
+    acc_bits--;
+    acc_max = powl(2, acc_bits);
+  } else if (key == BTN_DOWN && acc_bits < 7) {
+    acc_bits++;
+    acc_max = powl(2, acc_bits);
+  }
+}
+
+void opt_acc_draw() {
+  draw_opt_bar(122);
+  lcdSetCrsr(0, 123);
+  setTextColor(0xff, RGB_TO_8BIT(0, 0x7f, 0));
+  lcdPrint("Timescale:");
+
+  lcdSetCrsr(RESX - 24, 123);
+  setTextColor(0xff, RGB_TO_8BIT(0x7f, 0, 0));
+  lcdPrint("1:");
+  lcdPrint(IntToStr(acc_bits + 1, 1, 0));
+}
   
+struct option_entry {
+  void (*input)(int);
+  void (*draw)();
+};
+
+struct option_entry options[] = {
+  { opt_freq_input1, opt_freq_draw1 },
+  { opt_freq_input10, opt_freq_draw10 },
+  { opt_freq_input100, opt_freq_draw100 },
+  { opt_acc_input, opt_acc_draw }
+};
+int current_option = 0;
+int options_len = sizeof(options) / sizeof(options[0]);
+
+void draw_opt_bar(int content_y) {
+  draw_rect(0, content_y, RESX - 1, RESY - 1, 0xff);
+
+  int tab_x1 = RESX * current_option / options_len;
+  int tab_x2 = RESX * (current_option + 1) / options_len;
+  draw_rect(0, content_y - 2, tab_x1 - 1, content_y - 2, RGB_TO_8BIT(0, 0, 0xFF));
+  draw_rect(tab_x1, content_y - 2, tab_x2, content_y - 2, RGB_TO_8BIT(0xFF, 0xFF, 0));
+  draw_rect(tab_x2 + 1, content_y - 2, RESX, content_y - 2, RGB_TO_8BIT(0, 0, 0xFF));
+  draw_rect(0, content_y - 1, tab_x1 - 1, content_y - 1, RGB_TO_8BIT(0, 0, 0xBF));
+  draw_rect(tab_x1, content_y - 1, tab_x2, content_y - 1, RGB_TO_8BIT(0xBF, 0xBF, 0));
+  draw_rect(tab_x2 + 1, content_y - 1, RESX, content_y - 1, RGB_TO_8BIT(0, 0, 0xBF));
+}
+
+void draw_spectrum(void) {
+  int x, y;
+  draw_rect(0, 0, (RESX - USE_SAMPLES) / 2 - 1, KEEP_SAMPLES, 0xFF);
+  draw_rect(RESX - (RESX - USE_SAMPLES) / 2, 0, RESX - 1, KEEP_SAMPLES, 0xFF);
+
   int spectrum_y_old = spectrum_y;
   int sy = spectrum_y;
-  for(y = 0; y < RESY; y++) {
-    for(x = 0; x < KEEP_SAMPLES; x++) {
-      uint16_t v = spectrum[sy][x] >> (max_grade - 8);
+  for(y = 0; y < KEEP_SAMPLES; y++) {
+    for(x = 0; x < USE_SAMPLES; x++) {
+      uint8_t v = spectrum[sy][x];
       uint8_t c = v_to_rgb[v];
       lcdSetPixel(x + 1, y, c);
     }
     sy--;
     if (sy < 0)
-      sy = RESY - 1;
+      sy = KEEP_SAMPLES - 1;
   }
-
-  lcdSetCrsr(0, 122);
-  setTextColor(RGB_TO_8BIT(0, 0, 255), RGB_TO_8BIT(0, 255, 255));
-  lcdPrint("5 < ");
-  setTextColor(RGB_TO_8BIT(0, 0, 255), RGB_TO_8BIT(255, 255, 255));
-  lcdPrint(IntToStr(freq/1000000,4,F_LONG));
-  lcdPrint(" MHz");
-  setTextColor(RGB_TO_8BIT(0, 0, 255), RGB_TO_8BIT(0, 255, 255));
-  lcdPrint(" > 5");
-             
-  lcdDisplay();
 }
 
 int main(void) {
@@ -153,7 +251,7 @@ int main(void) {
 	inputInit();
 	lcdInit();
         setIntFont(&Font_8x8Thin);
-        memset(spectrum, RESY * KEEP_SAMPLES, 0);
+        memset(spectrum, KEEP_SAMPLES * USE_SAMPLES, 0);
 
 	cpu_clock_set(204); // WARP SPEED! :-)
 	hackrf_clock_init();
@@ -174,31 +272,25 @@ int main(void) {
         init_v_to_rgb();
 	while(1){
 		OFF(LED1);
-		switch(getInputRaw())
-		{
-			case BTN_LEFT:
-				freq -= 2000000;
-				ssp1_set_mode_max2837();
-				set_freq(freq);
-				break;
-			case BTN_RIGHT:
-				freq += 2000000;
-				ssp1_set_mode_max2837();
-				set_freq(freq);
-				break;
-			case BTN_UP:
-				freq += 100000000;
-				ssp1_set_mode_max2837();
-				set_freq(freq);
-				break;
-			case BTN_DOWN:
-				freq -= 100000000;
-				ssp1_set_mode_max2837();
-				set_freq(freq);
-				break;
-		}
 
-                draw();
+                int key = getInputRaw();
+                if (key == BTN_LEFT) {
+                  current_option--;
+                  if (current_option < 0) {
+                    current_option = options_len - 1;
+                  }
+                } else if (key == BTN_RIGHT) {
+                  current_option++;
+                  if (current_option >= options_len)
+                    current_option = 0;
+                } else {
+                  options[current_option].input(key);
+                }
+
+                draw_spectrum();
+                options[current_option].draw();
+                lcdDisplay();
+  
                 ON(LED1);
-	};
-};
+	}
+}
