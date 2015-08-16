@@ -109,9 +109,10 @@ void spectrum_menu()
 				ssp1_set_mode_max2837();
 				set_freq(freq);
 				break;
-			case BTN_ENTER:
+			//case BTN_ENTER:
 				//FIXME: unset the callback, reset the clockspeed, tidy up
 				//return;
+
 		}
 	}
 }
