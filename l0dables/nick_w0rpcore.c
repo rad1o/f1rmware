@@ -16,6 +16,7 @@
 #include <r0ketlib/render.h>
 #include <r0ketlib/print.h>
 #include <r0ketlib/keyin.h>
+#include <rad1olib/pins.h>
 
 #include "usetable.h"
 
@@ -66,13 +67,12 @@ void ram(void)
 				ship.speed++;
 			} else if (key == BTN_DOWN && ship.speed > SPEED_STOP) {
 				ship.speed--;
-			} else if (key ==BTN_NONE) {
+			} else if (key == BTN_NONE && count % 12 == 0) {
 				/* converge towards default speed */
-				if (ship.speed < SPEED_DEFAULT) {
+				if (ship.speed < SPEED_DEFAULT)
 					ship.speed++;
-				} else if (ship.speed > SPEED_DEFAULT) {
-					ship.speed--;
-				}
+				else if (ship.speed > SPEED_DEFAULT)
+					ship.speed--;	
 			}
 		}
 
@@ -82,7 +82,10 @@ void ram(void)
 			set_warp_lights(0);
 		}
 
-		if (ship.speed == 0 && count%6==0) drift_ship();
+        if (count % 3 == 0) OFF(LED4);
+		if (ship.speed == 0 && count%6==0) 
+            drift_ship();
+ 
 
 		int dx=0;
 		int dy=0;
@@ -133,6 +136,15 @@ void ram(void)
 }
 
 void set_warp_lights(uint8_t enabled) {
+
+    if (enabled) {
+        ON(LED2);
+        ON(LED3);
+    } else {
+        OFF(LED2);
+        OFF(LED3);
+    }
+
 	return;
 	//gpioSetValue(LEDA_R, 0);
 	//gpioSetValue(LEDA_G, 0);
@@ -150,6 +162,7 @@ void drift_ship(void) {
 		stars[i].x += d_x;
 		stars[i].y += d_y;
 	}
+    ON(LED4);
 }
 
 void init_star(s_star *star, int z)
