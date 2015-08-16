@@ -52,6 +52,8 @@
 #define DEFAULT_SAMPLE_RATE_HZ (10000000) /* 10MHz default sample rate */
 #define DEFAULT_BASEBAND_FILTER_BANDWIDTH (5000000) /* 5MHz default */
 #define MEASURES 20
+#define PI 3.14159265358979323846
+#define NB_SAMPLES 50000
 
 /* Typedefs */
 
@@ -66,8 +68,8 @@ typedef struct {
 
 /* Globals */
 
-uint32_t g_freq = 2535000000U;
-const uint64_t g_freq64 = (const uint64_t)2535000000U;
+uint32_t g_freq = 2531000000U;
+const uint64_t g_freq64 = (const uint64_t)2531000000U;
 uint32_t baseband_filter_bw_hz = 0;
 uint32_t sample_rate_hz;
 telegraph_mode_t g_current_mode = TELEGRAPH_TX_MODE;
@@ -467,14 +469,11 @@ void telegraph_init_tx(void)
 
 void main_ui(void) {
     char sz_freq[11];
-    double amp=0.8;
-    double r0, d_phi = (2*PI)/NB_SAMPLES, phi_zero=PI/4.0;
-    int I0, Q0,i;
 
     volatile uint32_t buffer[4096];
     double magsq[10];
     int8_t sigi[10], sigq[10];
-    int moy;
+    int moy,i;
 
 
     /* HackRF setup as found in hackrf_core.c */
