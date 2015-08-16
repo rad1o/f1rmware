@@ -9,6 +9,8 @@
 #define TYPE_CMD    0
 #define TYPE_DATA   1
 
+#define RGB(rgb) (rgb & 0b111000000000000000000000) >> 16 | (rgb & 0b000000001110000000000000) >> 11 | (rgb & 0b000000000000000011000000) >> 6
+
 /* Display buffer */
 extern uint8_t lcdBuffer[RESX*RESY];
 

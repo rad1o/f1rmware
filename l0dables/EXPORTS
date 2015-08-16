@@ -48,3 +48,6 @@ batteryGetVoltage
 drawHLine
 drawVLine
 drawRectFill
+readTextFile
+writeFile
+drawLine

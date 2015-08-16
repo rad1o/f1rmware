@@ -38,7 +38,7 @@ void ram(void){
                     redraw(--brightness);
                 break;
             case BTN_LEFT:
-                return;
+                break;
             case BTN_RIGHT:
                 break;
             case BTN_ENTER:
