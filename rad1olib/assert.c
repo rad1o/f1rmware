@@ -8,6 +8,6 @@ void assert_die(void){
 	SETUPgout(LED4);
 	while(1){
 		TOGGLE(LED4);
-		delay(3000000);
+		delayNop(3000000);
 	};
 };

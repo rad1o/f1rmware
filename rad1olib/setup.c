@@ -34,7 +34,7 @@
 
 uint8_t _cpu_speed=0;
 
-void delay(uint32_t duration)
+void delayNop(uint32_t duration)
 {
 	uint32_t i;
 
@@ -48,7 +48,7 @@ void cpu_clock_init(void) {
 
 	/* Enable XTAL */
 	CGU_XTAL_OSC_CTRL &= ~(CGU_XTAL_OSC_CTRL_HF_MASK|CGU_XTAL_OSC_CTRL_ENABLE_MASK);
-	delay(WAIT_CPU_CLOCK_INIT_DELAY); /* should be 250us / 3000 cycles @ 12MhZ*/
+	delayNop(WAIT_CPU_CLOCK_INIT_DELAY); /* should be 250us / 3000 cycles @ 12MhZ*/
 
 	/* Set PLL1 up for 204 MHz */
 	CGU_PLL1_CTRL= CGU_PLL1_CTRL_CLK_SEL(CGU_SRC_XTAL)
@@ -79,7 +79,7 @@ void cpu_clock_init(void) {
 
 	CGU_BASE_M4_CLK = (CGU_BASE_M4_CLK_CLK_SEL(CGU_SRC_IDIVB) | CGU_BASE_M4_CLK_AUTOBLOCK(1));
 
-	delay(WAIT_CPU_CLOCK_INIT_DELAY); /* should be 50us / 5100 @ 102MhZ */
+	delayNop(WAIT_CPU_CLOCK_INIT_DELAY); /* should be 50us / 5100 @ 102MhZ */
 };
 
 void ssp_clock_init(void) {
@@ -107,7 +107,7 @@ void cpu_clock_set(uint32_t target_mhz){ // rounds up
 
 	if(divider==1 && _cpu_speed<102){ // Do not go to 204 in one step
 		cpu_clock_set(102);
-		delay(WAIT_CPU_CLOCK_INIT_DELAY);
+		delayNop(WAIT_CPU_CLOCK_INIT_DELAY);
 	};
 
 	CGU_IDIVB_CTRL= CGU_IDIVB_CTRL_CLK_SEL(CGU_SRC_PLL1)
