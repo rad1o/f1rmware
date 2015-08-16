@@ -105,7 +105,9 @@ void spectrum_init()
 
 void spectrum_stop()
 {
-	nvic_disable_irq(NVIC_DMA_IRQ);
+//	nvic_disable_irq(NVIC_DMA_IRQ);
+	sgpio_dma_stop();
+	sgpio_cpld_stream_disable();
 	OFF(EN_VDD);
 	OFF(EN_1V8);
 	ON(MIC_AMP_DIS);
