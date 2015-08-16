@@ -98,10 +98,27 @@ void roomLoad(){
 		//}
 		// if defined, map room actions -> see actions.h
 	} else {
-		maze_text[0] = maze_filename[2];
-		maze_text[1] = maze_filename[3];
-		maze_text[2] = maze_filename[4];
-		maze_text[3] = maze_filename[5];
+		link_up[0] = '0';
+		link_up[1] = '0';
+		link_up[2] = '0';
+		link_up[3] = '0';
+		link_down[0] = '0';
+		link_down[1] = '0';
+		link_down[2] = '0';
+		link_down[3] = '0';
+		link_left[0] = '0';
+		link_left[1] = '0';
+		link_left[2] = '0';
+		link_left[3] = '0';
+		link_right[0] = '0';
+		link_right[1] = '0';
+		link_right[2] = '0';
+		link_right[3] = '0';
+
+		maze_text[0] = 'n';
+		maze_text[1] = 'o';
+		maze_text[2] = 't';
+		maze_text[3] = 'h';
 		maze_text[4] = 'i';
 		maze_text[5] = 'n';
 		maze_text[6] = 'g';
