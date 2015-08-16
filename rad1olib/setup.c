@@ -51,7 +51,7 @@ void cpu_clock_init(void) {
 
 	/* Enable XTAL */
 	CGU_XTAL_OSC_CTRL &= ~(CGU_XTAL_OSC_CTRL_HF_MASK|CGU_XTAL_OSC_CTRL_ENABLE_MASK);
-	delay(WAIT_CPU_CLOCK_INIT_delay); /* should be 250us / 3000 cycles @ 12MhZ*/
+	delay(WAIT_CPU_CLOCK_INIT_DELAY); /* should be 250us / 3000 cycles @ 12MhZ*/
 
 	/* Set PLL1 up for 204 MHz */
 	CGU_PLL1_CTRL= CGU_PLL1_CTRL_CLK_SEL(CGU_SRC_XTAL)
