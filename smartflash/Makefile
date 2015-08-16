@@ -25,8 +25,8 @@ gather:
 	cp ../testapp/testapp.b1n $(fsdir)/
 	cp ../campapp/camp.b1n $(fsdir)/
 	cp ../musicapp/musicapp.b1n $(fsdir)/
-	cp ../musicapp/welfare.mod $(fsdir)/
 	-cp ../l0dables/*.c1d $(fsdir)/
+	-for a in ../assets/*.led ; do ../tools/convertleds.py -o ${fsdir} $$a  ;done
 	-for a in ../l0dables/*.n1k ; do b=$${a##*/}; cp $$a ${fsdir}/$${b#nick_} ; done
 	cp ../hackrf/firmware/cpld/sgpio_if/default.xsvf $(fsdir)/cpld.xsv
 	# Add f0nts, images, l0dables, etc.
@@ -50,6 +50,7 @@ build:
 	cd ../hackrf && make lib hackrf-usb
 	cd ../campapp && make camp.b1n
 	cd ../testapp && make testapp.b1n
+	cd ../musicapp && make musicapp.b1n
 	cd ../bootloader && make boot.b1n
 	cd ../flashapp && make flashapp.dfu
 	cd ../l0dables && make
