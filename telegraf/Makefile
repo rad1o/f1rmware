@@ -59,7 +59,7 @@ SOBJS = $(foreach mod,$(SRCS),$(subst .c,.o,$(mod)))
 
 OBJS += $(SOBJS)
 
-CFLAGS=-Wno-unused-variable -DRAD1O -DLPC43XX_M4 -I../hackrf/firmware/common/ -DRAD10_TALKIE
+CFLAGS=-Wno-unused-variable -DRAD1O -DLPC43XX_M4 -I../hackrf/firmware/common/ -DRAD10_TELEGRAF
 OBJS += ../hackrf/firmware/common/w25q80bv.o
 OBJS += ../hackrf/firmware/common/max2871.o
 
