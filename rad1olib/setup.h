@@ -29,7 +29,7 @@
 
 extern uint8_t _cpu_speed;
 
-#ifndef RAD10_TALKIE
+#ifndef RAD10_TELEGRAF
 void delay(uint32_t duration);
 #endif
 

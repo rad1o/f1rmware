@@ -34,7 +34,7 @@
 
 uint8_t _cpu_speed=0;
 
-#ifndef RAD10_TALKIE
+#ifndef RAD10_TELEGRAF
 void delay(uint32_t duration)
 {
 	uint32_t i;
@@ -44,7 +44,7 @@ void delay(uint32_t duration)
 }
 #endif
 
-#ifndef RAD10_TALKIE
+#ifndef RAD10_TELEGRAF
 void cpu_clock_init(void) {
 	/* initialisation similar to UM10503 v1.9 sec. 13.2.1.1 */
 	CGU_BASE_M4_CLK = (CGU_BASE_M4_CLK_CLK_SEL(CGU_SRC_IRC) | CGU_BASE_M4_CLK_AUTOBLOCK(1));
