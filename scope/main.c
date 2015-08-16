@@ -4,6 +4,7 @@
  */
 
 #include <unistd.h>
+#include <string.h>
 
 #include <rad1olib/setup.h>
 #include <r0ketlib/print.h>
@@ -29,23 +30,50 @@
 
 #include "display.h"
 
-extern uint32_t sctr;
-extern complex_s8_t *s8ram;
-extern volatile int64_t freq;
-extern uint8_t spectrum_y;
-extern uint8_t spectrum[RESY][128];
+#define MIN(a,b) (((a) < (b)) ? (a) : (b))
+
+
+volatile int64_t freq = 2450000000;
+uint8_t spectrum_y = 0;
+uint16_t spectrum[RESY][128];
+int acc = 0;
+
+#define ACC_SAMPLES 8
+
+void spectrum_callback(uint8_t* buf, int bufLen)
+{
+	TOGGLE(LED2);
+
+	for(int i = 0; i < 128; i++) // display 128 FFT magnitude points
+	{
+		// FFT unwrap:
+		uint8_t v;
+		if(i < 64) // negative frequencies
+			v = buf[(bufLen/2)+64+i];
+		else // positive frequencies
+			v = buf[i-64];
+
+                spectrum[spectrum_y][i] += v;
+	}
+
+        acc++;
+        if (acc >= ACC_SAMPLES) {
+          acc = 0;
+          spectrum_y++;
+          if (spectrum_y >= RESY)
+            spectrum_y = 0;
+          memset(spectrum[spectrum_y], 0, 128 * sizeof(spectrum[0][0]));
+        }
+}
 
 void sys_tick_handler(void){
 	incTimer();
 };
 
+uint8_t v_to_rgb[255][3];
 
-void draw(void) {
-  int sy = spectrum_y;
-  startPixels();
-  for(int y = 0; y < RESY; y++) {
-    for(int x = 0; x < RESX; x++) {
-      uint8_t v = (x >= 1 && x <= 128) ? spectrum[sy][x - 1] : 0;
+void init_v_to_rgb() {
+  for(int v = 0; v < 255; v++) {
       uint8_t r;
       uint8_t g;
       uint8_t b;
@@ -56,7 +84,7 @@ void draw(void) {
       } else if (v < 0x80) {
         r = (v - 0x40) << 2;
         g = 0;
-        b = 255 - (v << 2);
+        b = 255 - ((v - 0x40) << 2);
       } else if (v < 0xC0) {
         r = 255;
         g = (v - 0x80) << 2;
@@ -66,7 +94,30 @@ void draw(void) {
         g = 255;
         b = (v - 0xC0) << 2;
       }
-      emitPixel(r, g, b);
+      v_to_rgb[v][0] = r;
+      v_to_rgb[v][1] = g;
+      v_to_rgb[v][2] = b;
+  }
+}
+
+void draw(void) {
+  int x, y;
+  /* uint16_t max = 0; */
+  /* for(y = 0; y < RESY; y++) { */
+  /*   for(x = 0; x < 128; x++) { */
+  /*     uint8_t v = spectrum[y][x]; */
+  /*     if (v > max) */
+  /*       max = v; */
+  /*   } */
+  /* } */
+  
+  int sy = spectrum_y;
+  startPixels();
+  for(y = 0; y < RESY; y++) {
+    for(x = 0; x < RESX; x++) {
+      uint16_t v = (x >= 1 && x <= 128) ? spectrum[sy][x - 1] : 0;
+      uint8_t *vs = v_to_rgb[MIN(255, v) /*255 * v / max*/];
+      emitPixel(vs[0], vs[1], vs[2]);
       /* lcdSetPixel(x + 1, y, (r & 0b11100000) | ((g >> 3) & 0b11100) | ((b >> 6) & 0b11)); */
     }
     sy--;
@@ -114,7 +165,8 @@ int main(void) {
         cpu_clock_set(204); // WARP SPEED! :-)
         si5351_init();
         portapack_init();
-        
+
+        init_v_to_rgb();
 	while(1){
 		TOGGLE(LED1);
 		switch(getInputRaw())
