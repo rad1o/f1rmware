@@ -32,6 +32,7 @@ int main(void) {
 //	cpu_clock_set(204);
 
 	SETUPgout(EN_VDD);
+    SETUPgout(EN_1V8);
 	SETUPgout(MIXER_EN);
 	SETUPgout(MIC_AMP_DIS);
 
