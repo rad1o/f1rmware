@@ -26,9 +26,7 @@ void dim(uint8_t *target, uint8_t *colours, size_t size, int dimmingfactor){
 
 void ram(void) {
   int dimmingfactor = 10;
-  int dx=0;
-  int dy=0;
-    static uint32_t ctr=0;
+  static uint32_t ctr=0;
   ctr++;
   uint8_t pattern[] = {
     0, 0, 0,
@@ -99,13 +97,6 @@ void ram(void) {
   };
   getInputWaitRelease();
   SETUPgout(RGB_LED);
-
-  setExtFont(GLOBAL(nickfont));
-  dx=DoString(0,0,GLOBAL(nickname));
-    dx=(RESX-dx)/2;
-    if(dx<0)
-        dx=0;
-    dy=(RESY-getFontHeight())/2;
 
   if (lcdShowImageFile("nick.lcd") != 0) {
     lcdClear();
