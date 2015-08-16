@@ -110,3 +110,5 @@ cd f1rmware/
 make
 make flash
 ```
+
+If you don't have the ARM toolchain, an easy way to get it on OS X is to download the [Energia IDE](http://energia.nu/download) and add `/Applications/Energia.app/Contents/Resources/Java/hardware/tools/lm4f/bin/` to your `PATH`.
