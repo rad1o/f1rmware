@@ -51,3 +51,4 @@ drawRectFill
 readTextFile
 writeFile
 drawLine
+lcdMoveCrsr
