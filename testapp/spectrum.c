@@ -8,6 +8,7 @@
 #include <r0ketlib/print.h>
 #include <r0ketlib/itoa.h>
 #include <r0ketlib/keyin.h>
+#include <r0ketlib/intin.h>
 #include <r0ketlib/menu.h>
 #include <r0ketlib/select.h>
 #include <r0ketlib/idle.h>
@@ -76,13 +77,8 @@ void spectrum_callback(uint8_t* buf, int bufLen)
 	lcdDisplay();
 }
 
-//# MENU spectrum
-void spectrum_menu()
+void spectrum_init()
 {
-	lcdClear();
-	lcdDisplay();
-	getInputWaitRelease();
-
 	// RF initialization from ppack.c:
 	dac_init(false);
 	cpu_clock_set(204); // WARP SPEED! :-)
@@ -105,7 +101,32 @@ void spectrum_menu()
 	// defaults:
 	freq = DEFAULT_FREQ;
 	displayMode = DEFAULT_MODE;
+}
 
+void spectrum_stop()
+{
+	nvic_disable_irq(NVIC_DMA_IRQ);
+	OFF(EN_VDD);
+	OFF(EN_1V8);
+	ON(MIC_AMP_DIS);
+	systick_set_clocksource(0);
+	systick_set_reload(12e6/SYSTICKSPEED/1000);
+
+	specan_register_callback(0);
+}
+
+//# MENU spectrum frequency
+void spectrum_frequency()
+{
+	freq=(int64_t)input_int("freq:",(int)(freq/1000000),50,4000,4)*1000000;
+}
+
+//# MENU spectrum show
+void spectrum_show()
+{
+	spectrum_init();
+	ssp1_set_mode_max2837();
+	set_freq(freq);
 	while(1)
 	{
 		switch(getInput())
@@ -127,16 +148,8 @@ void spectrum_menu()
 				set_freq(freq);
 				break;
 			case BTN_ENTER:
-				//FIXME: reset the clockspeed
-				specan_register_callback(0);
-                nvic_disable_irq(NVIC_DMA_IRQ);
-                OFF(EN_VDD);
-                OFF(EN_1V8);
-                ON(MIC_AMP_DIS);
-                systick_set_clocksource(0);
-                systick_set_reload(12e6/SYSTICKSPEED/1000);
+				spectrum_stop();
 				return;
-
 		}
 	}
 }
