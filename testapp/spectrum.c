@@ -15,6 +15,7 @@
 
 #include <r0ketlib/fs_util.h>
 #include <rad1olib/pins.h>
+#include <rad1olib/systick.h>
 
 #include <portalib/portapack.h>
 #include <common/hackrf_core.h>
@@ -29,6 +30,12 @@ static volatile int64_t freq = 2450000000;
 
 #define MODE_SPECTRUM 10
 #define MODE_WATERFALL 20
+
+// How long to wait before starting fast scroll
+#define FAST_CHANGE_DELAY 100
+
+// How much to change per 10 ms when scrolling fast
+#define FAST_CHANGE_CHANGE 2000000
 
 static volatile int displayMode = MODE_SPECTRUM;
 void spectrum_callback(uint8_t* buf, int bufLen)
@@ -72,6 +79,7 @@ void spectrum_callback(uint8_t* buf, int bufLen)
 //# MENU spectrum
 void spectrum_menu()
 {
+    int buttonPressTime;
 	lcdClear();
 	lcdDisplay();
 	getInputWaitRelease();
@@ -94,23 +102,47 @@ void spectrum_menu()
 
 	while(1)
 	{
-		switch(getInput())
+		switch(getInputRaw())
 		{
 			case BTN_UP:
 				displayMode=MODE_WATERFALL;
+                while(getInputRaw()==BTN_UP)
+                    ;
 				break;
 			case BTN_DOWN:
 				displayMode=MODE_SPECTRUM;
+                while(getInputRaw()==BTN_DOWN)
+                    ;
 				break;
 			case BTN_LEFT:
+                buttonPressTime = _timectr;
 				freq -= 2000000;
 				ssp1_set_mode_max2837();
 				set_freq(freq);
+                while(getInputRaw()==BTN_LEFT){
+                    if (_timectr > buttonPressTime + FAST_CHANGE_DELAY/SYSTICKSPEED)
+                    {
+                        freq -= FAST_CHANGE_CHANGE;
+                        ssp1_set_mode_max2837();
+                        set_freq(freq);
+                        delayms(10);
+                    }
+                }
 				break;
 			case BTN_RIGHT:
+                buttonPressTime = _timectr;
 				freq += 2000000;
 				ssp1_set_mode_max2837();
 				set_freq(freq);
+                while(getInputRaw()==BTN_RIGHT){
+                    if (_timectr > buttonPressTime + FAST_CHANGE_DELAY/SYSTICKSPEED)
+                    {
+                        freq += FAST_CHANGE_CHANGE;
+                        ssp1_set_mode_max2837();
+                        set_freq(freq);
+                        delayms(10);
+                    }
+                }
 				break;
 			case BTN_ENTER:
 				//FIXME: unset the callback, reset the clockspeed, tidy up
