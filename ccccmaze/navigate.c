@@ -3,6 +3,7 @@
 #include <r0ketlib/keyin.h>
 #include <r0ketlib/itoa.h>
 #include <r0ketlib/fs_util.h>
+#include <stdio.h>
 #include "utils.h"
 
 // separation of code....change this?

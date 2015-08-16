@@ -66,25 +66,77 @@ void mazeShow(){
 
 	//  split lcd-image, show
 	// maximum characters as blanks - FFx00
-	lcdPrint("             ");
+	if ( link_up[0] == '-' ) {
+		lcdPrint("-------------");
+    } else {
+    	lcdPrint("      ^      ");
+    }
+
 	lcdPrint(maze_position_x);
 	lcdPrint(" ");
 	lcdPrint(maze_position_y);
 	lcdPrintln("");
-	//  render text of file
-	for ( int i = 0; i < sizeof(maze_text); i++ ){
-		if ( maze_text[i] == 0 ){
+
+	//  render text of file padded
+	int pos = 0;
+	char line_buffer[RESTXTX];
+	char padded_line_buffer[RESTXTX];
+	char line_format[5];
+	line_format[0] = ' ';
+	line_format[1] = '%';
+	line_format[2] = 's';
+	line_format[3] = ' ';
+	line_format[4] = 0;
+
+	int col = 0;
+	int row = 0;
+	bool eot = false;
+	for ( int i = 0; i < sizeof(line_buffer); i++ ){line_buffer[i] = ' ';}
+	for ( int pos = 0; pos < MAX_ROOM_SIZE; pos++ ){
+		if (link_left[0]=='-'){
+			line_format[0]='|';
+		} else {
+			line_format[0]='<';
+		}
+		if (link_right[0]=='-'){
+			line_format[3]='|';
+		} else {
+			line_format[3]='>';
+		}
+
+		if ( maze_text[pos] == 0
+			|| row >= RESTXTY - 2
+			){
 			break;
 		}
-		if ( maze_text[i] == '\n' ){
-			lcdPrintln("");
+		if ( maze_text[pos] == '\n'
+			|| col >= RESTXTX - 3
+			){
+			if ( maze_text[pos] != '\n' ){
+				line_buffer[col] = maze_text[pos];
+			}
+			col = 0;
+			row++;
+			snprintf(padded_line_buffer,sizeof(padded_line_buffer),line_format,line_buffer);
+			padded_line_buffer[RESTXTX - 1] = line_format[3];
+			lcdPrintln(padded_line_buffer);
+			for ( int i = 0; i < sizeof(line_buffer); i++ ){line_buffer[i] = ' ';}
 			continue;
 		}
-		char str[2];
-		str[1] = 0;
-		str[0] = maze_text[i];
-		lcdPrint(str);
+		line_buffer[col] = maze_text[pos];
+		col++;
 	}
+	snprintf(padded_line_buffer,sizeof(padded_line_buffer),line_format,line_buffer);
+	lcdPrintln(padded_line_buffer);
+	for ( row = row; row < RESTXTY - 2;row++){
+		lcdPrintln("");
+	}
+
+	if ( link_down[0] == '-' ) {
+		lcdPrint("------------------");
+    } else {
+    	lcdPrint("     \\/      ");
+    }
 	// display position x/y
 	lcdDisplay();
 }
