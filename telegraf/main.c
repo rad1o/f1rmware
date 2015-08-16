@@ -1,6 +1,12 @@
 /*
  * This file is part of rad1o
  *
+ * It implements a basic embedded Morse transmitter able to
+ * handle both TX and RX. Enjoy !
+ *
+ * Authors:
+ *  - Damien Cauquil <d.cauquil@sysdream.com>
+ *  - Julien Boulet  <j.boulet@sysdream.com>
  */
 
 #include <unistd.h>
@@ -40,15 +46,14 @@
 
 #include "main.gen"
 
+/* Defines ... */
 #define EVERY(x,y) if((ctr+y)%(x/SYSTICKSPEED)==0)
 #define WAIT_CPU_CLOCK_INIT_DELAY   (10000)
-
 #define DEFAULT_SAMPLE_RATE_HZ (10000000) /* 10MHz default sample rate */
 #define DEFAULT_BASEBAND_FILTER_BANDWIDTH (5000000) /* 5MHz default */
-
-#define PI 3.14159265358979323846
-#define NB_SAMPLES 50000
 #define MEASURES 20
+
+/* Typedefs */
 
 typedef enum {
   TELEGRAPH_RX_MODE,
@@ -58,6 +63,8 @@ typedef enum {
 typedef struct {
 	uint32_t bandwidth_hz;
 } max2837_ft_t;
+
+/* Globals */
 
 uint32_t g_freq = 2535000000U;
 const uint64_t g_freq64 = (const uint64_t)2535000000U;
@@ -93,6 +100,7 @@ static const max2837_ft_t max2837_ft[] = {
  *
  * (this one was originally implemented in the libhackrf source)
  */
+
 uint32_t hackrf_compute_baseband_filter_bw_round_down_lt(const uint32_t bandwidth_hz)
 {
 	const max2837_ft_t* p = max2837_ft;
@@ -121,24 +129,8 @@ void night_tick(void){
             //char iodir= (GPIO_GPIO1DIR & (1 << (11) ))?1:0;
             if(batteryCharging()) {
                 ON(LED4);
-#if 0
-                if (iodir == gpioDirection_Input){
-                    IOCON_PIO1_11 = 0x0;
-                    gpioSetDir(RB_LED3, gpioDirection_Output);
-                    gpioSetValue (RB_LED3, 1);
-                    LightCheck();
-                }
-#endif
             } else {
                 OFF(LED4);
-#if 0
-                if (iodir != gpioDirection_Input){
-                    gpioSetValue (RB_LED3, 0);
-                    gpioSetDir(RB_LED3, gpioDirection_Input);
-                    IOCON_PIO1_11 = 0x41;
-                    LightCheck();
-                }
-#endif
             }
         };
 
@@ -160,6 +152,11 @@ void sys_tick_handler(void){
 	generated_tick();
 };
 
+/*
+ * Well, math.h provides a pow() function, but it was funny to set our
+ * own.
+ */
+
 int _pow(b, e) {
     int v = 1,i;
     if (e==0)
@@ -175,6 +172,7 @@ int _pow(b, e) {
  *
  * This routine render the frequency and the volume on the display.
  */
+
 void render_display(void) {
   int dx, dy, dx2;
   char num_charset[] = "0123456789";
@@ -184,7 +182,7 @@ void render_display(void) {
   int f = g_freq/1000000;
   int vol = g_volume*100;
 
-  /* Convert freq to string. */
+  /* Convert freq to string (because IntToStr returns a local var !) */
   for (i=4; i>0; i--) {
       sz_freq[4-i] = num_charset[f/_pow(10, i-1)];
       f -= (f/_pow(10, i-1))*(_pow(10,i-1));
@@ -226,7 +224,7 @@ void render_display(void) {
 }
 
 /*
- * Talkie init
+ * Telegraph init
  *
  * This routine was hard to define since there is no doc, but
  * obviously mixing both hackrf init stuff with rad1olib init stuff
@@ -381,6 +379,12 @@ void change_freq(uint32_t freq) {
    max2837_tx();
 }
 
+/*
+ * Initalize the transceiver for reception.
+ *
+ * This setup was undocumented, took us HOURS to figure it out.
+ */
+
 void telegraph_init_rx(void)
 {
   ssp1_init();
@@ -418,6 +422,10 @@ void telegraph_init_rx(void)
   sgpio_set_slice_mode(false);
 }
 
+/*
+ * Same for TX, took us HOURS again (and a lot of Club Mate).
+ */
+
 void telegraph_init_tx(void)
 {
   ssp1_init();
@@ -437,15 +445,11 @@ void telegraph_init_tx(void)
   /* Found in hackrf_usb: set_transceiver_mode.
    * Called by hackrf_start_tx().
    */
-  /*
-  baseband_streaming_disable();
-  */
+
   rf_path_set_direction(RF_PATH_DIRECTION_TX);
   max2837_stop();
   si5351c_activate_best_clock_source();
-  /*
-  baseband_streaming_enable();
-  */
+
   // Enable amplification (TX)
   rf_path_set_lna(1);
   // Enable antenna
@@ -458,10 +462,10 @@ void telegraph_init_tx(void)
 }
 
 /*
- * TX function.
+ * Main UI & TX/RX routine.
  */
 
-void transmit(void) {
+void main_ui(void) {
     char sz_freq[11];
     double amp=0.8;
     double r0, d_phi = (2*PI)/NB_SAMPLES, phi_zero=PI/4.0;
@@ -664,15 +668,10 @@ int main(void) {
 	generated_init();
 
   setTextColor(0xFF,0x00);
-  /*
-  lcdClear();
-  lcdPrintln("=== Transmit RF ===");
-  lcdDisplay();
-  */
   render_display();
 
-  /* Transmit. */
-  while(1) transmit();
+  /* Display UI and switch on radio stuff. */
+  main_ui();
 
   return 0;
 }
