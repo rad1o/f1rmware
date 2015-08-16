@@ -1,4 +1,4 @@
-APP=talkie
+APP=telegraph
 
 # our code
 OBJS =

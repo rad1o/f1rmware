@@ -16,6 +16,9 @@
 #include <r0ketlib/night.h>
 #include <r0ketlib/render.h>
 #include <r0ketlib/itoa.h>
+#include <r0ketlib/fonts.h>
+#include <r0ketlib/fonts/orbitron14.h>
+#include <r0ketlib/fonts/smallfonts.h>
 
 #include <rad1olib/pins.h>
 #include <rad1olib/systick.h>
@@ -48,9 +51,9 @@
 #define MEASURES 20
 
 typedef enum {
-  TALKIE_RX_MODE,
-  TALKIE_TX_MODE
-} talkie_mode_t;
+  TELEGRAPH_RX_MODE,
+  TELEGRAPH_TX_MODE
+} telegraph_mode_t;
 
 typedef struct {
 	uint32_t bandwidth_hz;
@@ -60,7 +63,8 @@ uint32_t g_freq = 2537000000U;
 const uint64_t g_freq64 = (const uint64_t)2537000000U;
 uint32_t baseband_filter_bw_hz = 0;
 uint32_t sample_rate_hz;
-talkie_mode_t g_current_mode = TALKIE_RX_MODE;
+telegraph_mode_t g_current_mode = TELEGRAPH_TX_MODE;
+double g_volume = 0.5;
 
 /* Required for baseband bandwidth cal. */
 static const max2837_ft_t max2837_ft[] = {
@@ -108,35 +112,10 @@ uint32_t hackrf_compute_baseband_filter_bw_round_down_lt(const uint32_t bandwidt
 	return p->bandwidth_hz;
 }
 
-
-
 void night_tick(void){
     static int ctr;
     ctr++;
 
-    /*
-    EVERY(1024,0){
-        //if(!adcMutex){
-            batteryVoltageCheck();
-            LightCheck();
-        //}
-    };
-
-    static char night=0;
-    static char posleds = 0;
-    EVERY(128,2){
-        if(night!=isNight()){
-            night=isNight();
-            if(night){
-                ON(LCD_BL_EN);
-//                push_queue(queue_unsetinvert);
-            }else{
-                OFF(LCD_BL_EN);
-//                push_queue(queue_setinvert);
-           };
-        };
-    };
-    */
     EVERY(50,0){
         if(GLOBAL(chargeled)){
             //char iodir= (GPIO_GPIO1DIR & (1 << (11) ))?1:0;
@@ -181,6 +160,71 @@ void sys_tick_handler(void){
 	generated_tick();
 };
 
+int _pow(b, e) {
+    int v = 1,i;
+    if (e==0)
+        return 1;
+    for (i=0; i<e; i++)
+        v *= b;
+    return v;
+}
+
+
+/*
+ * Display render.
+ *
+ * This routine render the frequency and the volume on the display.
+ */
+void render_display(void) {
+  int dx, dy, dx2;
+  char num_charset[] = "0123456789";
+  char sz_freq[10];
+  char sz_vol[5];
+  int digits = 0,i;
+  int f = g_freq/1000000;
+  int vol = g_volume*100;
+
+  /* Convert freq to string. */
+  for (i=4; i>0; i--) {
+      sz_freq[4-i] = num_charset[f/_pow(10, i-1)];
+      f -= (f/_pow(10, i-1))*(_pow(10,i-1));
+  }
+  sz_freq[4] = ' ';
+  sz_freq[5] = 'M';
+  sz_freq[6] = 'H';
+  sz_freq[7] = 'z';
+  sz_freq[8] = '\0';
+
+  /* Convert freq to string. */
+  for (i=3; i>0; i--) {
+      sz_vol[3-i] = num_charset[vol/_pow(10, i-1)];
+      vol -= (vol/_pow(10, i-1))*(_pow(10,i-1));
+  }
+  sz_vol[3] = '%';
+  sz_vol[4] = '\0';
+
+  setTextColor(0xFF,0x00);
+  lcdClear();
+  setIntFont(&Font_Orbitron14pt);
+
+
+  /* Draw name. */
+  dx = DoString(0, 0, "Telegraph");
+  dx = (RESX - dx)/2;
+  dx2 = DoString(0, 0, sz_freq);
+  dx2 = (RESX - dx2)/2;
+
+  lcdFill(0xFF);
+  DoString(dx, 15, "Telegraph");
+  DoString(dx, 62, sz_freq);
+  setIntFont(&Font_8x8);
+  dx = DoString(12, 90, "Volume:");
+  DoString(12+dx+4, 90, sz_vol);
+
+
+  lcdDisplay();
+}
+
 /*
  * Talkie init
  *
@@ -191,7 +235,7 @@ void sys_tick_handler(void){
  * May have some drawbacks we did not identified yet =).
  */
 
-void talkie_init(void)
+void telegraph_init(void)
 {
     /* Hack RF cpu_clock_init mix with rad10lib. */
 
@@ -337,7 +381,7 @@ void change_freq(uint32_t freq) {
    max2837_tx();
 }
 
-void talkie_init_rx(void)
+void telegraph_init_rx(void)
 {
   ssp1_init();
 
@@ -369,9 +413,12 @@ void talkie_init_rx(void)
   // Enable antenna
   rf_path_set_antenna(1);
 
+  /* Enable streaming. */
+  sgpio_cpld_stream_enable();
+  sgpio_set_slice_mode(false);
 }
 
-void talkie_init_tx(void)
+void telegraph_init_tx(void)
 {
   ssp1_init();
 
@@ -403,6 +450,11 @@ void talkie_init_tx(void)
   rf_path_set_lna(1);
   // Enable antenna
   rf_path_set_antenna(1);
+
+  /* Disable streaming. */
+  sgpio_cpld_stream_disable();
+  sgpio_set_slice_mode(false);
+
 }
 
 /*
@@ -432,7 +484,7 @@ void transmit(void) {
 
     /* LED setup (debug :) */
     SETUPgout(LED4);
-    ON(LED4);
+    OFF(LED4);
 
     /* Required by the LCD. */
     cpu_clock_set(204);
@@ -446,278 +498,154 @@ void transmit(void) {
 
     /* Found in hackrf_usb: main. */
     ssp1_init();
-    rf_path_init();
-    talkie_init_rx();
-    max2837_set_vga_gain(3);
-    #if 0
-    /* Set sample rate and frac.
-     * Found in hackrf_transfer.c
-     */
-     sample_rate_frac_set(2*g_freq, 1);
-
-     /* Compute default value depending on sample rate */
-     baseband_filter_bw_hz = hackrf_compute_baseband_filter_bw_round_down_lt(sample_rate_hz);
-
-     /* Set carrier frequency. */
-     set_freq(g_freq64);
-
-    /* Found in hackrf_usb: set_transceiver_mode.
-     * Called by hackrf_start_tx().
-     */
-    /*
-    baseband_streaming_disable();
-    */
-    rf_path_set_direction(RF_PATH_DIRECTION_TX);
-    max2837_stop();
-    si5351c_activate_best_clock_source();
-    /*
-    baseband_streaming_enable();
-    */
-    // Enable amplification (TX)
-    rf_path_set_lna(1);
-    // Enable antenna
-    rf_path_set_antenna(1);
-
-    //max2837_set_frequency(g_freq);
-    //max2837_start();
-    //max2837_tx();
-    #endif
-
-    //baseband_streaming_enable();
-    max2837_rx();
-    sgpio_cpld_stream_enable();
-    sgpio_set_slice_mode(false);
-
-    /* JUSQUE LA, TOUT VA BIEN :) */
-    sz_freq[0]='2';
-    sz_freq[1]='5';
-    sz_freq[2]='4';
-    sz_freq[3]='1';
-    sz_freq[4]='\0';
-
-    /* Select the lcd display. */
 
     lcdInit();
     ssp_clock_init();
-    lcd_select();
-    lcdFill(0xff);
-    lcdClear();
-    lcdPrintln("=== Transmit RF ===");
-    lcdPrintln(IntToStr(g_freq/1000000, 5, F_LONG));
-    lcdDisplay();
-    OFF(LED4);
+    render_display();
 
-    while (1){
-#if 0
-        /* Handles joystick up and down, inc/dec frequency when pressed. */
-        if ((getInputRaw() & BTN_UP) == BTN_UP) {
-            delay(4000);
-            if ((getInputRaw() & BTN_UP) == BTN_UP) {
-                ON(LED4);
-                delay(1000000);
-                OFF(LED4);
-                g_freq += 500000;
+    max2837_stop();
+    telegraph_init_rx();
+    max2837_start();
+    max2837_set_vga_gain(3);
+    max2837_rx();
 
-                /* Select the lcd display. */
-                ssp_clock_init();
-                lcdFill(0xff);
-                lcdClear();
-                lcdPrintln("=== Transmit RF ===");
-                lcdPrintln(IntToStr(g_freq/1000000, 5, F_LONG));
-                lcdDisplay();
-
-                /* Select the max2837. */
-                ssp1_init();
-                ssp1_set_mode_max2837();
-                max2837_set_frequency(g_freq);
-            }
-        }
-        if ((getInputRaw() & BTN_DOWN) == BTN_DOWN) {
-            delay(4000);
-            if ((getInputRaw() & BTN_DOWN) == BTN_DOWN) {
-                ON(LED4);
-                delay(1000000);
-                OFF(LED4);
-                g_freq -= 500000;
-
-                /* Select the lcd display. */
-                ssp_clock_init();
-                //lcdInit();
-                lcdFill(0xff);
-                lcdClear();
-                lcdPrintln("=== Transmit RF ===");
-                lcdPrintln(IntToStr(g_freq/1000000, 5, F_LONG));
-                lcdDisplay();
-
-                /* Select the max2837. */
-                ssp1_init();
-                ssp1_set_mode_max2837();
-                max2837_set_frequency(g_freq);
-            }
-        }
-
-        if ((adc_get_single(ADC0, ADC_CR_CH7)>>2) > 127)
-            ON(LED4);
-        else
-            OFF(LED4);
-
-        /* We read 8 samples from the ADC. */
-        for (i=0; i<8; i++)
-            samples[i] = (i%4)?0xff:0x00;
-
-        /* We transfer this to the SGPIO. */
-        __asm__(
-            "ldr r0, [%[p], #0]\n\t"
-            "str r0, [%[SGPIO_REG_SS], #44]\n\t"
-            "ldr r0, [%[p], #4]\n\t"
-            "str r0, [%[SGPIO_REG_SS], #20]\n\t"
-            "ldr r0, [%[p], #8]\n\t"
-            "str r0, [%[SGPIO_REG_SS], #40]\n\t"
-            "ldr r0, [%[p], #12]\n\t"
-            "str r0, [%[SGPIO_REG_SS], #8]\n\t"
-            "ldr r0, [%[p], #16]\n\t"
-            "str r0, [%[SGPIO_REG_SS], #36]\n\t"
-            "ldr r0, [%[p], #20]\n\t"
-            "str r0, [%[SGPIO_REG_SS], #16]\n\t"
-            "ldr r0, [%[p], #24]\n\t"
-            "str r0, [%[SGPIO_REG_SS], #32]\n\t"
-            "ldr r0, [%[p], #28]\n\t"
-            "str r0, [%[SGPIO_REG_SS], #0]\n\t"
-            :
-            : [SGPIO_REG_SS] "l" (SGPIO_PORT_BASE + 0x100),
-              [p] "l" (p)
-            : "r0"
-        );
-	//sgpio_set_slice_mode(false);
-    //SGPIO_SET_EN_1 &= (~(1 << SGPIO_SLICE_A));
-	//sgpio_configure(TRANSCEIVER_MODE_TX);
-#endif
-
-    /* We generate 22727 samples, with a increase of phi of 0.000276 */
     while(true) {
+
       /* Handles joystick up and down, inc/dec frequency when pressed. */
+      if ((getInputRaw() & BTN_LEFT) == BTN_LEFT) {
+        delay(8000);
+        if ((getInputRaw() & BTN_LEFT) == BTN_LEFT) {
+          if (g_volume > 0.1)
+            g_volume -= 0.001;
+          else
+            g_volume = 0.1;
+        }
+
+        /* Update the lcd display. */
+        ssp_clock_init();
+        render_display();
+
+      }
+      if ((getInputRaw() & BTN_RIGHT) == BTN_RIGHT) {
+        delay(8000);
+        if ((getInputRaw() & BTN_RIGHT) == BTN_RIGHT) {
+          if (g_volume < 0.99)
+            g_volume += 0.001;
+          else
+            g_volume = 1.0;
+        }
+
+        /* Update the lcd display. */
+        ssp_clock_init();
+        render_display();
+
+      }
       if ((getInputRaw() & BTN_UP) == BTN_UP) {
-          delay(4000);
+          delay(8000);
           if ((getInputRaw() & BTN_UP) == BTN_UP) {
-              g_freq += 500000;
+              max2837_stop();
+
+              if (g_freq < 5000000000)
+                g_freq += 1000000;
+              else
+                g_freq = 5000000000;
 
               /* Select the lcd display. */
               ssp_clock_init();
-              lcdFill(0xff);
-              lcdClear();
-              lcdPrintln("=== Transmit RF ===");
-              lcdPrintln(IntToStr(g_freq/1000000, 5, F_LONG));
-              lcdDisplay();
+              render_display();
 
               /* Select the max2837. */
-              if (g_current_mode == TALKIE_RX_MODE) {
-                talkie_init_rx();
+              if (g_current_mode == TELEGRAPH_RX_MODE) {
+                telegraph_init_rx();
               } else {
-                talkie_init_tx();
+                telegraph_init_tx();
               }
               ssp1_init();
               ssp1_set_mode_max2837();
               max2837_set_frequency(g_freq);
+
+              if (g_current_mode == TELEGRAPH_RX_MODE) {
+                max2837_start();
+                max2837_rx();
+              } else {
+                max2837_start();
+                max2837_tx();
+              }
           }
       }
       if ((getInputRaw() & BTN_DOWN) == BTN_DOWN) {
-          delay(4000);
+          delay(8000);
           if ((getInputRaw() & BTN_DOWN) == BTN_DOWN) {
               ON(LED4);
               delay(1000000);
               OFF(LED4);
               max2837_stop();
-              g_freq -= 500000;
 
-              /* Select the lcd display. */
+              if (g_freq < 40000000)
+                g_freq = 40000000;
+              else
+                g_freq -= 1000000;
+
+              /* Update the lcd display. */
               ssp_clock_init();
-              //lcdInit();
-              lcdFill(0xff);
-              lcdClear();
-              lcdPrintln("=== Transmit RF ===");
-              lcdPrintln(IntToStr(g_freq/1000000, 5, F_LONG));
-              lcdDisplay();
+              render_display();
 
-              /* Select the max2837. */
-              //ssp1_init();
-              //ssp1_set_mode_max2837();
-              //max2837_set_frequency(g_freq);
-
-              if (g_current_mode == TALKIE_RX_MODE) {
-                talkie_init_rx();
+              if (g_current_mode == TELEGRAPH_RX_MODE) {
+                telegraph_init_rx();
               } else {
-                talkie_init_tx();
+                telegraph_init_tx();
               }
               ssp1_init();
               ssp1_set_mode_max2837();
               max2837_set_frequency(g_freq);
+
+              if (g_current_mode == TELEGRAPH_RX_MODE) {
+                max2837_start();
+                max2837_rx();
+              } else {
+                max2837_start();
+                max2837_tx();
+              }
           }
       }
       if ((getInputRaw() & BTN_ENTER) == BTN_ENTER) {
-        if (g_current_mode == TALKIE_RX_MODE) {
+        if (g_current_mode == TELEGRAPH_RX_MODE) {
+          /* We were in RX mode, switch to TX mode. */
           max2837_stop();
-          talkie_init_tx();
-          sgpio_cpld_stream_disable();
-          sgpio_set_slice_mode(false);
-      g_current_mode = TALKIE_TX_MODE;
+          telegraph_init_tx();
+          g_current_mode = TELEGRAPH_TX_MODE;
         }
+        /* Send the tone. */
         max2837_start();
         max2837_tx();
+        dac_set(8.0*g_volume);
         delay(5000);
+        dac_set(8.0*g_volume);
         max2837_stop();
         delay(5000);
-      } else if (g_current_mode == TALKIE_TX_MODE) {
+      } else if (g_current_mode == TELEGRAPH_TX_MODE) {
+        /* We were in TX mode, switch to RX mode. */
         max2837_stop();
-        talkie_init_rx();
-        sgpio_cpld_stream_enable();
-        sgpio_set_slice_mode(false);
+        telegraph_init_rx();
         max2837_start();
         max2837_set_vga_gain(3);
         max2837_rx();
-        g_current_mode = TALKIE_RX_MODE;
+        g_current_mode = TELEGRAPH_RX_MODE;
       }
 
+      /* Send audio to the headphones. */
       while(SGPIO_STATUS_1 == 0);
       SGPIO_CLR_STATUS_1 = 1;
       buffer[0] = SGPIO_REG_SS(SGPIO_SLICE_A);
       sigi[i] = (buffer[i] & 0xff) | ((buffer[i] & 0xff0000)>>8);
       sigq[i] = ((buffer[i] >> 8) & 0xff) | ((buffer[i] & 0xff000000)>>16);
-      //magsq[0] = sqrt(sigi[0]*sigi[0] + sigq[0]*sigq[0]);
-
-      dac_set(sqrt(sigi[0]*sigi[0] + sigq[0]*sigq[0]));
-
-#if 0
-      for (i=0; i<MEASURES; i++) {
-        while(SGPIO_STATUS_1 == 0);
-        SGPIO_CLR_STATUS_1 = 1;
-        buffer[i] = SGPIO_REG_SS(SGPIO_SLICE_A);
-
-        /* find the magnitude squared */
-        sigi[i] = (buffer[i] & 0xff) | ((buffer[i] & 0xff0000)>>8);
-        sigq[i] = ((buffer[i] >> 8) & 0xff) | ((buffer[i] & 0xff000000)>>16);
-        magsq[i] = sigi[i]*sigi[i] + sigq[i]*sigq[i];
-        moy += magsq[i];
-        /*
-        if ((uint16_t)magsq & 0x8000) {
-          magsq[i] ^= 0xffff;
-          magsq[i]++;
-        }*/
-        delay(10000);
-      }
-      moy = moy/MEASURES;
-      if (((magsq[0] > moy) && (magsq[3] < moy)) ||
-          ((magsq[0] < moy) && (magsq[3] > moy)))
-          ON(LED4);
-      else
-          OFF(LED4);
-#endif
+      dac_set(sqrt(sigi[0]*sigi[0] + sigq[0]*sigq[0])*g_volume);
     }
-  }
 }
 
 int main(void) {
     /* Init CPU clock, and other hackrf/rad1olib related stuff. */
-	talkie_init();
+	telegraph_init();
 
     /* Init r0cketlib in order to use the LCD display and the joystick. */
     ssp_clock_init();
@@ -735,13 +663,16 @@ int main(void) {
     /* Required by the tick-based callbacks. */
 	generated_init();
 
-    setTextColor(0xFF,0x00);
-    lcdClear();
-    lcdPrintln("=== Transmit RF ===");
-    lcdDisplay();
+  setTextColor(0xFF,0x00);
+  /*
+  lcdClear();
+  lcdPrintln("=== Transmit RF ===");
+  lcdDisplay();
+  */
+  render_display();
 
-    /* Transmit. */
-    while(1) transmit();
+  /* Transmit. */
+  while(1) transmit();
 
-    return 0;
+  return 0;
 }
