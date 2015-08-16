@@ -14,17 +14,17 @@ void info_menu(){
 	 */
 	getInputWaitRelease();
 	lcdClear();
-	lcdPrintln("text-mode");
-	lcdPrintln(" up/down more text");
-	lcdPrintln(" enter return");
-	lcdPrintln("navigation mode");
-	lcdPrintln(" joystick to select room");
-	lcdPrintln(" enter to enter text-mode");
-	lcdPrintln(" switch off to leave");
-	lcdPrintln("info mode");
-	lcdPrintln(" any key");
-	lcdPrintln(" return quit");
+	lcdPrintln("cccc 2015 maze");
 	lcdPrintln("");
+	lcdPrintln("use cursor to");
+	lcdPrintln("move up and down");
+	lcdPrintln("switch off to end");
+	lcdPrintln("");
+	lcdPrintln("fork on GH and");
+	lcdPrintln("contribute!");
+	lcdPrintln("");
+	lcdPrintln("https://github.com/");
+	lcdPrintln("rad1o/f1rmware");
 	lcdDisplay();
 	while (1){
 		switch(getInput()){
