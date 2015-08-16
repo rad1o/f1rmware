@@ -31,6 +31,9 @@
 #include <rad1olib/battery.h>
 
 #include <hackrf_core.h>
+#include <max2837.h>
+#include <tuning.>
+
 #include "si5351c.h"
 #include "sgpio.h"
 #include "rf_path.h"
@@ -548,10 +551,10 @@ void main_ui(void) {
           if ((getInputRaw() & BTN_UP) == BTN_UP) {
               max2837_stop();
 
-              if (g_freq < 5000000000)
+              if (g_freq < 5000000000U)
                 g_freq += 1000000;
               else
-                g_freq = 5000000000;
+                g_freq = 5000000000U;
 
               /* Select the lcd display. */
               ssp_clock_init();
@@ -640,8 +643,8 @@ void main_ui(void) {
       while(SGPIO_STATUS_1 == 0);
       SGPIO_CLR_STATUS_1 = 1;
       buffer[0] = SGPIO_REG_SS(SGPIO_SLICE_A);
-      sigi[i] = (buffer[i] & 0xff) | ((buffer[i] & 0xff0000)>>8);
-      sigq[i] = ((buffer[i] >> 8) & 0xff) | ((buffer[i] & 0xff000000)>>16);
+      sigi[i] = (buffer[0] & 0xff) | ((buffer[0] & 0xff0000)>>8);
+      sigq[i] = ((buffer[0] >> 8) & 0xff) | ((buffer[0] & 0xff000000)>>16);
       dac_set(sqrt(sigi[0]*sigi[0] + sigq[0]*sigq[0])*g_volume);
     }
 }
