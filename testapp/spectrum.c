@@ -24,11 +24,18 @@
 
 static volatile int64_t freq = 2450000000;
 
+#define MODE_SPECTRUM 10
+#define MODE_WATERFALL 20
+
+static volatile int displayMode = MODE_SPECTRUM;
 void spectrum_callback(uint8_t* buf, int bufLen)
 {
 	TOGGLE(LED2);
+	if (displayMode == MODE_SPECTRUM)
+		lcdClear();
+	else if (displayMode == MODE_WATERFALL)
+		lcdShift(0,1,0);
 
-	lcdClear();
 	for(int i = 0; i < 128; i++) // display 128 FFT magnitude points
 	{
 		// FFT unwrap:
@@ -37,16 +44,24 @@ void spectrum_callback(uint8_t* buf, int bufLen)
 			v = buf[(bufLen/2)+64+i];
 		else // positive frequencies
 			v = buf[i-64];
-		
-		// fill display	
-		for(int j = 0; j < (v/2); j++)
-			lcdBuffer[i+RESX*(RESY-j)] = 0x00;
+
+		// fill display
+		if (displayMode == MODE_SPECTRUM)
+		{
+			for(int j = 0; j < (v/2); j++)
+				lcdBuffer[i+RESX*(RESY-j)] = 0x00;
+		}
+		else if (displayMode == MODE_WATERFALL)
+		{
+			lcdSetPixel(i,RESY-1,v);
+		}
 	}
-	
+
 	// text info
+	lcdSetCrsr(0,0);
 	lcdPrint("f=");
 	lcdPrint(IntToStr(freq/1000000,4,F_LONG));
-	lcdPrintln("MHz");
+	lcdPrintln("MHz                ");
 	lcdPrintln("-5MHz    0    +5MHz");
 	lcdDisplay();
 }
@@ -57,7 +72,7 @@ void spectrum_menu()
 	lcdClear();
 	lcdDisplay();
 	getInputWaitRelease();
-	
+
 	// RF initialization from ppack.c:
 	dac_init(false);
 	cpu_clock_set(204); // WARP SPEED! :-)
@@ -73,18 +88,16 @@ void spectrum_menu()
 	cpu_clock_set(204); // WARP SPEED! :-)
 	si5351_init();
 	portapack_init();
-	
+
 	while(1)
 	{
 		switch(getInput())
 		{
 			case BTN_UP:
-				//lcdPrintln("Hallo, Welt!");
-				//lcdDisplay();
+				displayMode=MODE_WATERFALL;
 				break;
 			case BTN_DOWN:
-				//lcdPrintln(IntToStr(sctr,7,F_LONG));
-				//lcdDisplay();
+				displayMode=MODE_SPECTRUM;
 				break;
 			case BTN_LEFT:
 				freq -= 2000000;
@@ -96,6 +109,9 @@ void spectrum_menu()
 				ssp1_set_mode_max2837();
 				set_freq(freq);
 				break;
+			case BTN_ENTER:
+				//FIXME: unset the callback, reset the clockspeed, tidy up
+				//return;
 		}
 	}
 }
