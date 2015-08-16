@@ -15,6 +15,7 @@
 #include <r0ketlib/idle.h>
 #include <fatfs/ff.h>
 #include <r0ketlib/fs_util.h>
+#include <r0ketlib/display.h>
 
 #include <r0ketlib/fs_util.h>
 #include <rad1olib/pins.h>
@@ -28,49 +29,44 @@
 
 #include <portalib/complex.h>
 
-#include "display.h"
-
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
 
+#define KEEP_SAMPLES 128
 
 volatile int64_t freq = 2450000000;
-uint8_t spectrum_y = 0;
-uint16_t spectrum[RESY][128];
-int acc = 0;
+uint16_t spectrum_y = 0;
+uint8_t spectrum[RESY][KEEP_SAMPLES];
 
-#define ACC_SAMPLES 8
 
 void spectrum_callback(uint8_t* buf, int bufLen)
 {
-	TOGGLE(LED2);
+	OFF(LED2);
 
-	for(int i = 0; i < 128; i++) // display 128 FFT magnitude points
+	for(int i = 0; i < KEEP_SAMPLES; i++) // display 128 FFT magnitude points
 	{
 		// FFT unwrap:
 		uint8_t v;
 		if(i < 64) // negative frequencies
 			v = buf[(bufLen/2)+64+i];
 		else // positive frequencies
-			v = buf[i-64];
+			v = buf[i-63];
 
                 spectrum[spectrum_y][i] += v;
 	}
 
-        acc++;
-        if (acc >= ACC_SAMPLES) {
-          acc = 0;
-          spectrum_y++;
-          if (spectrum_y >= RESY)
-            spectrum_y = 0;
-          memset(spectrum[spectrum_y], 0, 128 * sizeof(spectrum[0][0]));
-        }
+        spectrum_y++;
+        if (spectrum_y >= RESY)
+          spectrum_y = 0;
+        memset(spectrum[spectrum_y], 0, KEEP_SAMPLES * sizeof(spectrum[0][0]));
+
+        ON(LED2);
 }
 
 void sys_tick_handler(void){
 	incTimer();
 };
 
-uint8_t v_to_rgb[255][3];
+uint8_t v_to_rgb[255];
 
 void init_v_to_rgb() {
   for(int v = 0; v < 255; v++) {
@@ -94,37 +90,46 @@ void init_v_to_rgb() {
         g = 255;
         b = (v - 0xC0) << 2;
       }
-      v_to_rgb[v][0] = r;
-      v_to_rgb[v][1] = g;
-      v_to_rgb[v][2] = b;
+      v_to_rgb[v] = RGB_TO_8BIT(r, g, b);
   }
 }
 
 void draw(void) {
   int x, y;
-  /* uint16_t max = 0; */
-  /* for(y = 0; y < RESY; y++) { */
-  /*   for(x = 0; x < 128; x++) { */
-  /*     uint8_t v = spectrum[y][x]; */
-  /*     if (v > max) */
-  /*       max = v; */
-  /*   } */
-  /* } */
-  
-  int sy = spectrum_y;
-  startPixels();
+  lcdFill(RGB_TO_8BIT(0, 0, 255));
+
+  int max_grade = 0;
   for(y = 0; y < RESY; y++) {
-    for(x = 0; x < RESX; x++) {
-      uint16_t v = (x >= 1 && x <= 128) ? spectrum[sy][x - 1] : 0;
-      uint8_t *vs = v_to_rgb[MIN(255, v) /*255 * v / max*/];
-      emitPixel(vs[0], vs[1], vs[2]);
-      /* lcdSetPixel(x + 1, y, (r & 0b11100000) | ((g >> 3) & 0b11100) | ((b >> 6) & 0b11)); */
+    for(x = 0; x < KEEP_SAMPLES; x++) {
+      uint16_t v = spectrum[y][x];
+      while(v > (1 << max_grade))
+        max_grade++;
+    }
+  }
+  
+  int spectrum_y_old = spectrum_y;
+  int sy = spectrum_y;
+  for(y = 0; y < RESY; y++) {
+    for(x = 0; x < KEEP_SAMPLES; x++) {
+      uint16_t v = spectrum[sy][x] >> (max_grade - 8);
+      uint8_t c = v_to_rgb[v];
+      lcdSetPixel(x + 1, y, c);
     }
     sy--;
     if (sy < 0)
       sy = RESY - 1;
   }
-  stopPixels();
+
+  lcdSetCrsr(0, 120);
+  setTextColor(RGB_TO_8BIT(0, 0, 255), RGB_TO_8BIT(0, 255, 255));
+  lcdPrint("5 <- ");
+  setTextColor(RGB_TO_8BIT(0, 0, 255), RGB_TO_8BIT(255, 255, 255));
+  lcdPrint(IntToStr(freq/1000000,4,F_LONG));
+  lcdPrint(" MHz");
+  setTextColor(RGB_TO_8BIT(0, 0, 255), RGB_TO_8BIT(0, 255, 255));
+  lcdPrint(" -> 5");
+             
+  lcdDisplay();
 }
 
 int main(void) {
@@ -148,7 +153,7 @@ int main(void) {
 	/* fsInit();  */
 	/* lcdFill(0); */
 	/* readConfig(); */
-        memset(spectrum, RESY * 128, 0);
+        memset(spectrum, RESY * KEEP_SAMPLES, 0);
 
 	cpu_clock_set(204); // WARP SPEED! :-)
 	hackrf_clock_init();
@@ -168,21 +173,22 @@ int main(void) {
 
         init_v_to_rgb();
 	while(1){
-		TOGGLE(LED1);
+		OFF(LED1);
 		switch(getInputRaw())
 		{
 			case BTN_LEFT:
-				freq -= 1000000;
+				freq -= 5000000;
 				ssp1_set_mode_max2837();
 				set_freq(freq);
 				break;
 			case BTN_RIGHT:
-				freq += 1000000;
+				freq += 5000000;
 				ssp1_set_mode_max2837();
 				set_freq(freq);
 				break;
 		}
 
                 draw();
+                ON(LED1);
 	};
 };

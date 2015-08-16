@@ -3,6 +3,7 @@ APP=scope
 # our code
 OBJS =
 OBJS += ../rad1olib/setup.o
+OBJS += ../r0ketlib/display.o
 OBJS += ../r0ketlib/render.o
 OBJS += ../r0ketlib/fonts/smallfonts.o
 OBJS += ../r0ketlib/fonts/orbitron14.o
