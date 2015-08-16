@@ -120,7 +120,7 @@ void sys_tick_handler(void){
 void fancyNickname(void);
 
 int main(void) {
-	cpu_clock_init(); /* CPU Clock is now 104 MHz */
+	cpu_clock_init_rad1o(); /* CPU Clock is now 104 MHz */
 	ssp_clock_init();
 	systickInit();
 
