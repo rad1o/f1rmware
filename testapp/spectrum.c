@@ -14,20 +14,26 @@
 #include <rad1olib/pins.h>
 
 #include <portalib/portapack.h>
+#include <portalib/specan.h>
 #include <common/hackrf_core.h>
 #include <common/rf_path.h>
 #include <common/sgpio.h>
+#include <common/sgpio_dma.h>
 #include <common/tuning.h>
 #include <libopencm3/lpc43xx/dac.h>
 
 #include <portalib/complex.h>
 
-static volatile int64_t freq = 2450000000;
+#define DEFAULT_FREQ 2450000000
+#define DEFAULT_MODE MODE_SPECTRUM
+
+static volatile int64_t freq = DEFAULT_FREQ;
 
 #define MODE_SPECTRUM 10
 #define MODE_WATERFALL 20
 
-static volatile int displayMode = MODE_SPECTRUM;
+static volatile int displayMode = DEFAULT_MODE;
+
 void spectrum_callback(uint8_t* buf, int bufLen)
 {
 	TOGGLE(LED2);
@@ -88,6 +94,13 @@ void spectrum_menu()
 	cpu_clock_set(204); // WARP SPEED! :-)
 	si5351_init();
 	portapack_init();
+	
+	set_rx_mode(RECEIVER_CONFIGURATION_SPEC);
+	specan_register_callback(spectrum_callback);
+	
+	// defaults:
+	freq = DEFAULT_FREQ;
+	displayMode = DEFAULT_MODE;
 
 	while(1)
 	{
@@ -110,7 +123,7 @@ void spectrum_menu()
 				set_freq(freq);
 				break;
 			//case BTN_ENTER:
-				//FIXME: unset the callback, reset the clockspeed, tidy up
+				//specan_register_callback(0);
 				//return;
 
 		}
