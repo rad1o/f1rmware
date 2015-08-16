@@ -16,6 +16,7 @@ OBJS += ../r0ketlib/menu.o
 OBJS += ../rad1olib/spi-flash.o
 OBJS += ../rad1olib/assert.o
 OBJS += ../rad1olib/systick.o
+OBJS += ../rad1olib/draw.o
 OBJS += ../hackrf/firmware/common/si5351c.o
 OBJS += ../fatfs/diskio.o
 OBJS += ../fatfs/ff.o
