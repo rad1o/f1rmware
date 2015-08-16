@@ -27,8 +27,10 @@ for ((i=0;i<size;i++)); do
 		down=$(printf "%s" ${pi} ${nextj})
 		left=$(printf "%s" ${previ} ${pj})
 		right=$(printf "%s" ${nexti} ${pj})
-echo $i $j
-echo $up $down $left $right
+#echo $i $j
+#echo $up $down $left $right
+	    num_auto_lines=13
+
 		if [ $j == $((size - 1)) ]; then
 			down=----
 		fi
@@ -44,8 +46,8 @@ echo $up $down $left $right
 
 		walls=$(echo "${up}${down}${left}${right}")
 		echo ${walls} >> ${fn}
-		for ((z=0;z<15;z++)); do
-  		    line=$(mktemp -u XXXXXXXXXXXXXXXXXXXX)
+		for ((z=0;z<num_auto_lines;z++)); do
+			line=$(mktemp -u XXXXXXXXXXXXXXXXX)
   		    echo "${line}" >> ${fn}
   		done
   		echo ${fn}

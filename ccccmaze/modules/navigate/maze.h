@@ -69,7 +69,7 @@ void mazeShow(){
 	if ( link_up[0] == '-' ) {
 		lcdPrint("-------------");
     } else {
-    	lcdPrint("      ^      ");
+    	lcdPrint(" ^^^^^^^^^^^^");
     }
 
 	lcdPrint(maze_position_x);
@@ -92,17 +92,17 @@ void mazeShow(){
 	int row = 0;
 	bool eot = false;
 	for ( int i = 0; i < sizeof(line_buffer); i++ ){line_buffer[i] = ' ';}
+	if (link_left[0]=='-'){
+		line_format[0]='|';
+	} else {
+		line_format[0]='<';
+	}
+	if (link_right[0]=='-'){
+		line_format[3]='|';
+	} else {
+		line_format[3]='>';
+	}
 	for ( int pos = 0; pos < MAX_ROOM_SIZE; pos++ ){
-		if (link_left[0]=='-'){
-			line_format[0]='|';
-		} else {
-			line_format[0]='<';
-		}
-		if (link_right[0]=='-'){
-			line_format[3]='|';
-		} else {
-			line_format[3]='>';
-		}
 
 		if ( maze_text[pos] == 0
 			|| row >= RESTXTY - 2
@@ -119,23 +119,26 @@ void mazeShow(){
 			row++;
 			snprintf(padded_line_buffer,sizeof(padded_line_buffer),line_format,line_buffer);
 			padded_line_buffer[RESTXTX - 1] = line_format[3];
-			lcdPrintln(padded_line_buffer);
-			for ( int i = 0; i < sizeof(line_buffer); i++ ){line_buffer[i] = ' ';}
+			lcdPrint(padded_line_buffer);
+			lcdPrintln("");
+			for ( int i = 0; i < sizeof(line_buffer); i++ ){
+				line_buffer[i] = ' ';
+			}
+			pos++;
 			continue;
 		}
 		line_buffer[col] = maze_text[pos];
 		col++;
 	}
-	snprintf(padded_line_buffer,sizeof(padded_line_buffer),line_format,line_buffer);
-	lcdPrintln(padded_line_buffer);
-	for ( row = row; row < RESTXTY - 2;row++){
+	
+	for ( row = row; row < RESTXTY - 3;row++){
 		lcdPrintln("");
 	}
 
 	if ( link_down[0] == '-' ) {
 		lcdPrint("------------------");
     } else {
-    	lcdPrint("     \\/      ");
+    	lcdPrint(" \\/\\/\\/\\/\\/\\/\\/\\/");
     }
 	// display position x/y
 	lcdDisplay();

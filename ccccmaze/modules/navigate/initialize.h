@@ -1,5 +1,7 @@
 // 30x20?
 #define MAX_ROOM_SIZE 1024
+#define RESTXTX 19
+#define RESTXTY 16
 
 char current_room[MAX_ROOM_SIZE + 1];
 char maze_text[MAX_ROOM_SIZE + 1];
