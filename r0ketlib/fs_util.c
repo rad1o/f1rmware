@@ -43,7 +43,7 @@ void fsReInit(){
 	f_mount(&FatFs,"/",0);
 }
 
-int readFile(char * filename, char * data, int len){
+int readFile(char * filename, void * data, int len){
     FIL file;
     UINT readbytes;
     int res;
@@ -80,7 +80,7 @@ int readTextFile(char * filename, char * data, int len){
 }
 
 
-int writeFile(char * filename, const char * data, int len){
+int writeFile(char * filename, const void * data, int len){
     FIL file;
     UINT writebytes;
     int res;

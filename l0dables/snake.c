@@ -14,8 +14,6 @@
 #include <r0ketlib/print.h>
 #include <r0ketlib/keyin.h>
 #include <r0ketlib/select.h>
-#include <r0ketlib/itoa.h>
-#include <stdlib.h>
 
 #include "invfont.c"
 
@@ -48,6 +46,7 @@ struct snake_s {
 
 static void reset();
 static void next_level();
+static void render_level();
 static void draw_block();
 static void handle_input();
 static void death_anim();
@@ -56,7 +55,7 @@ static int hitWall();
 static int hitFood();
 static int hitSelf();
 static int showHighscore();
-static int highscore_get();
+static uint32_t highscore_get();
 
 int points = 0;
 int highscore = 0;
@@ -72,8 +71,6 @@ void ram(void)
 
   // load the highscore
   highscore = highscore_get();
-  if (highscore == 0)
-    highscore = 1;
 
   // initially reset everything
   reset();
@@ -168,6 +165,8 @@ static void reset()
   snake.t_start = 2;
 
   points = 0;
+  
+  food = getFood();
 
   // create snake in the middle of the field
   snake.tail[0].x = SIZE_X/2;
@@ -183,7 +182,7 @@ static void reset()
   draw_block(snake.tail[2].x, snake.tail[2].y, 0b00011000);
 
   // switch to level one
-  next_level();
+  render_level();
 }
 
 static void draw_block(int x, int y, int set)
@@ -205,37 +204,43 @@ static void draw_block(int x, int y, int set)
 
 static void next_level()
 {
-  char highscore_string[20];
-  char points_string[20];
-  food = getFood();
-  draw_block( food.x, food.y, 0b11101000);
+    points++;
+    food = getFood();
 
-  points++;
-  strcpy (points_string,"Points: ");
-  strcat (points_string,IntToStr(points,6,0));
+    if(snake.len < MAX_SNAKE_LEN-1)
+        snake.len++;
+    if(snake.speed > MAX_SPEED)
+        snake.speed--;
 
-  strcpy (highscore_string,"HI: ");
-  strcat (highscore_string,IntToStr(highscore,6,0));
+    render_level();
+}
 
-  if(snake.len < MAX_SNAKE_LEN-2)
-    snake.len++;
-  if(snake.speed >= MAX_SPEED)
-    snake.speed--;
+static void render_level()
+{
+    char highscore_string[20];
+    char points_string[20];
+    draw_block( food.x, food.y, 0b11101000);
 
-  // Display point color based on compare with highscore
-  if (points<highscore || (points==1 && highscore==1)) {
-    // Black
-    setTextColor(0xff,0x00);
-  } else if (points==highscore) {
-    // Dark Yellow
-    setTextColor(0xff,0b11011000);
-  } else if (points>highscore) {
-    // Dark Green
-    setTextColor(0xff,0b00011000);
-  }
-  DoString(0,0,points_string);
-  setTextColor(0xff,0b00000011);
-  DoString(MAX_X-44,0,highscore_string);
+    strcpy (points_string,"Points: ");
+    strcat (points_string,IntToStr(points,6,0));
+
+    strcpy (highscore_string,"HI: ");
+    strcat (highscore_string,IntToStr(highscore,6,0));
+
+    // Display point color based on compare with highscore
+    if (points<highscore || (points==0 && highscore==0)) {
+      // Black
+      setTextColor(0xff,0x00);
+    } else if (points==highscore) {
+      // Dark Yellow
+      setTextColor(0xff,0b11011000);
+    } else if (points>highscore) {
+      // Dark Green
+      setTextColor(0xff,0b00011000);
+    }
+    DoString(0,0,points_string);
+    setTextColor(0xff,0b00000011);
+    DoString(MAX_X-44,0,highscore_string);
 }
 
 static void handle_input()
@@ -297,7 +302,7 @@ static void death_anim()
 }
 
 static bool highscore_set(uint32_t score) {
-    writeFile("snake.5cr",IntToStr(score,6,0),strlen(IntToStr(score,6,0)));
+    writeFile("snake.5cr", &score , sizeof(uint32_t));
 
   // old r0ket code to get highscore from the world
 #if 0
@@ -315,9 +320,9 @@ static bool highscore_set(uint32_t score) {
 	return true;
 }
 
-static int highscore_get(){
-  char filecontent[FLEN];
-  readTextFile("snake.5cr",filecontent,FLEN);
+static uint32_t highscore_get(){
+  uint32_t score = 0;
+  readFile("snake.5cr", &score, sizeof(score));
 
   // old r0ket code to send highscore to the world
 #if 0
@@ -330,9 +335,7 @@ static int highscore_get(){
 	return MO_TIME(mpkt->pkt);
 #endif
 
-  // I don't get it, but we have to somehow read the variable, otherwise atoi will return 0... o_O
-  strlen(filecontent);
-  return atoi(filecontent);
+  return score;
 }
 
 static int showHighscore()
@@ -357,7 +360,7 @@ static int showHighscore()
   }
   DoString(RESX/2-4, RESY/2-25, IntToStr(points,6,0));
   setTextColor(0xff,0x00);
-  DoString(0,RESY/2-10, "  Your Highscore");
+  DoString(0,RESY/2-10, "  Last Highscore");
   setTextColor(0xff,0b00000011);
   DoString(RESX/2-4, RESY/2-2, IntToStr(highscore,6,0));
   setTextColor(0xff,0x00);
