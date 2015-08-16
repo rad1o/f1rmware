@@ -14,7 +14,7 @@ void drawVLine(int x, int y1, int y2, uint8_t color) {
 }
 
 void drawRectFill(int x, int y, int width, int heigth, uint8_t color) {
-    for (int i=y; i<=y+heigth; ++i) {
-        drawHLine(i, x, x+width, color);
+    for (int i=y; i<y+heigth; ++i) {
+        drawHLine(i, x, x+width-1, color);
     }
 }
