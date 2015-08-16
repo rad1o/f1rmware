@@ -8,6 +8,8 @@
 
 #include <rad1olib/setup.h>
 #include <r0ketlib/print.h>
+#include <r0ketlib/render.h>
+#include <r0ketlib/fonts/smallfonts.h>
 #include <r0ketlib/itoa.h>
 #include <r0ketlib/keyin.h>
 #include <r0ketlib/menu.h>
@@ -120,14 +122,14 @@ void draw(void) {
       sy = RESY - 1;
   }
 
-  lcdSetCrsr(0, 120);
+  lcdSetCrsr(0, 122);
   setTextColor(RGB_TO_8BIT(0, 0, 255), RGB_TO_8BIT(0, 255, 255));
-  lcdPrint("5 <- ");
+  lcdPrint("5 < ");
   setTextColor(RGB_TO_8BIT(0, 0, 255), RGB_TO_8BIT(255, 255, 255));
   lcdPrint(IntToStr(freq/1000000,4,F_LONG));
   lcdPrint(" MHz");
   setTextColor(RGB_TO_8BIT(0, 0, 255), RGB_TO_8BIT(0, 255, 255));
-  lcdPrint(" -> 5");
+  lcdPrint(" > 5");
              
   lcdDisplay();
 }
@@ -149,10 +151,8 @@ int main(void) {
 	SETUPgout(LED4);
 
 	inputInit();
-	/* lcdInit(); */
-	/* fsInit();  */
-	/* lcdFill(0); */
-	/* readConfig(); */
+	lcdInit();
+        setIntFont(&Font_8x8Thin);
         memset(spectrum, RESY * KEEP_SAMPLES, 0);
 
 	cpu_clock_set(204); // WARP SPEED! :-)
@@ -177,12 +177,22 @@ int main(void) {
 		switch(getInputRaw())
 		{
 			case BTN_LEFT:
-				freq -= 5000000;
+				freq -= 2000000;
 				ssp1_set_mode_max2837();
 				set_freq(freq);
 				break;
 			case BTN_RIGHT:
-				freq += 5000000;
+				freq += 2000000;
+				ssp1_set_mode_max2837();
+				set_freq(freq);
+				break;
+			case BTN_UP:
+				freq += 100000000;
+				ssp1_set_mode_max2837();
+				set_freq(freq);
+				break;
+			case BTN_DOWN:
+				freq -= 100000000;
 				ssp1_set_mode_max2837();
 				set_freq(freq);
 				break;
