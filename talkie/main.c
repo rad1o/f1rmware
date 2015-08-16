@@ -45,6 +45,12 @@
 
 #define PI 3.14159265358979323846
 #define NB_SAMPLES 50000
+#define MEASURES 20
+
+typedef enum {
+  TALKIE_RX_MODE,
+  TALKIE_TX_MODE
+} talkie_mode_t;
 
 typedef struct {
 	uint32_t bandwidth_hz;
@@ -54,6 +60,7 @@ uint32_t g_freq = 2537000000U;
 const uint64_t g_freq64 = (const uint64_t)2537000000U;
 uint32_t baseband_filter_bw_hz = 0;
 uint32_t sample_rate_hz;
+talkie_mode_t g_current_mode = TALKIE_RX_MODE;
 
 /* Required for baseband bandwidth cal. */
 static const max2837_ft_t max2837_ft[] = {
@@ -306,20 +313,113 @@ void talkie_init(void)
 		;
 }
 
+void change_freq(uint32_t freq) {
+  uint64_t freq64 = (uint64_t)freq;
+
+  /* Set sample rate and frac.
+   * Found in hackrf_transfer.c
+   */
+   sample_rate_frac_set(2*freq, 1);
+
+   /* Compute default value depending on sample rate */
+   baseband_filter_bw_hz = hackrf_compute_baseband_filter_bw_round_down_lt(sample_rate_hz);
+
+   /* Set carrier frequency. */
+   //set_freq(freq64);
+   /*
+   baseband_streaming_disable();
+   rf_path_set_direction(RF_PATH_DIRECTION_TX);
+   si5351c_activate_best_clock_source();
+   baseband_streaming_enable();
+   */
+   max2837_set_frequency(g_freq);
+   max2837_start();
+   max2837_tx();
+}
+
+void talkie_init_rx(void)
+{
+  ssp1_init();
+
+  /* Set sample rate and frac.
+   * Found in hackrf_transfer.c
+   */
+   sample_rate_frac_set(2*g_freq, 1);
+
+   /* Compute default value depending on sample rate */
+   baseband_filter_bw_hz = hackrf_compute_baseband_filter_bw_round_down_lt(sample_rate_hz);
+
+   /* Set carrier frequency. */
+   set_freq(g_freq);
+   //max2837_set_frequency(g_freq);
+  /* Found in hackrf_usb: set_transceiver_mode.
+   * Called by hackrf_start_tx().
+   */
+  /*
+  baseband_streaming_disable();
+  */
+  rf_path_set_direction(RF_PATH_DIRECTION_RX);
+  max2837_stop();
+  si5351c_activate_best_clock_source();
+  /*
+  baseband_streaming_enable();
+  */
+  // Enable amplification (TX)
+  rf_path_set_lna(1);
+  // Enable antenna
+  rf_path_set_antenna(1);
+
+}
+
+void talkie_init_tx(void)
+{
+  ssp1_init();
+
+  /* Set sample rate and frac.
+   * Found in hackrf_transfer.c
+   */
+   sample_rate_frac_set(2*g_freq, 1);
+
+   /* Compute default value depending on sample rate */
+   baseband_filter_bw_hz = hackrf_compute_baseband_filter_bw_round_down_lt(sample_rate_hz);
+
+   /* Set carrier frequency. */
+   set_freq(g_freq);
+   //max2837_set_frequency(g_freq);
+
+  /* Found in hackrf_usb: set_transceiver_mode.
+   * Called by hackrf_start_tx().
+   */
+  /*
+  baseband_streaming_disable();
+  */
+  rf_path_set_direction(RF_PATH_DIRECTION_TX);
+  max2837_stop();
+  si5351c_activate_best_clock_source();
+  /*
+  baseband_streaming_enable();
+  */
+  // Enable amplification (TX)
+  rf_path_set_lna(1);
+  // Enable antenna
+  rf_path_set_antenna(1);
+}
+
 /*
  * TX function.
  */
 
 void transmit(void) {
     char sz_freq[11];
-    volatile uint32_t buffer[1];
     double amp=0.8;
     double r0, d_phi = (2*PI)/NB_SAMPLES, phi_zero=PI/4.0;
     int I0, Q0,i;
 
-    /* LED setup (debug :) */
-    SETUPgout(LED4);
-    ON(LED4);
+    volatile uint32_t buffer[4096];
+    double magsq[10];
+    int8_t sigi[10], sigq[10];
+    int moy;
+
 
     /* HackRF setup as found in hackrf_core.c */
     pin_setup();
@@ -328,6 +428,12 @@ void transmit(void) {
     delay(1000000);
     cpu_clock_init();
 
+    rf_path_init();
+
+    /* LED setup (debug :) */
+    SETUPgout(LED4);
+    ON(LED4);
+
     /* Required by the LCD. */
     cpu_clock_set(204);
 
@@ -335,13 +441,15 @@ void transmit(void) {
     SETUPgout(MIC_AMP_DIS);
     OFF(MIC_AMP_DIS);
 
-    /* DAC enabled (in order to make some sound). *.
+    /* DAC enabled (in order to make some sound). */
     dac_init(false);
 
     /* Found in hackrf_usb: main. */
     ssp1_init();
     rf_path_init();
-
+    talkie_init_rx();
+    max2837_set_vga_gain(3);
+    #if 0
     /* Set sample rate and frac.
      * Found in hackrf_transfer.c
      */
@@ -356,19 +464,31 @@ void transmit(void) {
     /* Found in hackrf_usb: set_transceiver_mode.
      * Called by hackrf_start_tx().
      */
+    /*
     baseband_streaming_disable();
+    */
     rf_path_set_direction(RF_PATH_DIRECTION_TX);
+    max2837_stop();
     si5351c_activate_best_clock_source();
+    /*
     baseband_streaming_enable();
-
+    */
     // Enable amplification (TX)
     rf_path_set_lna(1);
     // Enable antenna
     rf_path_set_antenna(1);
 
-    /* JUSQUE LA, TOUT VA BIEN :) */
-    OFF(LED4);
+    //max2837_set_frequency(g_freq);
+    //max2837_start();
+    //max2837_tx();
+    #endif
 
+    //baseband_streaming_enable();
+    max2837_rx();
+    sgpio_cpld_stream_enable();
+    sgpio_set_slice_mode(false);
+
+    /* JUSQUE LA, TOUT VA BIEN :) */
     sz_freq[0]='2';
     sz_freq[1]='5';
     sz_freq[2]='4';
@@ -376,13 +496,16 @@ void transmit(void) {
     sz_freq[4]='\0';
 
     /* Select the lcd display. */
+
     lcdInit();
+    ssp_clock_init();
     lcd_select();
     lcdFill(0xff);
     lcdClear();
     lcdPrintln("=== Transmit RF ===");
     lcdPrintln(IntToStr(g_freq/1000000, 5, F_LONG));
     lcdDisplay();
+    OFF(LED4);
 
     while (1){
 #if 0
@@ -472,21 +595,124 @@ void transmit(void) {
 
     /* We generate 22727 samples, with a increase of phi of 0.000276 */
     while(true) {
-    for (i=0; i<NB_SAMPLES; i++) {
-        r0 = 2*amp*cos(d_phi*i - phi_zero);
-        I0 = 0x7FFF * (r0*cos(d_phi*i)+0.5);
-        Q0 = 0x7FFF * (r0*sin(d_phi*i)+0.5);
-        buffer[0] = (I0 & 0xFF);
-        buffer[0] |= (Q0 & 0xFF)<<8;
-        buffer[0] |= (I0 & 0xFF00)<<8;
-        buffer[0] |= (Q0 & 0xFF00)<<16;
+      /* Handles joystick up and down, inc/dec frequency when pressed. */
+      if ((getInputRaw() & BTN_UP) == BTN_UP) {
+          delay(4000);
+          if ((getInputRaw() & BTN_UP) == BTN_UP) {
+              g_freq += 500000;
+
+              /* Select the lcd display. */
+              ssp_clock_init();
+              lcdFill(0xff);
+              lcdClear();
+              lcdPrintln("=== Transmit RF ===");
+              lcdPrintln(IntToStr(g_freq/1000000, 5, F_LONG));
+              lcdDisplay();
+
+              /* Select the max2837. */
+              if (g_current_mode == TALKIE_RX_MODE) {
+                talkie_init_rx();
+              } else {
+                talkie_init_tx();
+              }
+              ssp1_init();
+              ssp1_set_mode_max2837();
+              max2837_set_frequency(g_freq);
+          }
+      }
+      if ((getInputRaw() & BTN_DOWN) == BTN_DOWN) {
+          delay(4000);
+          if ((getInputRaw() & BTN_DOWN) == BTN_DOWN) {
+              ON(LED4);
+              delay(1000000);
+              OFF(LED4);
+              max2837_stop();
+              g_freq -= 500000;
+
+              /* Select the lcd display. */
+              ssp_clock_init();
+              //lcdInit();
+              lcdFill(0xff);
+              lcdClear();
+              lcdPrintln("=== Transmit RF ===");
+              lcdPrintln(IntToStr(g_freq/1000000, 5, F_LONG));
+              lcdDisplay();
+
+              /* Select the max2837. */
+              //ssp1_init();
+              //ssp1_set_mode_max2837();
+              //max2837_set_frequency(g_freq);
+
+              if (g_current_mode == TALKIE_RX_MODE) {
+                talkie_init_rx();
+              } else {
+                talkie_init_tx();
+              }
+              ssp1_init();
+              ssp1_set_mode_max2837();
+              max2837_set_frequency(g_freq);
+          }
+      }
+      if ((getInputRaw() & BTN_ENTER) == BTN_ENTER) {
+        if (g_current_mode == TALKIE_RX_MODE) {
+          max2837_stop();
+          talkie_init_tx();
+          sgpio_cpld_stream_disable();
+          sgpio_set_slice_mode(false);
+      g_current_mode = TALKIE_TX_MODE;
+        }
+        max2837_start();
+        max2837_tx();
+        delay(5000);
+        max2837_stop();
+        delay(5000);
+      } else if (g_current_mode == TALKIE_TX_MODE) {
+        max2837_stop();
+        talkie_init_rx();
+        sgpio_cpld_stream_enable();
+        sgpio_set_slice_mode(false);
+        max2837_start();
+        max2837_set_vga_gain(3);
+        max2837_rx();
+        g_current_mode = TALKIE_RX_MODE;
+      }
+
+      while(SGPIO_STATUS_1 == 0);
+      SGPIO_CLR_STATUS_1 = 1;
+      buffer[0] = SGPIO_REG_SS(SGPIO_SLICE_A);
+      sigi[i] = (buffer[i] & 0xff) | ((buffer[i] & 0xff0000)>>8);
+      sigq[i] = ((buffer[i] >> 8) & 0xff) | ((buffer[i] & 0xff000000)>>16);
+      //magsq[0] = sqrt(sigi[0]*sigi[0] + sigq[0]*sigq[0]);
+
+      dac_set(sqrt(sigi[0]*sigi[0] + sigq[0]*sigq[0]));
+
+#if 0
+      for (i=0; i<MEASURES; i++) {
         while(SGPIO_STATUS_1 == 0);
-    		SGPIO_REG_SS(SGPIO_SLICE_A) = buffer[0];
-    		SGPIO_CLR_STATUS_1 = 1;
+        SGPIO_CLR_STATUS_1 = 1;
+        buffer[i] = SGPIO_REG_SS(SGPIO_SLICE_A);
+
+        /* find the magnitude squared */
+        sigi[i] = (buffer[i] & 0xff) | ((buffer[i] & 0xff0000)>>8);
+        sigq[i] = ((buffer[i] >> 8) & 0xff) | ((buffer[i] & 0xff000000)>>16);
+        magsq[i] = sigi[i]*sigi[i] + sigq[i]*sigq[i];
+        moy += magsq[i];
+        /*
+        if ((uint16_t)magsq & 0x8000) {
+          magsq[i] ^= 0xffff;
+          magsq[i]++;
+        }*/
+        delay(10000);
+      }
+      moy = moy/MEASURES;
+      if (((magsq[0] > moy) && (magsq[3] < moy)) ||
+          ((magsq[0] < moy) && (magsq[3] > moy)))
+          ON(LED4);
+      else
+          OFF(LED4);
+#endif
     }
-    d_phi = 0;
   }
-    }
 }
 
 int main(void) {
