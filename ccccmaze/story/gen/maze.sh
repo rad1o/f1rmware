@@ -29,7 +29,7 @@ for ((i=0;i<size;i++)); do
 		right=$(printf "%s" ${nexti} ${pj})
 #echo $i $j
 #echo $up $down $left $right
-	    num_auto_lines=13
+	    num_auto_lines=14
 
 		if [ $j == $((size - 1)) ]; then
 			down=----
