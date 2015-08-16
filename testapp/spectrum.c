@@ -69,13 +69,8 @@ void spectrum_callback(uint8_t* buf, int bufLen)
 	lcdDisplay();
 }
 
-//# MENU spectrum
-void spectrum_menu()
+void spectrum_init()
 {
-	lcdClear();
-	lcdDisplay();
-	getInputWaitRelease();
-
 	// RF initialization from ppack.c:
 	dac_init(false);
 	cpu_clock_set(204); // WARP SPEED! :-)
@@ -91,7 +86,30 @@ void spectrum_menu()
 	cpu_clock_set(204); // WARP SPEED! :-)
 	si5351_init();
 	portapack_init();
+}
 
+void spectrum_stop()
+{
+	nvic_disable_irq(NVIC_DMA_IRQ);
+	OFF(EN_VDD);
+	OFF(EN_1V8);
+	ON(MIC_AMP_DIS);
+	systick_set_clocksource(0);
+	systick_set_reload(12e6/SYSTICKSPEED/1000);
+}
+
+//# MENU spectrum frequency
+void spectrum_frequency()
+{
+	freq=(int64_t)input_int("freq:",(int)(freq/1000000),50,4000,4)*1000000;
+}
+
+//# MENU spectrum show
+void spectrum_show()
+{
+	spectrum_init();
+	ssp1_set_mode_max2837();
+	set_freq(freq);
 	while(1)
 	{
 		switch(getInput())
@@ -113,15 +131,8 @@ void spectrum_menu()
 				set_freq(freq);
 				break;
 			case BTN_ENTER:
-				//FIXME: unset the callback, reset the clockspeed, tidy up
-                nvic_disable_irq(NVIC_DMA_IRQ);
-                OFF(EN_VDD);
-                OFF(EN_1V8);
-                ON(MIC_AMP_DIS);
-                systick_set_clocksource(0);
-                systick_set_reload(12e6/SYSTICKSPEED/1000);
+				spectrum_stop();
 				return;
-
 		}
 	}
 }
