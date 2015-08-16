@@ -59,8 +59,8 @@ typedef struct {
 	uint32_t bandwidth_hz;
 } max2837_ft_t;
 
-uint32_t g_freq = 2537000000U;
-const uint64_t g_freq64 = (const uint64_t)2537000000U;
+uint32_t g_freq = 2535000000U;
+const uint64_t g_freq64 = (const uint64_t)2535000000U;
 uint32_t baseband_filter_bw_hz = 0;
 uint32_t sample_rate_hz;
 telegraph_mode_t g_current_mode = TELEGRAPH_TX_MODE;
