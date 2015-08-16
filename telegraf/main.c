@@ -159,7 +159,7 @@ void sys_tick_handler(void){
  * own.
  */
 
-int _pow(b, e) {
+int _pow(int b, int e) {
     int v = 1,i;
     if (e==0)
         return 1;
