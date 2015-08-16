@@ -29,7 +29,7 @@ OBJS += $(SOBJS)
 
 CFLAGS=-Wno-unused-variable -DRAD1O -DLPC43XX_M4
 
-LDSCRIPT=../ld/app.ld
+LDSCRIPT=app.ld
 RPATH=..
 include ../Makefile.inc
 
