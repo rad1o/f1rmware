@@ -1,5 +1,9 @@
 
 #include <rad1olib/setup.h>
+#include <rad1olib/systick.h>
+#include <libopencm3/lpc43xx/m4/nvic.h>
+#include <libopencm3/cm3/systick.h>
+
 #include <r0ketlib/display.h>
 #include <r0ketlib/print.h>
 #include <r0ketlib/itoa.h>
@@ -122,9 +126,16 @@ void spectrum_menu()
 				ssp1_set_mode_max2837();
 				set_freq(freq);
 				break;
-			//case BTN_ENTER:
-				//specan_register_callback(0);
-				//return;
+			case BTN_ENTER:
+				//FIXME: reset the clockspeed
+				specan_register_callback(0);
+                nvic_disable_irq(NVIC_DMA_IRQ);
+                OFF(EN_VDD);
+                OFF(EN_1V8);
+                ON(MIC_AMP_DIS);
+                systick_set_clocksource(0);
+                systick_set_reload(12e6/SYSTICKSPEED/1000);
+				return;
 
 		}
 	}
