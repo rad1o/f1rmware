@@ -32,7 +32,7 @@
 
 #include <hackrf_core.h>
 #include <max2837.h>
-#include <tuning.>
+#include <tuning.h>
 
 #include "si5351c.h"
 #include "sgpio.h"
