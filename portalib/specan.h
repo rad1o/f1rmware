@@ -1,9 +1,7 @@
 /*
- * Copyright 2012 Michael Ossmann <mike@ossmann.com>
- * Copyright 2012 Benjamin Vernoux <titanmkd@gmail.com>
- * Copyright 2012 Jared Boone <jared@sharebrained.com>
+ * Copyright (C) 2014 Jared Boone, ShareBrained Technology, Inc.
  *
- * This file is part of HackRF.
+ * This file is part of PortaPack.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,21 +19,17 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __SETUP_H
-#define __SETUP_H
+#ifndef __SPECAN_H__
+#define __SPECAN_H__
 
-#include <stdint.h>
-#include <stdbool.h>
+#include <stddef.h>
 
-extern uint8_t _cpu_speed;
-void delayNop(uint32_t duration);
+#include "portapack.h"
 
-void cpuClockInit(void);
-void ssp_clock_init(void);
-void cpu_clock_set(uint32_t target_mhz);
-void usb_clock_init(void);
-void hackrf_clock_init(void);
-void si5351_init(void);
+#include "complex.h"
 
+void specan_init(void* const _state);
+void specan_baseband_handler(void* const _state, complex_s8_t* const in, const size_t sample_count_in, baseband_timestamps_t* const timestamps);
+void specan_acknowledge_frame(void* const _state);
 
-#endif
+#endif/*__SPECAN_H__*/
