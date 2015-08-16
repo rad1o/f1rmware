@@ -48,3 +48,4 @@ batteryGetVoltage
 drawHLine
 drawVLine
 drawRectFill
+drawLine
