@@ -53,8 +53,8 @@ void night_tick(void){
 
     EVERY(1024,0){
         //if(!adcMutex){
-            batteryVoltageCheck();
-            LightCheck();
+            // batteryVoltageCheck();
+            // LightCheck();
         //}
     };
 
@@ -77,7 +77,7 @@ void night_tick(void){
         if(GLOBAL(chargeled)){
             //char iodir= (GPIO_GPIO1DIR & (1 << (11) ))?1:0;
             if(batteryCharging()) {
-                ON(LED4);
+                // ON(LED4); manually changed
 #if 0
                 if (iodir == gpioDirection_Input){
                     IOCON_PIO1_11 = 0x0;
@@ -87,7 +87,7 @@ void night_tick(void){
                 }
 #endif
             } else {
-                OFF(LED4);
+                // OFF(LED4); manually changed
 #if 0
                 if (iodir != gpioDirection_Input){
                     gpioSetValue (RB_LED3, 0);
@@ -98,7 +98,7 @@ void night_tick(void){
 #endif
             }
         };
-
+/*
         if(batteryGetVoltage()<3600){
             if( (ctr/(50/SYSTICKSPEED))%10 == 1 ) {
                 ON(LED4);
@@ -106,6 +106,7 @@ void night_tick(void){
                 OFF(LED4);
             }
         };
+*/
     };
 
     return;
