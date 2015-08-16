@@ -25,25 +25,21 @@ for ((i=0;i<size;i++)); do
 		
 	    up=$(printf "%s%s" ${pi} ${prevj})
 		down=$(printf "%s" ${pi} ${nextj})
-		left=$(printf "%s" ${nexti} ${pj})
+		left=$(printf "%s" ${previ} ${pj})
 		right=$(printf "%s" ${nexti} ${pj})
-
+echo $i $j
+echo $up $down $left $right
 		if [ $j == $((size - 1)) ]; then
 			down=----
 		fi
+		if [ $j == 0 ]; then
+			up=----
+		fi
 		if [ $i == $((size - 1))  ]; then
-			up=----
-		fi
-
-		if [ $prevj == "FFFFFFFFFFFFFFFF" ]; then
-			up=----
-		fi
-		if [ $previ == "FFFFFFFFFFFFFFFF" ]; then
-			left=----
-		fi
-		echo $up $down $left $right
-		if [ $right == "FFFFFFFFFFFFFFFF" ]; then
 			right=----
+		fi
+		if [ $i == 0 ]; then
+			left=----
 		fi
 
 		walls=$(echo "${up}${down}${left}${right}")
@@ -52,6 +48,6 @@ for ((i=0;i<size;i++)); do
   		    line=$(mktemp -u XXXXXXXXXXXXXXXXXXXX)
   		    echo "${line}" >> ${fn}
   		done
-  		#echo ${fn}
+  		echo ${fn}
 	done
 done
