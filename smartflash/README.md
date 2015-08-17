@@ -47,7 +47,7 @@ sudo make install
  - Copy `90-rad1o-flash.rules` to `/etc/udev/rules.d`
 
 
-### Installing the Perl module Curses
+#### Installing the Perl module Curses
 ```
 perl -MCPAN -eshell # use default configuration, it's sufficient
 
@@ -56,6 +56,15 @@ perl -MCPAN -eshell # use default configuration, it's sufficient
 install Curses
 exit
 ```
+
+OR the arch way
+
+``` 
+pacman -S perl-curses 
+```
+
+OR if neither works for your distro, please find a way to install the curses module from the CPAN archive, and add the instructions here
+
 
 ### Building the firmware and gathering all files:
  - Make sure to run "make" in the top level directory first. It will download and build all dependencies of the firmware
