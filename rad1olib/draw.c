@@ -1,6 +1,8 @@
 #include <rad1olib/setup.h>
 #include <r0ketlib/display.h>
 
+#define MAX_LINE_THICKNESS 16
+
 #define SWAP(p1, p2) do { int SWAP = p1; p1 = p2; p2 = SWAP; } while (0)
 #define ABS(p) (((p)<0) ? -(p) : (p))
 
@@ -28,17 +30,25 @@ void drawRectFill(int x, int y, int width, int heigth, uint8_t color) {
     }
 }
 
-void drawLine(int x1, int y1, int x2, int y2, uint8_t color) {
-	if(x1==x2) {
-		drawVLine(x1, y1, y2, color);
-		return;
+void drawLine(int x1, int y1, int x2, int y2, uint8_t color, int thickness) {
+	if(thickness<1) {
+		thickness = 1;
 	}
-	if(y1==y2) {
-		drawHLine(y1, x1, x2, color);
-		return;
+	if(thickness>MAX_LINE_THICKNESS) {
+		thickness = MAX_LINE_THICKNESS;
 	}
 	bool xSwap = x1 > x2;
 	bool ySwap = y1 > y2;
+	if(x1==x2) {
+		if(ySwap) { SWAP(y1,y2); }
+		drawRectFill(x1-thickness/2, y1, thickness, y2-y1, color);
+		return;
+	}
+	if(y1==y2) {
+		if(xSwap) { SWAP(x1,x2); }
+		drawRectFill(x1, y1-thickness/2, x2-x1, thickness, color);
+		return;
+	}
 	if(xSwap){
 		x1 = -x1;
 		x2 = -x2;
@@ -56,15 +66,9 @@ void drawLine(int x1, int y1, int x2, int y2, uint8_t color) {
 	int dy = y2-y1;
 	int D = 2*dy - dx;
 	
-	lcdSetPixel(x1, y1, color);
+	// lcdSetPixel(x1, y1, color);
 	int y = y1;
-	for(int x = x1+1; x < x2; x++) {
-		if(D > 0) {
-			y++;
-			D += 2 * dy - 2 * dx;
-		} else {
-			D += 2 * dy;
-		}
+	for(int x = x1; x <= x2; x++) {
 		int px = mSwap ? y : x;
 		if(xSwap) {
 			px = -px;
@@ -74,5 +78,23 @@ void drawLine(int x1, int y1, int x2, int y2, uint8_t color) {
 			py = -py;
 		}
 		lcdSetPixel(px, py, color);
+		if(D > 0) {
+			y++;
+			D += 2 * dy - 2 * dx;
+		} else {
+			D += 2 * dy;
+		}
+		
+		for(int t=1; t<thickness; t++) {
+			int offset = ((t-1)/2+1)*(t%2*2-1);
+			int tx = px;
+			int ty = py;
+			if(mSwap) {
+				tx += offset;
+			} else {
+				ty += offset;
+			}
+			lcdSetPixel(tx, ty, color);
+		}
 	}
 }
