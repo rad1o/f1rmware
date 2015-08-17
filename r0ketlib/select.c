@@ -83,8 +83,6 @@ int selectFile(char *filename, const char *extension)
         for(int i=0; i<count; i++){
             if( selected == i )
                 lcdPrint("*");
-            else
-                lcdPrint(" ");
             lcdSetCrsrX(14);
             int dot=-1;
             for(int j=0;files[j];j++)
@@ -105,11 +103,12 @@ int selectFile(char *filename, const char *extension)
                     selected++;
                     goto redraw;
                 }else{
-                    if(skip == file_count - PERPAGE) { // wrap to top
+                    if(skip >= file_count - PERPAGE){ // wrap to top
                         selected = 0;
                         skip = 0;
-                    } else 
+                    } else {
                         skip++;
+                    }
                 }
                 break;
             case BTN_UP:
