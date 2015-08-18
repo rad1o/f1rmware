@@ -50,6 +50,9 @@ with open(filename) as fp:
         sys.stderr.write('currently only animations with a maximum of 50 frames are supported!\n')
         sys.exit(2)
 
+    elif lines == 1:
+        delay = 65535 # for static files
+
     contents = contents.replace(chr(10), '')
     contents = contents.replace(' ', '')
     with open(outfilename, 'w') as fpW:
