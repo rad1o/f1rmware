@@ -14,6 +14,7 @@
 
 #include "usetable.h"
 
+#undef RGB
 #define RGB1(r,g,b) (((r)&0b11111000)|((g)>>5))
 #define RGB2(r,g,b) (((g)&0b00011100)<<3|((b)>>3))
 #define RGB(r,g,b) ((RGB1(r,g,b)<<8) | RGB2(r,g,b))
