@@ -26,7 +26,7 @@ gather:
 	cp ../campapp/camp.b1n $(fsdir)/
 	cp ../musicapp/musicapp.b1n $(fsdir)/
 	-cp ../l0dables/*.c1d $(fsdir)/
-	-for a in ../assets/*.led ; do ../tools/convertleds.py -o ${fsdir} $$a  ;done
+	for a in ../assets/*.led ; do ../tools/convertleds.py -o ${fsdir} $$a || exit ;done
 	-for a in ../l0dables/*.n1k ; do b=$${a##*/}; cp $$a ${fsdir}/$${b#nick_} ; done
 	cp ../hackrf/firmware/cpld/sgpio_if/default.xsvf $(fsdir)/cpld.xsv
 	# Add f0nts, images, l0dables, etc.

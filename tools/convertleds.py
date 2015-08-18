@@ -43,6 +43,13 @@ else:
 
 with open(filename) as fp:
     contents = fp.read()
+    lines = len(filter(lambda x: x.strip(), contents.splitlines()))
+
+    if lines > 50:
+        sys.stderr.write('ERROR: failed to convert %s\n' % filename)
+        sys.stderr.write('currently only animations with a maximum of 50 frames are supported!\n')
+        sys.exit(2)
+
     contents = contents.replace(chr(10), '')
     contents = contents.replace(' ', '')
     with open(outfilename, 'w') as fpW:
