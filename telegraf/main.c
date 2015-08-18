@@ -4,6 +4,9 @@
  * It implements a basic embedded Morse transmitter able to
  * handle both TX and RX. Enjoy !
  *
+ * This transmitter only works between 2590MHz - 2595MHz (based on max2837),
+ * with 10 pre-defined channels.
+ *
  * Authors:
  *  - Damien Cauquil <d.cauquil@sysdream.com>
  *  - Julien Boulet  <j.boulet@sysdream.com>
@@ -70,9 +73,10 @@ typedef struct {
 } max2837_ft_t;
 
 /* Globals */
-
-uint32_t g_freq = 2531000000U;
-const uint64_t g_freq64 = (const uint64_t)2531000000U;
+int g_bpressed = BTN_NONE;
+int g_channel = 0;
+uint32_t g_freq = 2590000000U;
+const uint64_t g_freq64 = (const uint64_t)2590000000U;
 uint32_t baseband_filter_bw_hz = 0;
 uint32_t sample_rate_hz;
 telegraph_mode_t g_current_mode = TELEGRAPH_TX_MODE;
@@ -181,24 +185,15 @@ int _pow(int b, int e) {
 void render_display(void) {
   int dx, dy, dx2;
   char num_charset[] = "0123456789";
-  char sz_freq[10];
+  char sz_channel[11] = "Channel: 0";
   char sz_vol[5];
   int digits = 0,i;
-  int f = g_freq/1000000;
   int vol = g_volume*100;
 
-  /* Convert freq to string (because IntToStr returns a local var !) */
-  for (i=4; i>0; i--) {
-      sz_freq[4-i] = num_charset[f/_pow(10, i-1)];
-      f -= (f/_pow(10, i-1))*(_pow(10,i-1));
-  }
-  sz_freq[4] = ' ';
-  sz_freq[5] = 'M';
-  sz_freq[6] = 'H';
-  sz_freq[7] = 'z';
-  sz_freq[8] = '\0';
+  /* Set channel string. */
+  sz_channel[9] = 0x30 + g_channel;
 
-  /* Convert freq to string. */
+  /* Convert volume to string. */
   for (i=3; i>0; i--) {
       sz_vol[3-i] = num_charset[vol/_pow(10, i-1)];
       vol -= (vol/_pow(10, i-1))*(_pow(10,i-1));
@@ -214,12 +209,12 @@ void render_display(void) {
   /* Draw name. */
   dx = DoString(0, 0, "Telegraph");
   dx = (RESX - dx)/2;
-  dx2 = DoString(0, 0, sz_freq);
+  dx2 = DoString(0, 0, sz_channel);
   dx2 = (RESX - dx2)/2;
 
   lcdFill(0xFF);
-  DoString(dx, 15, "Telegraph");
-  DoString(dx, 62, sz_freq);
+  DoString(dx, 10, "Telegraph");
+  DoString(dx, 62, sz_channel);
   setIntFont(&Font_8x8);
   dx = DoString(12, 90, "Volume:");
   DoString(12+dx+4, 90, sz_vol);
@@ -517,135 +512,163 @@ void main_ui(void) {
 
     while(true) {
 
-      /* Handles joystick up and down, inc/dec frequency when pressed. */
-      if ((getInputRaw() & BTN_LEFT) == BTN_LEFT) {
-        delay(8000);
-        if ((getInputRaw() & BTN_LEFT) == BTN_LEFT) {
-          if (g_volume > 0.1)
-            g_volume -= 0.001;
-          else
-            g_volume = 0.1;
-        }
+      if ((g_bpressed != BTN_NONE) && (getInputRaw()==BTN_NONE)) {
+        /* Quick'n'dirty debounce. */
+        delay(30000);
+        if ((g_bpressed != BTN_NONE) && (getInputRaw()==BTN_NONE)) {
+          /* Handle channel switch. */
+          switch(g_bpressed) {
+            case BTN_RIGHT:
+              {
+                max2837_stop();
 
-        /* Update the lcd display. */
-        ssp_clock_init();
-        render_display();
+                if (g_channel < 9)
+                    g_channel++;
+                else
+                    g_channel = 9;
 
-      }
-      if ((getInputRaw() & BTN_RIGHT) == BTN_RIGHT) {
-        delay(8000);
-        if ((getInputRaw() & BTN_RIGHT) == BTN_RIGHT) {
-          if (g_volume < 0.99)
-            g_volume += 0.001;
-          else
-            g_volume = 1.0;
-        }
+                /* Compute carrier frequency. */
+                g_freq = 2590000000U + (500000 * g_channel);
 
-        /* Update the lcd display. */
-        ssp_clock_init();
-        render_display();
+                /* Select the lcd display. */
+                ssp_clock_init();
+                render_display();
 
-      }
-      if ((getInputRaw() & BTN_UP) == BTN_UP) {
-          delay(8000);
-          if ((getInputRaw() & BTN_UP) == BTN_UP) {
-              max2837_stop();
+                /* Select the max2837. */
+                if (g_current_mode == TELEGRAPH_RX_MODE) {
+                  telegraph_init_rx();
+                } else {
+                  telegraph_init_tx();
+                }
+                ssp1_init();
+                ssp1_set_mode_max2837();
+                max2837_set_frequency(g_freq);
 
-              if (g_freq < 5000000000U)
-                g_freq += 1000000;
-              else
-                g_freq = 5000000000U;
-
-              /* Select the lcd display. */
-              ssp_clock_init();
-              render_display();
-
-              /* Select the max2837. */
-              if (g_current_mode == TELEGRAPH_RX_MODE) {
-                telegraph_init_rx();
-              } else {
-                telegraph_init_tx();
+                if (g_current_mode == TELEGRAPH_RX_MODE) {
+                  max2837_start();
+                  max2837_rx();
+                } else {
+                  max2837_start();
+                  max2837_tx();
+                }
               }
-              ssp1_init();
-              ssp1_set_mode_max2837();
-              max2837_set_frequency(g_freq);
+              break;
 
-              if (g_current_mode == TELEGRAPH_RX_MODE) {
-                max2837_start();
-                max2837_rx();
-              } else {
-                max2837_start();
-                max2837_tx();
+            case BTN_LEFT:
+              {
+                max2837_stop();
+
+                if (g_channel > 0)
+                    g_channel--;
+                else
+                  g_channel = 0;
+
+                /* Compute carrier frequency. */
+                g_freq = 2590000000U + (500000 * g_channel);
+
+                /* Update the lcd display. */
+                ssp_clock_init();
+                render_display();
+
+                if (g_current_mode == TELEGRAPH_RX_MODE) {
+                  telegraph_init_rx();
+                } else {
+                  telegraph_init_tx();
+                }
+                ssp1_init();
+                ssp1_set_mode_max2837();
+                max2837_set_frequency(g_freq);
+
+                if (g_current_mode == TELEGRAPH_RX_MODE) {
+                  max2837_start();
+                  max2837_rx();
+                } else {
+                  max2837_start();
+                  max2837_tx();
+                }
               }
+              break;
           }
-      }
-      if ((getInputRaw() & BTN_DOWN) == BTN_DOWN) {
-          delay(8000);
-          if ((getInputRaw() & BTN_DOWN) == BTN_DOWN) {
-              ON(LED4);
-              delay(1000000);
-              OFF(LED4);
-              max2837_stop();
-
-              if (g_freq < 40000000)
-                g_freq = 40000000;
-              else
-                g_freq -= 1000000;
-
-              /* Update the lcd display. */
-              ssp_clock_init();
-              render_display();
-
-              if (g_current_mode == TELEGRAPH_RX_MODE) {
-                telegraph_init_rx();
-              } else {
-                telegraph_init_tx();
-              }
-              ssp1_init();
-              ssp1_set_mode_max2837();
-              max2837_set_frequency(g_freq);
-
-              if (g_current_mode == TELEGRAPH_RX_MODE) {
-                max2837_start();
-                max2837_rx();
-              } else {
-                max2837_start();
-                max2837_tx();
-              }
-          }
-      }
-      if ((getInputRaw() & BTN_ENTER) == BTN_ENTER) {
-        if (g_current_mode == TELEGRAPH_RX_MODE) {
-          /* We were in RX mode, switch to TX mode. */
-          max2837_stop();
-          telegraph_init_tx();
-          g_current_mode = TELEGRAPH_TX_MODE;
+          g_bpressed = BTN_NONE;
         }
-        /* Send the tone. */
-        max2837_start();
-        max2837_tx();
-        dac_set(8.0*g_volume);
-        delay(5000);
-        dac_set(8.0*g_volume);
-        max2837_stop();
-        delay(5000);
-      } else if (g_current_mode == TELEGRAPH_TX_MODE) {
-        /* We were in TX mode, switch to RX mode. */
-        max2837_stop();
-        telegraph_init_rx();
-        max2837_start();
-        max2837_set_vga_gain(3);
-        max2837_rx();
-        g_current_mode = TELEGRAPH_RX_MODE;
+      } else {
+        g_bpressed = getInputRaw();
       }
 
-      /* Send audio to the headphones. */
-      while(SGPIO_STATUS_1 == 0);
-      SGPIO_CLR_STATUS_1 = 1;
-      buffer[0] = SGPIO_REG_SS(SGPIO_SLICE_A);
-      sigi[i] = (buffer[0] & 0xff) | ((buffer[0] & 0xff0000)>>8);
-      sigq[i] = ((buffer[0] >> 8) & 0xff) | ((buffer[0] & 0xff000000)>>16);
-      dac_set(sqrt(sigi[0]*sigi[0] + sigq[0]*sigq[0])*g_volume);
+      /*
+       * Volume and beep button are handled the classic way,
+       * because they may be long-pressed.
+       */
+
+      switch(getInputRaw()) {
+        case BTN_DOWN:
+          {
+            if (g_volume > 0.11)
+              g_volume -= 0.01;
+            else
+              g_volume = 0.1;
+
+            /* Update the lcd display. */
+            ssp_clock_init();
+            render_display();
+          }
+          break;
+
+        case BTN_UP:
+          {
+            if (g_volume < 0.99)
+              g_volume += 0.01;
+            else
+              g_volume = 1.0;
+
+            /* Update the lcd display. */
+            ssp_clock_init();
+            render_display();
+          }
+          break;
+
+        case BTN_ENTER:
+          {
+            if (g_current_mode == TELEGRAPH_RX_MODE) {
+              /* We were in RX mode, switch to TX mode. */
+              max2837_stop();
+              telegraph_init_tx();
+              g_current_mode = TELEGRAPH_TX_MODE;
+            }
+
+            /* Send the tone. */
+            max2837_start();
+            max2837_tx();
+            dac_set(8.0*g_volume);
+            delay(5000);
+            dac_set(0.0*g_volume);
+            max2837_stop();
+            delay(5000);
+          }
+          break;
+
+        default:
+          {
+            if (g_current_mode == TELEGRAPH_TX_MODE) {
+              /* We were in TX mode, switch to RX mode. */
+              max2837_stop();
+              telegraph_init_rx();
+              max2837_start();
+              max2837_set_vga_gain(3);
+              max2837_rx();
+              g_current_mode = TELEGRAPH_RX_MODE;
+            }
+
+            /* Send audio to the headphones. */
+            while(SGPIO_STATUS_1 == 0);
+            SGPIO_CLR_STATUS_1 = 1;
+            buffer[0] = SGPIO_REG_SS(SGPIO_SLICE_A);
+            sigi[i] = (buffer[0] & 0xff) | ((buffer[0] & 0xff0000)>>8);
+            sigq[i] = ((buffer[0] >> 8) & 0xff) | ((buffer[0] & 0xff000000)>>16);
+            dac_set(sqrt(sigi[0]*sigi[0] + sigq[0]*sigq[0])*g_volume);
+          }
+          break;
+      }
     }
 }
 
@@ -658,17 +681,14 @@ int main(void) {
 	systickInit();
 
 	SETUPgout(LED4);
-    //SETUPgout(MIC_AMP_DIS);
-    //OFF(MIC_AMP_DIS);
-    OFF(LED4);
+  OFF(LED4);
 
 	inputInit();
 	lcdInit();
 	lcdFill(0xff);
 
-    /* Required by the tick-based callbacks. */
+  /* Required by the tick-based callbacks. */
 	generated_init();
-
   setTextColor(0xFF,0x00);
   render_display();
 
