@@ -64,7 +64,7 @@ void dac_menu(){
 		    if(++i>=readbytes)
 			i=0;
 		    dac_set(ram[i]);
-		    delay(765);
+		    delayNop(765);
 		}else if (mode==0){ // ECHO
 		    dac_set(adc_get_single(ADC0,ADC_CR_CH7)>>1);
 		};

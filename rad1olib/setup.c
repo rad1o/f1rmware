@@ -29,12 +29,13 @@
 #include <libopencm3/lpc43xx/scu.h>
 #include <libopencm3/lpc43xx/ssp.h>
 #include <stdint.h>
+#include <common/si5351c.h>
 
 #define WAIT_CPU_CLOCK_INIT_DELAY   (10000)
 
 uint8_t _cpu_speed=0;
 
-void delay(uint32_t duration)
+void delayNop(uint32_t duration)
 {
 	uint32_t i;
 
@@ -42,13 +43,13 @@ void delay(uint32_t duration)
 		__asm__("nop");
 }
 
-void cpu_clock_init(void) {
+void cpuClockInit(void) {
 	/* initialisation similar to UM10503 v1.9 sec. 13.2.1.1 */
 	CGU_BASE_M4_CLK = (CGU_BASE_M4_CLK_CLK_SEL(CGU_SRC_IRC) | CGU_BASE_M4_CLK_AUTOBLOCK(1));
 
 	/* Enable XTAL */
 	CGU_XTAL_OSC_CTRL &= ~(CGU_XTAL_OSC_CTRL_HF_MASK|CGU_XTAL_OSC_CTRL_ENABLE_MASK);
-	delay(WAIT_CPU_CLOCK_INIT_DELAY); /* should be 250us / 3000 cycles @ 12MhZ*/
+	delayNop(WAIT_CPU_CLOCK_INIT_DELAY); /* should be 250us / 3000 cycles @ 12MhZ*/
 
 	/* Set PLL1 up for 204 MHz */
 	CGU_PLL1_CTRL= CGU_PLL1_CTRL_CLK_SEL(CGU_SRC_XTAL)
@@ -79,7 +80,7 @@ void cpu_clock_init(void) {
 
 	CGU_BASE_M4_CLK = (CGU_BASE_M4_CLK_CLK_SEL(CGU_SRC_IDIVB) | CGU_BASE_M4_CLK_AUTOBLOCK(1));
 
-	delay(WAIT_CPU_CLOCK_INIT_DELAY); /* should be 50us / 5100 @ 102MhZ */
+	delayNop(WAIT_CPU_CLOCK_INIT_DELAY); /* should be 50us / 5100 @ 102MhZ */
 };
 
 void ssp_clock_init(void) {
@@ -107,7 +108,7 @@ void cpu_clock_set(uint32_t target_mhz){ // rounds up
 
 	if(divider==1 && _cpu_speed<102){ // Do not go to 204 in one step
 		cpu_clock_set(102);
-		delay(WAIT_CPU_CLOCK_INIT_DELAY);
+		delayNop(WAIT_CPU_CLOCK_INIT_DELAY);
 	};
 
 	CGU_IDIVB_CTRL= CGU_IDIVB_CTRL_CLK_SEL(CGU_SRC_PLL1)
@@ -163,3 +164,35 @@ void hackrf_clock_init(void)
 	CGU_BASE_APB3_CLK = CGU_BASE_APB3_CLK_AUTOBLOCK(1)
 			| CGU_BASE_APB3_CLK_CLK_SEL(CGU_SRC_PLL1);
 }
+
+void si5351_init(void){
+	i2c0_init(255); 
+
+	si5351c_disable_all_outputs();
+	si5351c_disable_oeb_pin_control();
+	si5351c_power_down_all_clocks();
+	si5351c_set_crystal_configuration();
+	si5351c_enable_xo_and_ms_fanout();
+	si5351c_configure_pll_sources();
+	si5351c_configure_pll_multisynth();
+
+//	/* MS3/CLK3 is the source for the external clock output. */
+//	si5351c_configure_multisynth(3, 80*128-512, 0, 1, 0); /* 800/80 = 10MHz */
+
+	/* MS5/CLK5 is the source for the RFFC5071 mixer. */
+	si5351c_configure_multisynth(5, 16*128-512, 0, 1, 0); /* 800/16 = 50MHz */
+
+	/* MS4/CLK4 is the source for the MAX2837 clock input. */
+	si5351c_configure_multisynth(4, 20*128-512, 0, 1, 0); /* 800/20 = 40MHz */
+
+	/* MS6/CLK6 is unused. */
+	/* MS7/CLK7 is the source for the LPC43xx microcontroller. */
+	uint8_t ms7data[] = { 90, 255, 20, 0 };
+	si5351c_write(ms7data, sizeof(ms7data));
+
+	si5351c_set_clock_source(PLL_SOURCE_XTAL);
+	// soft reset
+	uint8_t resetdata[] = { 177, 0xac };
+	si5351c_write(resetdata, sizeof(resetdata));
+	si5351c_enable_clock_outputs();
+};

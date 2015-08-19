@@ -13,6 +13,7 @@ OBJS += ../r0ketlib/print.o
 OBJS += ../r0ketlib/itoa.o
 OBJS += ../r0ketlib/keyin.o
 OBJS += ../r0ketlib/menu.o
+OBJS += ../r0ketlib/mesh.o
 OBJS += ../rad1olib/spi-flash.o
 OBJS += ../rad1olib/assert.o
 OBJS += ../rad1olib/systick.o

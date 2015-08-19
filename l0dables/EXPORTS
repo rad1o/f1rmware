@@ -1,4 +1,4 @@
-delay
+delayNop
 getInput
 getInputRaw
 getInputWait
@@ -52,3 +52,9 @@ readTextFile
 writeFile
 drawLine
 lcdMoveCrsr
+DoRect
+DoLine
+DoCube
+DoMesh
+getMeshSizes
+getMesh

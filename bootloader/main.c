@@ -196,7 +196,7 @@ void bootFile(const char * filename){
 };
 
 int main(uint32_t startloc) {
-	cpu_clock_init();
+	cpuClockInit();
 	ssp_clock_init();
 	systickInit();
 

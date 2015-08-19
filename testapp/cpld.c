@@ -47,7 +47,7 @@ void cpld_menu(){
 	getInputWaitRelease();
 	SETUPgout(EN_1V8);
 	ON(EN_1V8);
-	delay(1000000); /* wait until cpld boot */
+	delayNop(1000000); /* wait until cpld boot */
 	cpu_clock_set(204);
 
 	lcdClear();

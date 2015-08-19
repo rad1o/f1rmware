@@ -22,11 +22,16 @@
       `sudo apt-get install gcc-arm-none-eabi libnewlib-arm-none-eabi`
     * Arch: `sudo pacman -S arm-none-eabi-gcc arm-none-eabi-newlib arm-none-eabi-binutils`
     * FreeBSD: Theory: `sudo pkg install arm-none-eabi-gcc492 arm-none-eabi-binutils` / `portmaster devel/arm-none-eabi-gcc492 devel/arm-none-eabi-binutils`; practice: `kldload linux` & see _Manual installation_
+    * Fedora: `sudo dnf install arm-none-eabi-newlib arm-none-eabi-gcc-cs-c++.x86_64 gcc-c++-arm-linux-gnu.x86_64`
+    ** note: [https://bugzilla.redhat.com/show_bug.cgi?id=1248294](RHBZ #1248294] you will need to rebuild arm-none-eabi-newlib as described by the reporter. Or just use [https://blog.pcfe.net/packages/arm-none-eabi-newlib-2.2.0_1-4.fc24.noarch.rpm](my build).
 * python-yaml (http://pyyaml.org/)
     * Debian/Ubuntu: `sudo apt-get install python-yaml`
     * Arch: `sudo pacman -S python-yaml`
     * FreeBSD: `sudo pkg install py27-yaml` or `portmaster devel/py-yaml`
+    * Fedora: `sudo dnf install PyYAML`
     * Alternative: via pip/virtualenv
+* to build docs
+    * Fedora: `sudo dnf install doxygen graphviz`
 * libopencm3 (fork, https://github.com/rad1o/libopencm3)
     * If you are using `git`, the preferred way to install
       `libopencm3` is to use the submodule:
@@ -47,6 +52,8 @@
     * Debian/Ubuntu: `sudo apt-get install dfu-util`
     * Arch: `sudo pacman -S dfu-util`
     * FreeBSD: `pkg install dfu-util` / `portmaster ports/dfu-util`
+    * Fedora: `sudo dnf install dfu-util`
+
     * If you want to use smartflash, instead build and install our fork from https://github.com/rad1o/dfu-util
 
       ```
@@ -58,6 +65,7 @@
 
 * cmake (optional, if you want to build the hackrf firmware)
     * `sudo apt-get install cmake`
+    * Fedora: `sudo dnf install cmake`
 
 If you use [Nix or NixOS](https://nixos.org/), you can do `nix-shell --pure .` to enter a shell with all required dependencies.
 
