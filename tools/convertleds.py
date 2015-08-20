@@ -10,12 +10,17 @@ def print_usage():
     sys.stderr.write('\tconvertleds.py [-d delay] input.led [output.l3d]\n')
 
 options, remainder = getopt.getopt(sys.argv[1:], 'd:o:h', ['delay=', 'outdir=', 'help'])
-delay = 50
+
+delay_arg = None
+delay_file = None
+default_delay = 50
+delay_regex = "^delay:(.+)\n"
+
 outdir = "."
 
 for opt, arg in options:
     if opt in ('-d', '--delay'):
-        delay = int(arg)
+        delay_arg = int(arg)
     if opt in ('-o', '--outdir'):
         outdir = arg
     if opt in ('-h', '--help'):
@@ -43,6 +48,15 @@ else:
 
 with open(filename) as fp:
     contents = fp.read()
+
+    delay_match = re.search(delay_regex, contents)
+    if delay_match:
+        delay_file = delay_match.group(1)
+        contents = re.sub(delay_regex, '', contents)
+
+    # first use argument if available, then use delay from file if available, then fallback to default
+    delay = delay_arg if delay_arg else int(delay_file) if delay_file else default_delay
+
     lines = len(filter(lambda x: x.strip(), contents.splitlines()))
 
     if lines > 50:
