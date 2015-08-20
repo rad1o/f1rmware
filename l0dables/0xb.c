@@ -13,9 +13,8 @@
 
 #include "usetable.h"
 
-#define FONT "orbit14.f0n"
-
-const char* fonts[] = {
+#define N_FONTS 11
+const char* font_list[N_FONTS] = {
     "marker18.f0n",
     "orbit14.f0n",
     "orbit32.f0n",
@@ -37,16 +36,16 @@ typedef struct {
   uint8_t bg;
 } color_t;
 
-color_t zero_col = { 0b10010010, 0b01001001 };
+const color_t zero_col = { 0xff, 0 };
 
 #define N_COLORS 6
-color_t colors[N_COLORS] = {
-  { 0b11100000, 0b01001001 },
-  { 0b00011100, 0b01001001 },
-  { 0b00000011, 0b01001001 },
-  { 0b11111100, 0b01001001 },
-  { 0b00011111, 0b01001001 },
-  { 0b11100011, 0b01001001 }
+const color_t colors[N_COLORS] = {
+  { 0b11100000, 0 },
+  { 0b00011100, 0 },
+  { 0b00000011, 0 },
+  { 0b11111100, 0 },
+  { 0b00011111, 0 },
+  { 0b11100011, 0 }
 };
 
 
@@ -80,7 +79,7 @@ void cell_set_new_value(cell_t* c, uint val)
   */
 }
 
-color_t* cell_col(cell_t* c)
+const color_t* cell_col(cell_t* c)
 {
   if (c->val < 1)
     return &zero_col;
@@ -121,8 +120,7 @@ void board_init(board_t* b, uint w, uint h, const char* font)
   b->seed = 0;
   //b->cells = malloc(b->n * sizeof(cell_t));
 
-  uint i;
-  for (i = 0; i < b->n; i ++) {
+  for (uint i = 0; i < b->n; i ++) {
     cell_init(b->cells + i);
   }
   b->n_empty_cells = b->n;
@@ -133,8 +131,6 @@ void board_init(board_t* b, uint w, uint h, const char* font)
 void board_set_font(board_t* b, const char* font)
 {
   b->font = font;
-  setExtFont(font);
-  b->cell_size_px = getFontHeight();
 }
 
 cell_t* board_cell(board_t* b, uint x, uint y)
@@ -144,14 +140,20 @@ cell_t* board_cell(board_t* b, uint x, uint y)
 
 void board_draw(board_t* b)
 {
+  setExtFont(b->font);
+  b->cell_size_px = getFontHeight();
+
   uint x, y;
 
   for (x = 0; x < b->w; x ++) {
     for (y = 0; y < b->h; y ++) {
       cell_t* c = board_cell(b, x, y);
-      color_t* col = cell_col(c);
+      const color_t* col = cell_col(c);
       setTextColor(col->bg, col->fg);
-      DoChar(x * b->cell_size_px, y * b->cell_size_px, cell_chr(c));
+      uint xx = x * b->cell_size_px;
+      uint yy = y * b->cell_size_px;
+      if (xx < RESX && yy < RESY)
+        DoChar(x * b->cell_size_px, y * b->cell_size_px, cell_chr(c));
     }
   }
 }
@@ -175,6 +177,7 @@ void board_shove(board_t *b, cell_t* start, int pitch0, int pitch1, uint n0, uin
       if (from->val) {
         if (prev && (prev->val == from->val)) {
           prev->val ++;
+          prev = NULL;
         }
         else {
           *to = *from;
@@ -227,6 +230,7 @@ void board_drop_new_value(board_t* b)
 bool board_handle_input(board_t* b)
 {
   static uint8_t current_font = 0;
+
   getInputWaitRelease();
   uint8_t key = getInputWait();
 
@@ -272,7 +276,7 @@ bool board_handle_input(board_t* b)
     case BTN_ENTER:
       current_font ++;
       current_font %= 11;
-      board_set_font(b, fonts[current_font]);
+      board_set_font(b, font_list[current_font]);
       return true;
 
     default:
@@ -288,10 +292,14 @@ bool board_handle_input(board_t* b)
 void ram(void) {
   board_t b;
 
-  board_init(&b, 4, 4, FONT);
+  board_init(&b, 4, 4, font_list[0]);
 
   board_drop_new_value(&b);
   board_drop_new_value(&b);
+
+  b->cells[0].val = 10;
+  b->cells[1].val = 11;
+  b->cells[2].val = 15;
 
   do {
     lcdClear();
