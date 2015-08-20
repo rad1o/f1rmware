@@ -1,5 +1,8 @@
 
 #include <rad1olib/setup.h>
+#include <rad1olib/systick.h>
+#include <libopencm3/lpc43xx/m4/nvic.h>
+
 #include <r0ketlib/display.h>
 #include <r0ketlib/print.h>
 #include <r0ketlib/itoa.h>
@@ -12,6 +15,7 @@
 
 #include <r0ketlib/fs_util.h>
 #include <rad1olib/pins.h>
+#include <rad1olib/systick.h>
 
 #include <portalib/portapack.h>
 #include <portalib/specan.h>
@@ -33,6 +37,12 @@ static volatile int64_t freq = DEFAULT_FREQ;
 #define MODE_WATERFALL 20
 
 static volatile int displayMode = DEFAULT_MODE;
+
+// How long to wait before starting fast scroll
+#define FAST_CHANGE_DELAY 100
+
+// How much to change per 10 ms when scrolling fast
+#define FAST_CHANGE_CHANGE 2000000
 
 void spectrum_callback(uint8_t* buf, int bufLen)
 {
@@ -67,7 +77,7 @@ void spectrum_callback(uint8_t* buf, int bufLen)
 	lcdSetCrsr(0,0);
 	lcdPrint("f=");
 	lcdPrint(IntToStr(freq/1000000,4,F_LONG));
-	lcdPrintln("MHz                ");
+	lcdPrintln("MHz      x          ");
 	lcdPrintln("-5MHz    0    +5MHz");
 	lcdDisplay();
 }
@@ -75,6 +85,7 @@ void spectrum_callback(uint8_t* buf, int bufLen)
 //# MENU spectrum
 void spectrum_menu()
 {
+    int buttonPressTime;
 	lcdClear();
 	lcdDisplay();
 	getInputWaitRelease();
@@ -94,38 +105,66 @@ void spectrum_menu()
 	cpu_clock_set(204); // WARP SPEED! :-)
 	si5351_init();
 	portapack_init();
-	
+
 	set_rx_mode(RECEIVER_CONFIGURATION_SPEC);
 	specan_register_callback(spectrum_callback);
-	
+
 	// defaults:
 	freq = DEFAULT_FREQ;
 	displayMode = DEFAULT_MODE;
 
 	while(1)
 	{
-		switch(getInput())
+		switch(getInputRaw())
 		{
 			case BTN_UP:
 				displayMode=MODE_WATERFALL;
+                while(getInputRaw()==BTN_UP)
+                    ;
 				break;
 			case BTN_DOWN:
 				displayMode=MODE_SPECTRUM;
+                while(getInputRaw()==BTN_DOWN)
+                    ;
 				break;
 			case BTN_LEFT:
+        buttonPressTime = _timectr;
 				freq -= 2000000;
 				ssp1_set_mode_max2837();
 				set_freq(freq);
+                while(getInputRaw()==BTN_LEFT){
+                    if (_timectr > buttonPressTime + FAST_CHANGE_DELAY/SYSTICKSPEED)
+                    {
+                        freq -= FAST_CHANGE_CHANGE;
+                        ssp1_set_mode_max2837();
+                        set_freq(freq);
+                        delayms(10);
+                    }
+                }
 				break;
 			case BTN_RIGHT:
+        buttonPressTime = _timectr;
 				freq += 2000000;
 				ssp1_set_mode_max2837();
 				set_freq(freq);
+                while(getInputRaw()==BTN_RIGHT){
+                    if (_timectr > buttonPressTime + FAST_CHANGE_DELAY/SYSTICKSPEED)
+                    {
+                        freq += FAST_CHANGE_CHANGE;
+                        ssp1_set_mode_max2837();
+                        set_freq(freq);
+                        delayms(10);
+                    }
+                }
 				break;
-			//case BTN_ENTER:
-				//specan_register_callback(0);
-				//return;
-
+			case BTN_ENTER:
+                nvic_disable_irq(NVIC_DMA_IRQ);
+                OFF(EN_VDD);
+                OFF(EN_1V8);
+                ON(MIC_AMP_DIS);
+                systick_set_clocksource(0);
+                systick_set_reload(12e6/SYSTICKSPEED/1000);
+				return;
 		}
 	}
 }
