@@ -2,13 +2,13 @@
 #include <r0ketlib/print.h>
 #include <r0ketlib/keyin.h>
 
-//# MENU info
-void info_menu(){
+//# MENU usage
+void usage_menu(){
 	uint32_t read_count;
 
 	lcdClear();
 	getInputWaitRelease();
-	
+
 	/*
 	 * todo: load text from file
 	 */
@@ -35,7 +35,7 @@ void info_menu(){
 			case BTN_ENTER:
 				return;
 				break;
-		};	
+		};
 	}
 	return;
 };

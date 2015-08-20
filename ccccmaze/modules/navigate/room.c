@@ -88,11 +88,11 @@ void roomLoad(application_t *app){
 		//}
 		// if defined, map room actions -> see actions.h
 	} else {
-		snprintf(app->link_up,sizeof(app->link_up),"%s","0000");
-		snprintf(app->link_down,sizeof(app->link_down),"%s","0000");
-		snprintf(app->link_left,sizeof(app->link_left),"%s","0000");
-		snprintf(app->link_right,sizeof(app->link_right),"%s","0000");
-		snprintf(app->screen_text,sizeof(app->screen_text),"%s","no maze found\nplease reinstall map");
+		snprintf(app->link_up,sizeof(app->link_up),"%s","----");
+		snprintf(app->link_down,sizeof(app->link_down),"%s","----");
+		snprintf(app->link_left,sizeof(app->link_left),"%s","----");
+		snprintf(app->link_right,sizeof(app->link_right),"%s","----");
+		snprintf(app->screen_text,sizeof(app->screen_text),"%s\n%s",maze_filename,"no maze found\nplease reinstall");
 	}
 }
 void roomLeave(application_t *app){

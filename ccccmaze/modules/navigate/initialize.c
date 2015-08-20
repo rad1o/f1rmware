@@ -9,32 +9,12 @@ void initialize(application_t *app){
 	//todo: memset(maze,NULL,256*256)
 	memset((void *) &app->screen_text, 0, sizeof(app->screen_text));
 	memset((void *) &app->current_cell, 0, sizeof(app->current_cell));
-	//todo: load from cm(namespace).cfg
-	app->maze_position_x[0] = '0';
-	app->maze_position_x[1] = '0';
-	app->maze_position_x[2] = 0;
-	app->maze_position_y[0] = '0';
-	app->maze_position_y[1] = '0';
-	app->maze_position_y[2] = 0;
-	app->link_up[0] = '-';
-	app->link_up[1] = '-';
-	app->link_up[2] = '-';
-	app->link_up[3] = '-';
-	//app->link_up[4] = 0;
-	app->link_down[0] = '0';
-	app->link_down[1] = '0';
-	app->link_down[2] = '0';
-	app->link_down[3] = '1';
-	//app->link_down[4] = 0;
-	app->link_left[0] = '-';
-	app->link_left[1] = '-';
-	app->link_left[2] = '-';
-	app->link_left[3] = '-';
-	//app->link_left[4] = 0;
-	app->link_right[0] = '0';
-	app->link_right[1] = '1';
-	app->link_right[2] = '0';
-	app->link_right[3] = '0';
-	//link_right[4] = 0;
+	snprintf(app->namespace_name,sizeof(app->namespace_name),"cm");
+	snprintf(app->maze_position_x,sizeof(app->maze_position_x),"00");
+	snprintf(app->maze_position_y,sizeof(app->maze_position_y),"00");
+	snprintf(app->link_up,sizeof(app->link_up),"%s","----");
+	snprintf(app->link_down,sizeof(app->link_down),"%s","0001");
+	snprintf(app->link_left,sizeof(app->link_left),"%s","----");
+	snprintf(app->link_right,sizeof(app->link_right),"%s","0100");
 	app->state = MAZE_STATE_MAZE;
 }

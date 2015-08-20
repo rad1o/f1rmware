@@ -1,3 +1,7 @@
+//# ifdef DEBUG
+#include <r0ketlib/display.h>
+#include <r0ketlib/print.h>
+//# endif
 /**
   * utilities to make c-code readable
   */

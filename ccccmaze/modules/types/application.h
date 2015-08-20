@@ -4,15 +4,15 @@
 #include "../../constants.h"
 
 typedef struct {
-	char current_cell[MAX_ROOM_SIZE + 1];
-	char screen_text[MAX_ROOM_SIZE + 1];
 	char maze_position_x[3];
 	char maze_position_y[3];
-	char link_up[4];
-	char link_down[4];
-	char link_left[4];
-	char link_right[4];
-	char namespace_name[2];
+	char link_up[5];
+	char link_down[5];
+	char link_left[5];
+	char link_right[5];
+	char namespace_name[3];
 	int state;
+	char current_cell[MAX_ROOM_SIZE + 1];
+	char screen_text[MAX_ROOM_SIZE + 1];
 } application_t;
 #endif

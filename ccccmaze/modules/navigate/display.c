@@ -2,9 +2,6 @@
 #include <r0ketlib/print.h>
 #include <ccccmaze/modules/navigate/display.h>
 void displayBottomBar(bool maze_edge, uint8_t empty_rows){
-	for ( int i = 0; i < empty_rows; i++){
-		lcdPrintln("");
-	}
 	if ( maze_edge ) {
 		lcdPrint("------------------");
     } else {

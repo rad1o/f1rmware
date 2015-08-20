@@ -14,7 +14,7 @@ void level_0_menu(){
 	initialize(&app);
 
 	while(1){
-		mazeShow(&app,"cm");
+		mazeShow(&app);
 		mazeEvent(&app,getInput());
 		getInputWaitRelease();
 	};

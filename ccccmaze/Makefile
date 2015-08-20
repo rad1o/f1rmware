@@ -65,5 +65,5 @@ clean::
 install::
 	mount /dev/$(shell dmesg | tail -n 10| grep '/1.50 MiB' | sed 's|.*\[||;s|].*||') /mnt
 	cp ccccmaze.b1n /mnt
-	rsync story/*.cfg /mnt
+	rsync story/*.csm /mnt
 	umount /mnt

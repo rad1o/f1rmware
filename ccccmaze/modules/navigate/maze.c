@@ -65,7 +65,7 @@ void mazeMove(application_t *app,int key_event){
 	*/
 }
 
-void mazeShow(application_t *app,const char *namespace_name){
+void mazeShow(application_t *app){
 	// render image? top half of screen
 	// load maze_file if exists (cache?)
 	roomLoad(app);
@@ -133,5 +133,5 @@ void mazeShow(application_t *app,const char *namespace_name){
 	for ( row = row; row < RESTXTY - row; row++){
 		displayRow(padded_line_buffer);
 	}
-	displayBottomBar(app->link_down[0] == '-', RESTXTY - row);
+	displayBottomBar(app->link_down[0] == '-');
 }
