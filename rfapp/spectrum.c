@@ -106,7 +106,11 @@ void spectrum_init()
 	specan_register_callback(spectrum_callback);
 
 	// defaults:
-	freq = DEFAULT_FREQ;
+
+	// the frequency is either initialized to DEFAULT_FREQ or set by the frequency menu
+	// resetting it here would break the menu.
+	//freq = DEFAULT_FREQ;
+
 	displayMode = DEFAULT_MODE;
 }
 
