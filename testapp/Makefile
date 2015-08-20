@@ -26,6 +26,7 @@ OBJS += ../r0ketlib/execute.o
 OBJS += ../r0ketlib/config.o
 OBJS += ../r0ketlib/stringin.o
 OBJS += ../r0ketlib/colorin.o
+OBJS += ../r0ketlib/intin.o
 OBJS += ../r0ketlib/random.o
 OBJS += ../r0ketlib/image.o
 OBJS += ../r0ketlib/mesh.o

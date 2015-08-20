@@ -54,9 +54,14 @@ typedef struct specan_state_t {
 } specan_state_t;
 
 static const float log_k = 0.00000000001f; // to prevent log10f(0), which is bad...
-uint8_t tmpBuf[256];
 
-extern void spectrum_callback(uint8_t* buf, int bufLen); // in testapp/spectrum.c
+static volatile specan_callback_t  specan_callback = 0;
+
+void specan_register_callback(specan_callback_t callback)
+{
+	specan_callback = callback;
+}
+
 
 void specan_init(void* const _state) {
 	specan_state_t* const state = (specan_state_t*)_state;
@@ -75,6 +80,8 @@ void specan_init(void* const _state) {
 	//state->spectrum_floor = -4.5f;
 	state->spectrum_floor = -10.0f;
 	state->spectrum_gain = 8.0f;
+	
+	specan_callback = 0; // reset callback
 }
 
 void specan_acknowledge_frame(void* const _state) {
@@ -125,7 +132,8 @@ void specan_baseband_handler(void* const _state, complex_s8_t* const in, const s
 		specan_calculate_peaks(state);
 		state->frame_count += 1;
 //		ipc_command_spectrum_data(&device_state->ipc_m0, state->avg_log, state->peak_log, 256);
-		spectrum_callback(state->avg_log, 256);
+		if(specan_callback)
+			specan_callback(state->avg_log, 256);
 		state->frame_count = 0; // hack; next if below is otherwise not reached due to missing UI thread
 		return;
 	}

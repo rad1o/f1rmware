@@ -2,11 +2,13 @@
 #include <rad1olib/setup.h>
 #include <rad1olib/systick.h>
 #include <libopencm3/lpc43xx/m4/nvic.h>
+#include <libopencm3/cm3/systick.h>
 
 #include <r0ketlib/display.h>
 #include <r0ketlib/print.h>
 #include <r0ketlib/itoa.h>
 #include <r0ketlib/keyin.h>
+#include <r0ketlib/intin.h>
 #include <r0ketlib/menu.h>
 #include <r0ketlib/select.h>
 #include <r0ketlib/idle.h>
@@ -17,20 +19,26 @@
 #include <rad1olib/pins.h>
 
 #include <portalib/portapack.h>
+#include <portalib/specan.h>
 #include <common/hackrf_core.h>
 #include <common/rf_path.h>
 #include <common/sgpio.h>
+#include <common/sgpio_dma.h>
 #include <common/tuning.h>
 #include <libopencm3/lpc43xx/dac.h>
 
 #include <portalib/complex.h>
 
-static volatile int64_t freq = 2450000000;
+#define DEFAULT_FREQ 2450000000
+#define DEFAULT_MODE MODE_SPECTRUM
+
+static volatile int64_t freq = DEFAULT_FREQ;
 
 #define MODE_SPECTRUM 10
 #define MODE_WATERFALL 20
 
-static volatile int displayMode = MODE_SPECTRUM;
+static volatile int displayMode = DEFAULT_MODE;
+
 void spectrum_callback(uint8_t* buf, int bufLen)
 {
 	TOGGLE(LED2);
@@ -69,13 +77,8 @@ void spectrum_callback(uint8_t* buf, int bufLen)
 	lcdDisplay();
 }
 
-//# MENU spectrum
-void spectrum_menu()
+void spectrum_init()
 {
-	lcdClear();
-	lcdDisplay();
-	getInputWaitRelease();
-
 	// RF initialization from ppack.c:
 	dac_init(false);
 	cpu_clock_set(204); // WARP SPEED! :-)
@@ -91,7 +94,41 @@ void spectrum_menu()
 	cpu_clock_set(204); // WARP SPEED! :-)
 	si5351_init();
 	portapack_init();
+	
+	set_rx_mode(RECEIVER_CONFIGURATION_SPEC);
+	specan_register_callback(spectrum_callback);
+	
+	// defaults:
+	freq = DEFAULT_FREQ;
+	displayMode = DEFAULT_MODE;
+}
 
+void spectrum_stop()
+{
+//	nvic_disable_irq(NVIC_DMA_IRQ);
+	sgpio_dma_stop();
+	sgpio_cpld_stream_disable();
+	OFF(EN_VDD);
+	OFF(EN_1V8);
+	ON(MIC_AMP_DIS);
+	systick_set_clocksource(0);
+	systick_set_reload(12e6/SYSTICKSPEED/1000);
+
+	specan_register_callback(0);
+}
+
+//# MENU spectrum frequency
+void spectrum_frequency()
+{
+	freq=(int64_t)input_int("freq:",(int)(freq/1000000),50,4000,4)*1000000;
+}
+
+//# MENU spectrum show
+void spectrum_show()
+{
+	spectrum_init();
+	ssp1_set_mode_max2837();
+	set_freq(freq);
 	while(1)
 	{
 		switch(getInput())
@@ -113,15 +150,8 @@ void spectrum_menu()
 				set_freq(freq);
 				break;
 			case BTN_ENTER:
-				//FIXME: unset the callback, reset the clockspeed, tidy up
-                nvic_disable_irq(NVIC_DMA_IRQ);
-                OFF(EN_VDD);
-                OFF(EN_1V8);
-                ON(MIC_AMP_DIS);
-                systick_set_clocksource(0);
-                systick_set_reload(12e6/SYSTICKSPEED/1000);
+				spectrum_stop();
 				return;
-
 		}
 	}
 }
