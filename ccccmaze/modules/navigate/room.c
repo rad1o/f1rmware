@@ -44,7 +44,7 @@ void roomLoad(application_t *app){
 
 	// ascii - save bytes, add name
 	char maze_filename[12];
-	snprintf(maze_filename,sizeof(maze_filename),"%s%s%s.mip",app->namespace_name,app->maze_position_x,app->maze_position_y);
+	snprintf(maze_filename,sizeof(maze_filename),"%s%s%s.csm",app->namespace_name,app->maze_position_x,app->maze_position_y);
 	if ( 0 < readTextFile(maze_filename,app->current_cell,MAX_ROOM_SIZE) ){
 		// text format to allow easy customize
 		// FF FF starts image in lcd-format (130x?)
