@@ -71,6 +71,17 @@ typedef struct device_state_t {
 	dsp_metrics_t dsp_metrics;
 } device_state_t;
 
+typedef enum {
+	RECEIVER_CONFIGURATION_SPEC = 0,
+	RECEIVER_CONFIGURATION_NBAM = 1,
+	RECEIVER_CONFIGURATION_NBFM = 2,
+	RECEIVER_CONFIGURATION_WBFM = 3,
+	RECEIVER_CONFIGURATION_TPMS = 4,
+	RECEIVER_CONFIGURATION_TPMS_FSK = 5,
+	RECEIVER_CONFIGURATION_AIS = 6,
+} receiver_configuration_id_t;
+
+
 void portapack_init();
 void portapack_run();
 

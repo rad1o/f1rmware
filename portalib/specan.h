@@ -32,4 +32,7 @@ void specan_init(void* const _state);
 void specan_baseband_handler(void* const _state, complex_s8_t* const in, const size_t sample_count_in, baseband_timestamps_t* const timestamps);
 void specan_acknowledge_frame(void* const _state);
 
+typedef void (*specan_callback_t)(uint8_t* buf, int bufLen);
+void specan_register_callback(specan_callback_t callback);
+
 #endif/*__SPECAN_H__*/

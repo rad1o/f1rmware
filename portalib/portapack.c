@@ -127,16 +127,6 @@ static void rx_ais_init_wrapper(void* const _state) {
 
 static volatile receiver_baseband_handler_t receiver_baseband_handler = NULL;
 
-typedef enum {
-	RECEIVER_CONFIGURATION_SPEC = 0,
-	RECEIVER_CONFIGURATION_NBAM = 1,
-	RECEIVER_CONFIGURATION_NBFM = 2,
-	RECEIVER_CONFIGURATION_WBFM = 3,
-	RECEIVER_CONFIGURATION_TPMS = 4,
-	RECEIVER_CONFIGURATION_TPMS_FSK = 5,
-	RECEIVER_CONFIGURATION_AIS = 6,
-} receiver_configuration_id_t;
-
 typedef struct receiver_configuration_t {
 	receiver_state_init_t init;
 	receiver_baseband_handler_t baseband_handler;
