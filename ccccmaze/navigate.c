@@ -1,29 +1,21 @@
-#include <r0ketlib/display.h>
-#include <r0ketlib/print.h>
 #include <r0ketlib/keyin.h>
-#include <r0ketlib/itoa.h>
-#include <r0ketlib/fs_util.h>
-#include <stdio.h>
-#include "utils.h"
 
 // separation of code....change this?
-
-
-#include "modules/navigate/initialize.h"
-#include "modules/navigate/room.h"
-#include "modules/navigate/maze.h"
-
-//# MENU navigate
-void navigate_menu(){
-	lcdClear();
+#include <ccccmaze/modules/types/application.h>
+#include <ccccmaze/modules/navigate/initialize.h>
+#include <ccccmaze/modules/navigate/room.h>
+#include <ccccmaze/modules/navigate/maze.h>
+//# MENU level-0
+void level_0_menu(){
 
 	getInputWaitRelease();
-	
-	initialize();
+	application_t app;
+	app.state=1;
+	initialize(&app);
 
 	while(1){
-		mazeShow();
-		mazeEvent(getInput());
+		mazeShow(&app,"cm");
+		mazeEvent(&app,getInput());
 		getInputWaitRelease();
 	};
 };

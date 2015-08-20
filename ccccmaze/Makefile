@@ -36,6 +36,10 @@ OBJS += ../rad1olib/draw.o
 
 OBJS += ../hackrf/firmware/common/hackrf_core.o
 
+OBJS += modules/navigate/display.o
+OBJS += modules/navigate/initialize.o
+OBJS += modules/navigate/maze.o
+OBJS += modules/navigate/room.o
 SRCS = $(wildcard *.c)
 SOBJS = $(foreach mod,$(SRCS),$(subst .c,.o,$(mod)))
 
