@@ -8,6 +8,7 @@ subdirs:
 	$(MAKE) -C campapp
 	$(MAKE) -C testapp
 	$(MAKE) -C musicapp
+	$(MAKE) -C rfapp
 	$(MAKE) -C bootloader
 	$(MAKE) -C flashapp
 	$(MAKE) -C l0dables
@@ -35,6 +36,7 @@ clean:
 	$(MAKE) -C campapp clean
 	$(MAKE) -C testapp clean
 	$(MAKE) -C musicapp clean
+	$(MAKE) -C rfapp clean
 	$(MAKE) -C bootloader clean
 	$(MAKE) -C flashapp clean
 	$(MAKE) -C l0dables clean
