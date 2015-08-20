@@ -390,7 +390,7 @@ static void drawBlock(int x, int y, int f) {
 }
 
 static void theEnd() {
-    DoString(28,60,"GAME OVER");
+    DoString(32,75,"GAME OVER");
     DoString(15,100,"Press button...");
     lcdDisplay();
     
