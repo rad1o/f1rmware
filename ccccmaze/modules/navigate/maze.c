@@ -87,7 +87,6 @@ void mazeShow(application_t *app){
 
 	int col = 0;
 	int row = 0;
-	bool eot = false;
 	for ( int i = 0; i < sizeof(line_buffer); i++ ){line_buffer[i] = ' ';}
 	if (app->link_left[0]=='-'){
 		line_format[0]='|';
@@ -114,7 +113,12 @@ void mazeShow(application_t *app){
 			}
 			col = 0;
 			row++;
-			snprintf(padded_line_buffer,sizeof(padded_line_buffer),line_format,line_buffer);
+			snprintf(
+				  padded_line_buffer
+				, sizeof(padded_line_buffer)
+				, line_format
+				, line_buffer
+				);
 			padded_line_buffer[RESTXTX - 1] = line_format[3];
 			displayRow(padded_line_buffer);
 			for ( int i = 0; i < sizeof(line_buffer); i++ ){
@@ -130,7 +134,7 @@ void mazeShow(application_t *app){
 	for ( int i = 1; i < RESTXTX - 1; i++ ){
 		padded_line_buffer[i] = ' ';
 	}
-	for ( row = row; row < RESTXTY - row; row++){
+	for ( row = row; row < RESTXTY - 2; row++){
 		displayRow(padded_line_buffer);
 	}
 	displayBottomBar(app->link_down[0] == '-');

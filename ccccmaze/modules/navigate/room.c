@@ -63,7 +63,6 @@ void roomLoad(application_t *app){
 		snprintf(app->link_down,sizeof(app->link_down),"%s",app->current_cell + 4);
 		snprintf(app->link_left,sizeof(app->link_left),"%s",app->current_cell + 8);
 		snprintf(app->link_right,sizeof(app->link_right),"%s",app->current_cell + 12);
-
 		int offset = LINK_SIZE + 1;
 		for ( int cpos = offset
 			; cpos < MAX_ROOM_SIZE
