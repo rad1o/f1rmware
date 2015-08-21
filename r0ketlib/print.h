@@ -12,6 +12,8 @@ void lcdRefresh();
 void lcdMoveCrsr(signed int dx,signed int dy);
 void lcdSetCrsr(int dx,int dy);
 void lcdSetCrsrX(int dx);
+int lcdGetCrsrX();
+int lcdGetCrsrY();
 void setSystemFont(void);
 int lcdGetVisibleLines(void);
 
