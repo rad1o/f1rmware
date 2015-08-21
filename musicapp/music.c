@@ -34,13 +34,14 @@
 #include <libopencm3/cm3/vector.h>
 
 // about 32kByte AHB RAM designated for Cortex M0 @ 0x20000000,
-// we mis-use it for our buffers
-#define MODFILE_BUF_SIZE (32*1024)
-#define MODFILE_BUF 0x20000000
+// we mis-use it for our samples
+#define SAMPLES_BANK_SIZE (32*1024)
+#define SAMPLES_BUF 0x20000000
 
-// 16kByte in ram_l0dable section
-#define SAMPLES_BANK_SIZE (8*1024)
-#define SAMPLES_BUF 0x10080000
+// The mod buffer can go in the second RAM segment. This relies
+// on a modified linker script to move everything else away from here.
+#define MODFILE_BUF_SIZE (72*1024)
+#define MODFILE_BUF 0x10080000
 
 // we can work with 51MHz just fine.
 #define RITIMER_RATE 51000000
