@@ -14,10 +14,10 @@ APP=../flashapp/flashapp.dfu
 FILEORDER= \
     camp.b1n \
     hackrf.b1n \
+		rfapp.b1n \
     musicapp.b1n \
-    testapp.b1n \
-    scope.b1n \
-    rfapp.b1n
+    testapp.b1n
+
 
 gather:
 	@echo
@@ -27,7 +27,6 @@ gather:
 	cp ../testapp/testapp.b1n $(fsdir)/
 	cp ../campapp/camp.b1n $(fsdir)/
 	cp ../musicapp/musicapp.b1n $(fsdir)/
-	cp ../scope/scope.b1n $(fsdir)/
 	cp ../rfapp/rfapp.b1n $(fsdir)/
 	-cp ../l0dables/*.c1d $(fsdir)/
 	-for a in ../assets/*.led ; do ../tools/convertleds.py -o ${fsdir} $$a  ;done
@@ -56,7 +55,6 @@ build:
 	cd ../testapp && make testapp.b1n
 	cd ../musicapp && make musicapp.b1n
 	cd ../rfapp && make rfapp.b1n
-	cd ../scope && make scope.b1n
 	cd ../bootloader && make boot.b1n
 	cd ../flashapp && make flashapp.dfu
 	cd ../l0dables && make

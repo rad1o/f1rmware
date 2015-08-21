@@ -9,7 +9,6 @@ subdirs:
 	$(MAKE) -C testapp
 	$(MAKE) -C musicapp
 	$(MAKE) -C rfapp
-	$(MAKE) -C scope
 	$(MAKE) -C bootloader
 	$(MAKE) -C flashapp
 	$(MAKE) -C l0dables
@@ -43,5 +42,4 @@ clean:
 	$(MAKE) -C l0dables clean
 	$(MAKE) -C smartflash clean
 	$(MAKE) -C hackrf hack-clean
-	$(MAKE) -C scope hack-clean
 #	cd libopencm3 && make clean
