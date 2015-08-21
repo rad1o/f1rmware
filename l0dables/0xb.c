@@ -1,31 +1,20 @@
 #include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
 
 #include <r0ketlib/display.h>
 #include <r0ketlib/fonts.h>
-#include <r0ketlib/render.h>
-#include <r0ketlib/fonts/smallfonts.h>
 #include <r0ketlib/keyin.h>
-#include <r0ketlib/itoa.h>
-#include <r0ketlib/config.h>
-#include <r0ketlib/render.h>
 
 #include "usetable.h"
 
-#define N_FONTS 11
+#define N_FONTS 7
 const char* font_list[N_FONTS] = {
+    "-"
     "marker18.f0n",
     "orbit14.f0n",
-    "orbit32.f0n",
     "pt18.f0n",
     "ptone18.f0n",
     "soviet18.f0n",
-    "soviet26.f0n",
-    "soviet38.f0n",
     "ubuntu18.f0n",
-    "ubuntu29.f0n",
-    "ubuntu36.f0n"
 };
 
 
@@ -101,6 +90,7 @@ typedef struct {
   cell_t cells[BOARD_ABSOLUTE_MAX_CELLS];
   uint cell_size_px;
   uint n_empty_cells;
+  uint n_moves;
 } board_t;
 
 void board_set_font(board_t* b, const char* font);
@@ -126,6 +116,10 @@ void board_init(board_t* b, uint w, uint h, const char* font)
   b->n_empty_cells = b->n;
 
   board_set_font(b, font);
+
+  b->n_moves = 0;
+
+  srand(b->seed);
 }
 
 void board_set_font(board_t* b, const char* font)
@@ -140,12 +134,25 @@ cell_t* board_cell(board_t* b, uint x, uint y)
 
 void board_draw(board_t* b)
 {
+  setTextColor(0, 0xff);
+  setIntFont(&Font_7x8);
+  if (b->n_moves < 3)
+    DoString(0, 0, "try to get to 'b'!");
+  else
+    DoString(0, 0, IntToStr(b->n_moves, 6, 0));
+
   setExtFont(b->font);
   b->cell_size_px = getFontHeight();
 
-  uint centering = (RESX - (b->cell_size_px * b->w)) / 2;
-  if (centering >= RESX)
-    centering = 0;
+  uint centeringx = (RESX - (b->cell_size_px * b->w)) / 2;
+  if (centeringx >= RESX)
+    centeringx = 0;
+
+  uint centeringy = (RESY - (b->cell_size_px * b->h)) / 2;
+  if (centeringy >= RESY)
+    centeringy = 0;
+  if (centeringy < 8)
+    centeringy = 8;
 
   uint x, y;
 
@@ -154,16 +161,13 @@ void board_draw(board_t* b)
       cell_t* c = board_cell(b, x, y);
       const color_t* col = cell_col(c);
       setTextColor(col->bg, col->fg);
-      uint xx = centering + x * b->cell_size_px;
-      uint yy = y * b->cell_size_px;
+      uint xx = centeringx + x * b->cell_size_px;
+      uint yy = centeringy + y * b->cell_size_px;
       if (xx < RESX && yy < RESY)
         DoChar(xx, yy, cell_chr(c));
     }
   }
 
-  setTextColor(0, 0xff);
-  setIntFont(&Font_7x8);
-  DoString(0, 120, b->font);
 }
 
 /* Push cells in one direction, combining similar ones.
@@ -283,7 +287,7 @@ bool board_handle_input(board_t* b)
 
     case BTN_ENTER:
       current_font ++;
-      current_font %= 11;
+      current_font %= N_FONTS;
       board_set_font(b, font_list[current_font]);
       return true;
 
@@ -294,20 +298,17 @@ bool board_handle_input(board_t* b)
 
   board_shove(b, start, pitch0, pitch1, n0, n1);
   board_drop_new_value(b);
+  b->n_moves ++;
   return true;
 }
 
 void ram(void) {
   board_t b;
 
-  board_init(&b, 4, 4, font_list[0]);
+  board_init(&b, 4, 4, font_list[1]);
 
   board_drop_new_value(&b);
   board_drop_new_value(&b);
-
-  b.cells[0].val = 10;
-  b.cells[1].val = 11;
-  b.cells[2].val = 15;
 
   do {
     lcdClear();
