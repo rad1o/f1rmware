@@ -53,13 +53,13 @@
 
 static void wait_spifi(void){
 	while ((SPIFI_STAT & SPIFI_STAT_CMD_MASK) >0){
-		delay(10); //_WFI();
+		delayNop(10); //_WFI();
 	};
 }
 
 void flash_wait_write(){
 	while (flash_status1() & S1_BUSY){
-		delay(10); // _WFI();
+		delayNop(10); // _WFI();
 	};
 }
 

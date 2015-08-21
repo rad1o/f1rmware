@@ -52,7 +52,7 @@ static void refill_cpld_buffer_fs(void) {
 void cpld_flash(){
 	SETUPgout(EN_1V8);
 	ON(EN_1V8);
-	delay(1000000); /* wait until cpld boot */
+	delayNop(1000000); /* wait until cpld boot */
 	cpu_clock_set(204);
 
 	lcdPrintln("Program CPLD");
@@ -109,7 +109,7 @@ void full_msc(){
 };
 
 int main(void) {
-    cpu_clock_init(); /* CPU Clock is now 104 MHz */
+    cpuClockInit(); /* CPU Clock is now 104 MHz */
     ssp_clock_init();
     systickInit();
 
@@ -133,9 +133,9 @@ int main(void) {
     cpu_clock_set(50);
     full_msc();
     while(1) {
-	    delay(2000000);
+	    delayNop(2000000);
 	    ON(LED4);
-	    delay(2000000);
+	    delayNop(2000000);
 	    OFF(LED4);
     }
     return 0;

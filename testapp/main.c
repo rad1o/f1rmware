@@ -25,13 +25,14 @@ void sys_tick_handler(void){
 };
 
 int main(void) {
-	cpu_clock_init(); /* CPU Clock is now 104 MHz */
+	cpuClockInit(); /* CPU Clock is now 104 MHz */
 	ssp_clock_init();
 	systickInit();
 
 //	cpu_clock_set(204);
 
 	SETUPgout(EN_VDD);
+	SETUPgout(EN_1V8);
 	SETUPgout(MIXER_EN);
 	SETUPgout(MIC_AMP_DIS);
 
