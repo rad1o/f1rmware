@@ -60,6 +60,14 @@ void lcdSetCrsrX(int dx){
     x=dx;
 }
 
+int lcdGetCrsrX(){
+    return x;
+}
+
+int lcdGetCrsrY(){
+    return y;
+}
+
 void setSystemFont(void){
     setIntFont(&Font_7x8);
 }
@@ -68,4 +76,3 @@ void setSystemFont(void){
 int lcdGetVisibleLines(void){
     return (RESY/getFontHeight()); // subtract title line
 }
-

@@ -51,6 +51,9 @@ drawRectFill
 readTextFile
 writeFile
 drawLine
+fsInfo
+fsUsage
+lcdGetCrsrY
 lcdMoveCrsr
 DoRect
 DoLine
