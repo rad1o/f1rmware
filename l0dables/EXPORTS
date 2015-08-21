@@ -50,3 +50,4 @@ drawVLine
 drawRectFill
 readTextFile
 writeFile
+drawLine
