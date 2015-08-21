@@ -10,7 +10,8 @@
 #define SIZE 130.0
 #define DISTANCE 1600.0
 #define CULLING
-
+#define TRAIL_LENGTH 13
+#define THICKNESS 4
 
 typedef struct {
 	float x;
@@ -30,7 +31,7 @@ int* bfCull(float r[], float s, float oz, int* o);
 
 
 void ram(void) {
-	getInputWaitRelease();
+	// getInputWaitRelease();
 	
 	int i;
 	float distance = DISTANCE;
@@ -43,6 +44,13 @@ void ram(void) {
 #ifdef CULLING
 	int bf[] = {0,0,0,0,0,0}; // backface condition for each of the 6 faces
 #endif
+	int trailIndex = 0;
+	point2d_t trail[TRAIL_LENGTH*8];
+	for(int p=0; p<TRAIL_LENGTH*8; p++) {
+		trail[p].x = -1;
+		trail[p].y = -1;
+	}
+	float distT = 0.0;
 	
 	// Set up cube - put a vertex at each corner
 	v[0].x = SIZE; v[0].y = SIZE; v[0].z = SIZE;
@@ -55,16 +63,17 @@ void ram(void) {
 	v[7].x = -SIZE; v[7].y = -SIZE; v[7].z = -SIZE;
 	
 	
+	drawRectFill(0, 0, SIZE, SIZE, 0x00);
 	// Frame
 	while(1)
 	{
 		// Clear screen to black
-		drawRectFill(0, 0, SIZE, SIZE, 0x00);
+		// drawRectFill(0, 0, SIZE, SIZE, 0x00);
 		
 		// Rotate arbitrarily
-		rx += 0.01;
-		ry += 0.00975;
-		rz -= 0.0124;
+		rx += 0.05;
+		ry += 0.0483;
+		rz -= 0.062;
 		
 		// Calculate rotation matrix coefficients
 		rotsincos[0] = sin(rx); rotsincos[1] = cos(rx);
@@ -83,56 +92,71 @@ void ram(void) {
 			point2d_t oproj;
 			project(orot, distance, &oproj);
 			p[k] = oproj;
+			trail[trailIndex*8+k] = oproj;
 		}
 		
-		// come back to normal distance
-		distance -= (distance-DISTANCE)*.1;
+		// animate distance
+		distT = distT>2.0 ? (distT+0.1)-2.0 : distT+0.1;
+		distance -= (distance-DISTANCE+sin(distT*3.141)*1000)*.1;
 		
-		// Connect the vertices:
-#ifdef CULLING
+		// trail cleanup
+		int trailIndexLast = (trailIndex+1)%TRAIL_LENGTH;
+		drawLine(trail[trailIndexLast*8+0].x,trail[trailIndexLast*8+0].y,trail[trailIndexLast*8+1].x,trail[trailIndexLast*8+1].y,0b00000000, THICKNESS);
+		drawLine(trail[trailIndexLast*8+1].x,trail[trailIndexLast*8+1].y,trail[trailIndexLast*8+3].x,trail[trailIndexLast*8+3].y,0b00000000, THICKNESS);
+		drawLine(trail[trailIndexLast*8+2].x,trail[trailIndexLast*8+2].y,trail[trailIndexLast*8+3].x,trail[trailIndexLast*8+3].y,0b00000000, THICKNESS);
+		drawLine(trail[trailIndexLast*8+0].x,trail[trailIndexLast*8+0].y,trail[trailIndexLast*8+2].x,trail[trailIndexLast*8+2].y,0b00000000, THICKNESS);
+		drawLine(trail[trailIndexLast*8+4].x,trail[trailIndexLast*8+4].y,trail[trailIndexLast*8+5].x,trail[trailIndexLast*8+5].y,0b00000000, THICKNESS);
+		drawLine(trail[trailIndexLast*8+5].x,trail[trailIndexLast*8+5].y,trail[trailIndexLast*8+7].x,trail[trailIndexLast*8+7].y,0b00000000, THICKNESS);
+		drawLine(trail[trailIndexLast*8+6].x,trail[trailIndexLast*8+6].y,trail[trailIndexLast*8+7].x,trail[trailIndexLast*8+7].y,0b00000000, THICKNESS);
+		drawLine(trail[trailIndexLast*8+6].x,trail[trailIndexLast*8+6].y,trail[trailIndexLast*8+4].x,trail[trailIndexLast*8+4].y,0b00000000, THICKNESS);
+		drawLine(trail[trailIndexLast*8+0].x,trail[trailIndexLast*8+0].y,trail[trailIndexLast*8+4].x,trail[trailIndexLast*8+4].y,0b00000000, THICKNESS);
+		drawLine(trail[trailIndexLast*8+1].x,trail[trailIndexLast*8+1].y,trail[trailIndexLast*8+5].x,trail[trailIndexLast*8+5].y,0b00000000, THICKNESS);
+		drawLine(trail[trailIndexLast*8+2].x,trail[trailIndexLast*8+2].y,trail[trailIndexLast*8+6].x,trail[trailIndexLast*8+6].y,0b00000000, THICKNESS);
+		drawLine(trail[trailIndexLast*8+3].x,trail[trailIndexLast*8+3].y,trail[trailIndexLast*8+7].x,trail[trailIndexLast*8+7].y,0b00000000, THICKNESS);
+		
+		// colored trail - render last frame's wireframe. we cheat a bit here by using the current frame's culling, but it's hardly noticeable. :)
+		int trailIndexSecond = (trailIndex-1+TRAIL_LENGTH)%TRAIL_LENGTH;
+		if(bf[0] || bf[2]){ drawLine(trail[trailIndexSecond*8+0].x,trail[trailIndexSecond*8+0].y,trail[trailIndexSecond*8+1].x,trail[trailIndexSecond*8+1].y,0b11110100/*0b01101000*/, THICKNESS); }
+		if(bf[0] || bf[5]){ drawLine(trail[trailIndexSecond*8+1].x,trail[trailIndexSecond*8+1].y,trail[trailIndexSecond*8+3].x,trail[trailIndexSecond*8+3].y,0b11111000/*0b01101100*/, THICKNESS); }
+		if(bf[0] || bf[3]){ drawLine(trail[trailIndexSecond*8+2].x,trail[trailIndexSecond*8+2].y,trail[trailIndexSecond*8+3].x,trail[trailIndexSecond*8+3].y,0b11111100/*0b01101100*/, THICKNESS); }
+		if(bf[0] || bf[4]){ drawLine(trail[trailIndexSecond*8+0].x,trail[trailIndexSecond*8+0].y,trail[trailIndexSecond*8+2].x,trail[trailIndexSecond*8+2].y,0b11001000/*0b01100100*/, THICKNESS); }
+		if(bf[1] || bf[2]){ drawLine(trail[trailIndexSecond*8+4].x,trail[trailIndexSecond*8+4].y,trail[trailIndexSecond*8+5].x,trail[trailIndexSecond*8+5].y,0b00011010/*0b00001101*/, THICKNESS); }
+		if(bf[1] || bf[5]){ drawLine(trail[trailIndexSecond*8+5].x,trail[trailIndexSecond*8+5].y,trail[trailIndexSecond*8+7].x,trail[trailIndexSecond*8+7].y,0b00011010/*0b00001101*/, THICKNESS); }
+		if(bf[1] || bf[3]){ drawLine(trail[trailIndexSecond*8+6].x,trail[trailIndexSecond*8+6].y,trail[trailIndexSecond*8+7].x,trail[trailIndexSecond*8+7].y,0b11111000/*0b01101100*/, THICKNESS); }
+		if(bf[1] || bf[4]){ drawLine(trail[trailIndexSecond*8+6].x,trail[trailIndexSecond*8+6].y,trail[trailIndexSecond*8+4].x,trail[trailIndexSecond*8+4].y,0b11110100/*0b01101000*/, THICKNESS); }
+		if(bf[2] || bf[4]){ drawLine(trail[trailIndexSecond*8+0].x,trail[trailIndexSecond*8+0].y,trail[trailIndexSecond*8+4].x,trail[trailIndexSecond*8+4].y,0b00011010/*0b00001101*/, THICKNESS); }
+		if(bf[2] || bf[5]){ drawLine(trail[trailIndexSecond*8+1].x,trail[trailIndexSecond*8+1].y,trail[trailIndexSecond*8+5].x,trail[trailIndexSecond*8+5].y,0b11111100/*0b01101100*/, THICKNESS); }
+		if(bf[3] || bf[4]){ drawLine(trail[trailIndexSecond*8+2].x,trail[trailIndexSecond*8+2].y,trail[trailIndexSecond*8+6].x,trail[trailIndexSecond*8+6].y,0b11001000/*0b01100100*/, THICKNESS); }
+		if(bf[3] || bf[5]){ drawLine(trail[trailIndexSecond*8+3].x,trail[trailIndexSecond*8+3].y,trail[trailIndexSecond*8+7].x,trail[trailIndexSecond*8+7].y,0b00011010/*0b00001101*/, THICKNESS); }
+		
+		// vertices
 		// With backface culling. Check if adjacent faces are visible - if at least one of them is, draw the line.
-		if(bf[0] || bf[2]){ drawLine(p[0].x,p[0].y,p[1].x,p[1].y,0b11100000); }
-		if(bf[0] || bf[5]){ drawLine(p[1].x,p[1].y,p[3].x,p[3].y,0b11100000); }
-		if(bf[0] || bf[3]){ drawLine(p[2].x,p[2].y,p[3].x,p[3].y,0b11100000); }
-		if(bf[0] || bf[4]){ drawLine(p[0].x,p[0].y,p[2].x,p[2].y,0b11100000); }
+		if(bf[0] || bf[2]){ drawLine(p[0].x,p[0].y,p[1].x,p[1].y,0xFF/*0b11110100*/, THICKNESS); }
+		if(bf[0] || bf[5]){ drawLine(p[1].x,p[1].y,p[3].x,p[3].y,0xFF/*0b11111000*/, THICKNESS); }
+		if(bf[0] || bf[3]){ drawLine(p[2].x,p[2].y,p[3].x,p[3].y,0xFF/*0b11111100*/, THICKNESS); }
+		if(bf[0] || bf[4]){ drawLine(p[0].x,p[0].y,p[2].x,p[2].y,0xFF/*0b11001000*/, THICKNESS); }
+		if(bf[1] || bf[2]){ drawLine(p[4].x,p[4].y,p[5].x,p[5].y,0xFF/*0b00011010*/, THICKNESS); }
+		if(bf[1] || bf[5]){ drawLine(p[5].x,p[5].y,p[7].x,p[7].y,0xFF/*0b00011010*/, THICKNESS); }
+		if(bf[1] || bf[3]){ drawLine(p[6].x,p[6].y,p[7].x,p[7].y,0xFF/*0b11111000*/, THICKNESS); }
+		if(bf[1] || bf[4]){ drawLine(p[6].x,p[6].y,p[4].x,p[4].y,0xFF/*0b11110100*/, THICKNESS); }
+		if(bf[2] || bf[4]){ drawLine(p[0].x,p[0].y,p[4].x,p[4].y,0xFF/*0b00011010*/, THICKNESS); }
+		if(bf[2] || bf[5]){ drawLine(p[1].x,p[1].y,p[5].x,p[5].y,0xFF/*0b11111100*/, THICKNESS); }
+		if(bf[3] || bf[4]){ drawLine(p[2].x,p[2].y,p[6].x,p[6].y,0xFF/*0b11001000*/, THICKNESS); }
+		if(bf[3] || bf[5]){ drawLine(p[3].x,p[3].y,p[7].x,p[7].y,0xFF/*0b00011010*/, THICKNESS); }
 		
-		if(bf[1] || bf[2]){ drawLine(p[4].x,p[4].y,p[5].x,p[5].y,0b11110100); }
-		if(bf[1] || bf[5]){ drawLine(p[5].x,p[5].y,p[7].x,p[7].y,0b11110100); }
-		if(bf[1] || bf[3]){ drawLine(p[6].x,p[6].y,p[7].x,p[7].y,0b11110100); }
-		if(bf[1] || bf[4]){ drawLine(p[6].x,p[6].y,p[4].x,p[4].y,0b11110100); }
+		trailIndex = trailIndexLast;
 		
-		if(bf[2] || bf[4]){ drawLine(p[0].x,p[0].y,p[4].x,p[4].y,0b11111100); }
-		if(bf[2] || bf[5]){ drawLine(p[1].x,p[1].y,p[5].x,p[5].y,0b11111100); }
-		if(bf[3] || bf[4]){ drawLine(p[2].x,p[2].y,p[6].x,p[6].y,0b11111100); }
-		if(bf[3] || bf[5]){ drawLine(p[3].x,p[3].y,p[7].x,p[7].y,0b11111100); }
-#else
-		// Without backface culling - simply render every line (wireframe)
-		drawLine(p[0].x,p[0].y,p[1].x,p[1].y,0b11100000);
-		drawLine(p[1].x,p[1].y,p[3].x,p[3].y,0b11100000);
-		drawLine(p[2].x,p[2].y,p[3].x,p[3].y,0b11100000);
-		drawLine(p[0].x,p[0].y,p[2].x,p[2].y,0b11100000);
-		
-		drawLine(p[4].x,p[4].y,p[5].x,p[5].y,0b11110100);
-		drawLine(p[5].x,p[5].y,p[7].x,p[7].y,0b11110100);
-		drawLine(p[6].x,p[6].y,p[7].x,p[7].y,0b11110100);
-		drawLine(p[6].x,p[6].y,p[4].x,p[4].y,0b11110100);
-		
-		drawLine(p[0].x,p[0].y,p[4].x,p[4].y,0b11111100);
-		drawLine(p[1].x,p[1].y,p[5].x,p[5].y,0b11111100);
-		drawLine(p[2].x,p[2].y,p[6].x,p[6].y,0b11111100);
-		drawLine(p[3].x,p[3].y,p[7].x,p[7].y,0b11111100);
-#endif
-		
-		delayms(1);
+		delayms(10);
 		lcdDisplay();
 		
-		switch(getInput()){
-			case BTN_LEFT:
-				return;
-			case BTN_ENTER:
-				// enlarge on middle joystick press
-				distance = DISTANCE*.5;
-		};
+		int key = getInputRaw();
+		if(key&BTN_LEFT) {
+			return;
+		}
+		if(key&BTN_ENTER) {
+			// enlarge on middle joystick press
+			distance = DISTANCE*.5;
+		}
 	}
 }
 
