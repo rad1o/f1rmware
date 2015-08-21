@@ -16,6 +16,7 @@ FILEORDER= \
     hackrf.b1n \
     musicapp.b1n \
     testapp.b1n \
+    scope.b1n \
     rfapp.b1n
 
 gather:
@@ -26,6 +27,7 @@ gather:
 	cp ../testapp/testapp.b1n $(fsdir)/
 	cp ../campapp/camp.b1n $(fsdir)/
 	cp ../musicapp/musicapp.b1n $(fsdir)/
+	cp ../scope/scope.b1n $(fsdir)/
 	cp ../rfapp/rfapp.b1n $(fsdir)/
 	cp ../telegraf/telegraf.b1n $(fsdir)/
 	-cp ../l0dables/*.c1d $(fsdir)/
@@ -55,6 +57,7 @@ build:
 	cd ../testapp && make testapp.b1n
 	cd ../musicapp && make musicapp.b1n
 	cd ../rfapp && make rfapp.b1n
+	cd ../scope && make scope.b1n
 	cd ../telegraf && make telegraf.b1n
 	cd ../bootloader && make boot.b1n
 	cd ../flashapp && make flashapp.dfu

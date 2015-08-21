@@ -109,7 +109,7 @@ void full_msc(){
 };
 
 int main(void) {
-    cpu_clock_init_(); /* CPU Clock is now 104 MHz */
+    cpuClockInit(); /* CPU Clock is now 104 MHz */
     ssp_clock_init();
     systickInit();
 

@@ -43,7 +43,7 @@ void delayNop(uint32_t duration)
 		__asm__("nop");
 }
 
-void cpu_clock_init_(void) {
+void cpuClockInit(void) {
 	/* initialisation similar to UM10503 v1.9 sec. 13.2.1.1 */
 	CGU_BASE_M4_CLK = (CGU_BASE_M4_CLK_CLK_SEL(CGU_SRC_IRC) | CGU_BASE_M4_CLK_AUTOBLOCK(1));
 
