@@ -41,7 +41,7 @@
 
 int main(void)
 {
-	cpu_clock_init();
+	cpu_clock_init_();
 //	cpu_clock_pll1_max_speed();
 	scu_pinmux(RF_EN_PIN,SCU_GPIO_NOPULL|RF_EN_FUNC);
 	GPIO_DIR(RF_EN_GPORT) |= RF_EN_GPIN;
@@ -111,7 +111,7 @@ int main(void)
 			gpio_set(LED1_GPORT, LED1_GPIN); /* LED on */
 		}else{
 			gpio_clear(LED1_GPORT, LED1_GPIN); /* LED off */
-//			delay(200000);
+//			delayNop(200000);
 		};
 
 		ctr++;

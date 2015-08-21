@@ -14,6 +14,7 @@ subdirs:
 	$(MAKE) -C flashapp
 	$(MAKE) -C l0dables
 	$(MAKE) -C smartflash
+	$(MAKE) -C scope
 
 libopencm3/README:
 	git submodule init
@@ -44,4 +45,5 @@ clean:
 	$(MAKE) -C l0dables clean
 	$(MAKE) -C smartflash clean
 	$(MAKE) -C hackrf hack-clean
+	$(MAKE) -C scope hack-clean
 #	cd libopencm3 && make clean

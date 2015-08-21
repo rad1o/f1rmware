@@ -79,7 +79,7 @@ void spectrum_callback(uint8_t* buf, int bufLen)
 	lcdSetCrsr(0,0);
 	lcdPrint("f=");
 	lcdPrint(IntToStr(freq/1000000,4,F_LONG));
-	lcdPrintln("MHz                ");
+	lcdPrintln("MHz                 ");
 	lcdPrintln("-5MHz    0    +5MHz");
 	lcdDisplay();
 }
@@ -106,7 +106,11 @@ void spectrum_init()
 	specan_register_callback(spectrum_callback);
 
 	// defaults:
+
+	// the frequency is either initialized to DEFAULT_FREQ or set by the frequency menu
+	// resetting it here would break the menu.
 	//freq = DEFAULT_FREQ;
+
 	displayMode = DEFAULT_MODE;
 }
 
