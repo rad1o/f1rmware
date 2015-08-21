@@ -9,12 +9,12 @@ subdirs:
 	$(MAKE) -C testapp
 	$(MAKE) -C musicapp
 	$(MAKE) -C rfapp
+	$(MAKE) -C scope
 	$(MAKE) -C telegraf
 	$(MAKE) -C bootloader
 	$(MAKE) -C flashapp
 	$(MAKE) -C l0dables
 	$(MAKE) -C smartflash
-	$(MAKE) -C scope
 
 libopencm3/README:
 	git submodule init
