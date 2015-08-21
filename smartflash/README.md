@@ -35,7 +35,7 @@ It can be build from rad1o/dfu-util:
 ``` sh
 git clone https://github.com/rad1o/dfu-util.git
 cd dfu-util
-sh autogen.sh 
+sh autogen.sh
 ./configure  
 make
 # install in-place of existing dfu-util
@@ -47,24 +47,31 @@ sudo make install
  - Copy `90-rad1o-flash.rules` to `/etc/udev/rules.d`
 
 
-#### Installing the Perl module Curses
+#### perl Curses module
+
+#####Debian, Ubuntu, etc.
+```
+apt-get install libcurses-perl
+```
+
+#####arch
+
+```
+pacman -S perl-curses
+```
+
+#####Directly from CPAN
+
+Note: You should probably only do this if there is no package for your distro.
+
 ```
 perl -MCPAN -eshell # use default configuration, it's sufficient
 
-# a new console, e.g. ' cpan[1]> ' opens, yust type:
+# a new console, e.g. ' cpan[1]> ' opens, just type:
 
 install Curses
 exit
 ```
-
-OR the arch way
-
-``` 
-pacman -S perl-curses 
-```
-
-OR if neither works for your distro, please find a way to install the curses module from the CPAN archive, and add the instructions here
-
 
 ### Building the firmware and gathering all files:
  - Make sure to run "make" in the top level directory first. It will download and build all dependencies of the firmware
