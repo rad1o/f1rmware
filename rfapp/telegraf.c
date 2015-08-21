@@ -50,10 +50,7 @@
 #include <libopencm3/lpc43xx/adc.h>
 #include <math.h>
 
-#include "main.gen"
-
 /* Defines ... */
-#define EVERY(x,y) if((ctr+y)%(x/SYSTICKSPEED)==0)
 #define WAIT_CPU_CLOCK_INIT_DELAY   (10000)
 #define DEFAULT_SAMPLE_RATE_HZ (10000000) /* 10MHz default sample rate */
 #define DEFAULT_BASEBAND_FILTER_BANDWIDTH (5000000) /* 5MHz default */
@@ -128,38 +125,6 @@ uint32_t hackrf_compute_baseband_filter_bw_round_down_lt(const uint32_t bandwidt
 	}
 	return p->bandwidth_hz;
 }
-
-void night_tick(void){
-    static int ctr;
-    ctr++;
-
-    EVERY(50,0){
-        if(GLOBAL(chargeled)){
-            //char iodir= (GPIO_GPIO1DIR & (1 << (11) ))?1:0;
-            if(batteryCharging()) {
-                ON(LED4);
-            } else {
-                OFF(LED4);
-            }
-        };
-
-        if(batteryGetVoltage()<3600){
-            if( (ctr/(50/SYSTICKSPEED))%10 == 1 ) {
-                ON(LED4);
-            } else {
-                OFF(LED4);
-            }
-        };
-    };
-
-    return;
-}
-
-void sys_tick_handler(void){
-	incTimer();
-    night_tick();
-	generated_tick();
-};
 
 /*
  * Well, math.h provides a pow() function, but it was funny to set our
@@ -672,7 +637,8 @@ void main_ui(void) {
     }
 }
 
-int main(void) {
+//# MENU telegraf
+void telegraph_main(void) {
     /* Init CPU clock, and other hackrf/rad1olib related stuff. */
 	telegraph_init();
 
@@ -688,12 +654,11 @@ int main(void) {
 	lcdFill(0xff);
 
   /* Required by the tick-based callbacks. */
-	generated_init();
   setTextColor(0xFF,0x00);
   render_display();
 
   /* Display UI and switch on radio stuff. */
   main_ui();
 
-  return 0;
+  return;
 }

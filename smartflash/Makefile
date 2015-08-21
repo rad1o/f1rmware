@@ -29,7 +29,6 @@ gather:
 	cp ../musicapp/musicapp.b1n $(fsdir)/
 	cp ../scope/scope.b1n $(fsdir)/
 	cp ../rfapp/rfapp.b1n $(fsdir)/
-	cp ../telegraf/telegraf.b1n $(fsdir)/
 	-cp ../l0dables/*.c1d $(fsdir)/
 	-for a in ../assets/*.led ; do ../tools/convertleds.py -o ${fsdir} $$a  ;done
 	-for a in ../l0dables/*.n1k ; do b=$${a##*/}; cp $$a ${fsdir}/$${b#nick_} ; done
@@ -58,7 +57,6 @@ build:
 	cd ../musicapp && make musicapp.b1n
 	cd ../rfapp && make rfapp.b1n
 	cd ../scope && make scope.b1n
-	cd ../telegraf && make telegraf.b1n
 	cd ../bootloader && make boot.b1n
 	cd ../flashapp && make flashapp.dfu
 	cd ../l0dables && make

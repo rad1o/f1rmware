@@ -19,8 +19,38 @@
 
 #include "main.gen"
 
+
+#define EVERY(x,y) if((ctr+y)%(x/SYSTICKSPEED)==0)
+
+void night_tick(void){
+    static int ctr;
+    ctr++;
+
+    EVERY(50,0){
+        if(GLOBAL(chargeled)){
+            //char iodir= (GPIO_GPIO1DIR & (1 << (11) ))?1:0;
+            if(batteryCharging()) {
+                ON(LED4);
+            } else {
+                OFF(LED4);
+            }
+        };
+
+        if(batteryGetVoltage()<3600){
+            if( (ctr/(50/SYSTICKSPEED))%10 == 1 ) {
+                ON(LED4);
+            } else {
+                OFF(LED4);
+            }
+        };
+    };
+
+    return;
+}
+
 void sys_tick_handler(void){
 	incTimer();
+	night_tick();
 	generated_tick();
 };
 
@@ -43,7 +73,7 @@ int main(void) {
 
 	inputInit();
 	lcdInit();
-	fsInit(); 
+	fsInit();
 	lcdFill(0xff);
 	readConfig();
 
