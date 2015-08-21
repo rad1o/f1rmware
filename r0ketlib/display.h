@@ -28,4 +28,7 @@ void lcd_select();
 void lcd_deselect();
 void lcdWrite(uint8_t cd, uint8_t data);
 
+#define RGB_TO_8BIT(r, g, b)                                    \
+  ((r & 0b11100000) | ((g >> 3) & 0b11100) | ((b >> 6) & 0b11))
+
 #endif

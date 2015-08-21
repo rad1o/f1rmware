@@ -1,4 +1,4 @@
-APP=testapp
+APP=rfapp
 
 # our code
 OBJS =
