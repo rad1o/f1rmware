@@ -7,9 +7,9 @@
 
 void fsInit(void);
 void fsReInit(void);
-int readFile(char * filename, char * data, int len);
+int readFile(char * filename, void * data, int len);
 int readTextFile(char * filename, char * data, int len);
-int writeFile(char * filename, const char * data, int len);
+int writeFile(char * filename, const void * data, int len);
 int getFileSize(char * filename);
 const char* f_get_rc_string (FRESULT rc);
 
