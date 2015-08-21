@@ -17,6 +17,7 @@
 
 #include <r0ketlib/fs_util.h>
 #include <rad1olib/pins.h>
+#include <rad1olib/systick.h>
 
 #include <portalib/portapack.h>
 #include <portalib/specan.h>
@@ -38,6 +39,12 @@ static volatile int64_t freq = DEFAULT_FREQ;
 #define MODE_WATERFALL 20
 
 static volatile int displayMode = DEFAULT_MODE;
+
+// How long to wait before starting fast scroll
+#define FAST_CHANGE_DELAY 100
+
+// How much to change per 10 ms when scrolling fast
+#define FAST_CHANGE_CHANGE 2000000
 
 void spectrum_callback(uint8_t* buf, int bufLen)
 {
@@ -94,12 +101,12 @@ void spectrum_init()
 	cpu_clock_set(204); // WARP SPEED! :-)
 	si5351_init();
 	portapack_init();
-	
+
 	set_rx_mode(RECEIVER_CONFIGURATION_SPEC);
 	specan_register_callback(spectrum_callback);
-	
+
 	// defaults:
-	freq = DEFAULT_FREQ;
+	//freq = DEFAULT_FREQ;
 	displayMode = DEFAULT_MODE;
 }
 
@@ -126,28 +133,54 @@ void spectrum_frequency()
 //# MENU spectrum show
 void spectrum_show()
 {
+	int buttonPressTime;
 	spectrum_init();
 	ssp1_set_mode_max2837();
 	set_freq(freq);
 	while(1)
 	{
-		switch(getInput())
+		//getInputWaitRepeat does not seem to work?
+		switch(getInputRaw())
 		{
 			case BTN_UP:
 				displayMode=MODE_WATERFALL;
+                while(getInputRaw()==BTN_UP)
+                    ;
 				break;
 			case BTN_DOWN:
 				displayMode=MODE_SPECTRUM;
+                while(getInputRaw()==BTN_DOWN)
+                    ;
 				break;
 			case BTN_LEFT:
+        buttonPressTime = _timectr;
 				freq -= 2000000;
 				ssp1_set_mode_max2837();
 				set_freq(freq);
+                while(getInputRaw()==BTN_LEFT){
+                    if (_timectr > buttonPressTime + FAST_CHANGE_DELAY/SYSTICKSPEED)
+                    {
+                        freq -= FAST_CHANGE_CHANGE;
+                        ssp1_set_mode_max2837();
+                        set_freq(freq);
+                        delayms(10);
+                    }
+                }
 				break;
 			case BTN_RIGHT:
+        buttonPressTime = _timectr;
 				freq += 2000000;
 				ssp1_set_mode_max2837();
 				set_freq(freq);
+                while(getInputRaw()==BTN_RIGHT){
+                    if (_timectr > buttonPressTime + FAST_CHANGE_DELAY/SYSTICKSPEED)
+                    {
+                        freq += FAST_CHANGE_CHANGE;
+                        ssp1_set_mode_max2837();
+                        set_freq(freq);
+                        delayms(10);
+                    }
+                }
 				break;
 			case BTN_ENTER:
 				spectrum_stop();
