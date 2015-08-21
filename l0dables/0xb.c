@@ -143,6 +143,10 @@ void board_draw(board_t* b)
   setExtFont(b->font);
   b->cell_size_px = getFontHeight();
 
+  uint centering = (RESX - (b->cell_size_px * b->w)) / 2;
+  if (centering >= RESX)
+    centering = 0;
+
   uint x, y;
 
   for (x = 0; x < b->w; x ++) {
@@ -150,12 +154,16 @@ void board_draw(board_t* b)
       cell_t* c = board_cell(b, x, y);
       const color_t* col = cell_col(c);
       setTextColor(col->bg, col->fg);
-      uint xx = x * b->cell_size_px;
+      uint xx = centering + x * b->cell_size_px;
       uint yy = y * b->cell_size_px;
       if (xx < RESX && yy < RESY)
-        DoChar(x * b->cell_size_px, y * b->cell_size_px, cell_chr(c));
+        DoChar(xx, yy, cell_chr(c));
     }
   }
+
+  setTextColor(0, 0xff);
+  setIntFont(&Font_7x8);
+  DoString(0, 120, b->font);
 }
 
 /* Push cells in one direction, combining similar ones.
@@ -297,9 +305,9 @@ void ram(void) {
   board_drop_new_value(&b);
   board_drop_new_value(&b);
 
-  b->cells[0].val = 10;
-  b->cells[1].val = 11;
-  b->cells[2].val = 15;
+  b.cells[0].val = 10;
+  b.cells[1].val = 11;
+  b.cells[2].val = 15;
 
   do {
     lcdClear();
