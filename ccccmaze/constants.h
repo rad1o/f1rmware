@@ -1,0 +1,6 @@
+// 30x20?
+#define MAX_ROOM_SIZE 1024
+#define RESTXTX 19
+#define RESTXTY 16
+#define MAZE_STATE_MAZE 0
+#define MAZE_STATE_ROOM 1
