@@ -65,6 +65,7 @@ static void drawBlock();
 static void theEnd();
 static void setHighscore();
 static int getHighscore();
+int atoi();
 
 int score;
 int highscore;
@@ -422,12 +423,17 @@ static void theEnd() {
 }
 
 static void setHighscore(int score) {
-    writeFile("tetris.5cr",IntToStr(score,6,0),strlen(IntToStr(score,6,0)));
+    char filecontent[7];
+
+    strcpy(filecontent, IntToStr(score,6,0));
+    filecontent[6] = 0;
+
+    writeFile("tetris.6cr",filecontent,7);
 }
 
 static int getHighscore() {
-  char filecontent[13];
-  readTextFile("tetris.5cr",filecontent,13);
+  char filecontent[7];
+  readTextFile("tetris.6cr",filecontent,7);
   
   // I don't get it, but we have to somehow read the variable, otherwise atoi will return 0... o_O
   strlen(filecontent);
