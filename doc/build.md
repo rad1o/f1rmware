@@ -79,6 +79,8 @@ make
 
 On BSD systems, use `gmake` instead of `make`.
 
+## continue with instructions on wiki
+Now that your toolchain is set up under Linux, follow the [instructions on the wiki](https://rad1o.badge.events.ccc.de/howto:build) to build regularly from git and flash your rad1o.
 
 ## Flash rad1o
 
