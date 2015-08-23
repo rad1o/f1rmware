@@ -58,12 +58,10 @@ void tick_rgbLeds(void) {
 //# MENU rgb_leds
 void selectLedFile(void){
     if(GLOBAL(rgbleds)) {
-        if( selectFile(GLOBAL(ledfile),"L3D") != 0){
-            lcdPrintln("No file selected.");
-            return;
-        };
-        writeFile("ledfile.cfg",GLOBAL(ledfile),strlen(GLOBAL(ledfile)));
-        init_rgbLeds();
+        while(selectFile(GLOBAL(ledfile),"L3D") >= 0) {
+            writeFile("ledfile.cfg", GLOBAL(ledfile), strlen(GLOBAL(ledfile)));
+            init_rgbLeds();
+        }
     } else {
         lcdClear();
         lcdNl();
