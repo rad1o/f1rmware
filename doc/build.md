@@ -89,7 +89,7 @@ If you want to just run the firmware once without permanently storing it on the 
 
 Alternatively, you can use `FlashGUI` in the `smartflash` directory, see `smartflash/README.md` for details.
 
-To fix issues on some boards that are not flashable by FlashGUI or to restore the filesystem on the radio in general, run `sudo mkfs.msdos -I /dev/sdx` and resthe firmware again with `FlashGUI`. 
+To fix issues on some boards that are not flashable by FlashGUI or to restore the filesystem on the radio in general, run `sudo mkfs.msdos -I /dev/sdx` and restore the firmware again with `FlashGUI`. 
 
 
 ## OS X setup:
