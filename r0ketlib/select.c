@@ -1,21 +1,20 @@
 #include <string.h>
-#include <r0ketlib/keyin.h>
-//#include "lcd/lcd.h"
-//#include "lcd/fonts/smallfonts.h"
-#include <r0ketlib/print.h>
-#include <fatfs/ff.h>
-//#include "basic/basic.h"
-
-#define FLEN 13
-
 #include <r0ketlib/display.h>
 #include <r0ketlib/print.h>
 #include <r0ketlib/itoa.h>
 #include <r0ketlib/keyin.h>
+#include <r0ketlib/print.h>
+#include <fatfs/ff.h>
+
+#define FLEN 13
+#define PERPAGE 15
+
+static uint16_t selected = 0;
+static uint16_t skip = 0;
+static uint16_t file_count = 0;
 
 /* if count is 0xff (-1) do not fill files and return the count instead */
-int getFiles(char files[][FLEN], uint8_t count, uint16_t skip, const char *ext)
-{
+int getFiles(char files[][FLEN], uint8_t count, uint16_t skip, const char *ext){
     DIR dir;                /* Directory object */
     FILINFO Finfo;
     FRESULT res;
@@ -25,7 +24,7 @@ int getFiles(char files[][FLEN], uint8_t count, uint16_t skip, const char *ext)
     if(res){
         lcdPrint("OpenDir:"); lcdPrintln(IntToStr(res,3,0)); lcdDisplay(); 
         return 0;
-    };
+    }
     while(f_readdir(&dir, &Finfo) == FR_OK && Finfo.fname[0]){
         int len=strlen(Finfo.fname);
 
@@ -41,7 +40,7 @@ int getFiles(char files[][FLEN], uint8_t count, uint16_t skip, const char *ext)
         if( skip>0 ){
             skip--;
             continue;
-        };
+        }
 
         if(count != 0xff)
             strcpy(files[pos],Finfo.fname);
@@ -52,22 +51,22 @@ int getFiles(char files[][FLEN], uint8_t count, uint16_t skip, const char *ext)
     return pos;
 }
 
-#define PERPAGE 15
-int selectFile(char *filename, const char *extension)
-{
-    int skip = 0;
-    char key;
-    int selected = 0;
-    int file_count = getFiles(NULL, 0xff, 0, extension);
+uint16_t init_selectFile(const char *extension){
+    selected = 0;
+    skip = 0;
 
-//    font=&Font_7x8;
+    file_count = getFiles(NULL, 0xff, 0, extension);
     if(!file_count){
         lcdPrintln("No Files?");
         lcdDisplay();
         getInputWait();
         getInputWaitRelease();
-        return -1;
-    };
+    }
+    return file_count;
+}
+
+int selectFileRepeat(char *filename, const char *extension){
+    uint8_t key;
     while(1){
         char files[PERPAGE][FLEN];
         int count = getFiles(files, PERPAGE, skip, extension);
@@ -75,8 +74,8 @@ int selectFile(char *filename, const char *extension)
         if(count<PERPAGE && selected==count){
             skip--;
             continue;
-        };
-        
+        }
+
         redraw:
         lcdClear();
         lcdPrintln("Select file:");
@@ -119,8 +118,7 @@ int selectFile(char *filename, const char *extension)
                     if( skip > 0 ){
                         skip--;
                     } else { // wrap to bottom
-                        skip = file_count - PERPAGE;
-                        if(skip < 0) skip = 0;
+                        skip = file_count<PERPAGE ? 0 : file_count - PERPAGE;
                         selected = file_count - skip - 1;
                     }
                 }
@@ -138,4 +136,11 @@ int selectFile(char *filename, const char *extension)
                 return 1;
         }
     }
+}
+
+int selectFile(char *filename, const char *extension){
+    if(!init_selectFile(extension))
+        return -1;
+
+    return selectFileRepeat(filename, extension);
 }
