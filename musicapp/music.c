@@ -27,15 +27,11 @@
 #include <fatfs/ff.h>
 
 #include <rad1olib/pins.h>
-
-#include <libopencm3/lpc43xx/dac.h>
-#include <libopencm3/lpc43xx/m4/nvic.h>
-#include <libopencm3/lpc43xx/ritimer.h>
-#include <libopencm3/cm3/vector.h>
+#include <rad1olib/audio.h>
 
 // about 32kByte AHB RAM designated for Cortex M0 @ 0x20000000,
 // we mis-use it for our samples
-#define SAMPLES_BANK_SIZE (32*1024)
+#define SAMPLES_SIZE (32*1024)
 #define SAMPLES_BUF 0x20000000
 
 // The mod buffer can go in the second RAM segment. This relies
@@ -1146,7 +1142,7 @@ static inline int clip(int i)
     else return(i);
 }
 
-void synthrender(uint8_t *renderbuffer, int samplecount)
+void synthrender(int samplecount)
 {
     /* 125bpm equals to 50Hz (= 0.02s)
      * => one tick = mixingrate/50,
@@ -1155,7 +1151,6 @@ void synthrender(uint8_t *renderbuffer, int samplecount)
 
     signed short s;
     int qf_distance, qf_distance2;
-    uint8_t *p = renderbuffer;
 
     int i;
 
@@ -1252,71 +1247,14 @@ void synthrender(uint8_t *renderbuffer, int samplecount)
             }
         /* If we have more than 4 channels
          * we have to make sure that we apply clipping */
-        *p = ((clip(value)+32768)>>8);
-        p+=1;
+        audio_push((clip(value) + 32768) >> 6);
     }
 }
 
 
 /*****************************************************************/
 
-typedef struct { uint8_t buf[SAMPLES_BANK_SIZE]; } samplebuf_t;
-samplebuf_t *samples = (samplebuf_t*) SAMPLES_BUF;
-static volatile int samples_done = 0;
-static volatile int samples_active = 0;
-static int samples_ptr = 0;
-static volatile int dac_volume = 4;
-static int dac_amp = 0;
-static vector_table_entry_t old_isr;
-
-void samples_stop(void) {
-    // stop interrupt handler
-    RITIMER_CTRL &= ~(RITIMER_CTRL_RITEN(1));
-    nvic_disable_irq(NVIC_RITIMER_IRQ);
-    vector_table.irq[NVIC_RITIMER_IRQ] = old_isr;
-    dac_set(0);
-    samples_done = 0;
-}
-
-void SAMPLES_isr(void) {
-    // check if it actually is an RITIMER interrupt
-    if((RITIMER_CTRL | RITIMER_CTRL_RITINT(1)) == 0) {
-        // nope, ignore it.
-        return;
-    }
-
-    dac_set(dac_volume * samples[samples_active].buf[samples_ptr]);
-
-    samples_ptr++;
-    if(samples_ptr == SAMPLES_BANK_SIZE) {
-        if(samples_done != 0) {
-            samples_stop();
-        }
-        samples_ptr = 0;
-        samples_active ^= 1; // toggle 0/1
-    }
-    // reset interrupt flag
-    RITIMER_CTRL |= RITIMER_CTRL_RITINT(1);
-}
-
-void samples_start(void) {
-    for(int i=0; i < SAMPLES_BANK_SIZE/2; i++) ((uint32_t*)samples)[i] = 0;
-
-    samples_done = 0;
-    samples_ptr = 0;
-    // timer setup
-    old_isr = vector_table.irq[NVIC_RITIMER_IRQ];
-    RITIMER_MASK = 0;
-    RITIMER_COUNTER = 0;
-    RITIMER_CTRL |= RITIMER_CTRL_RITEN(1) | RITIMER_CTRL_RITENCLR(1);
-    RITIMER_COMPVAL = (RITIMER_RATE / SAMPLE_RATE);
-    vector_table.irq[NVIC_RITIMER_IRQ] = SAMPLES_isr;
-    nvic_enable_irq(NVIC_RITIMER_IRQ);
-    nvic_set_priority(NVIC_RITIMER_IRQ, 1);
-}
-
 void modplay(char *fname) {
-    int cur = samples_active;
     unsigned char *modfile = (unsigned char*) MODFILE_BUF;
     int res;
     UINT readbytes;
@@ -1329,7 +1267,7 @@ void modplay(char *fname) {
     if(file.fsize > MODFILE_BUF_SIZE) {
         lcdPrintln("File too large.");
         lcdPrintln("Maximum size is");
-        lcdPrintln("32kByte.");
+        lcdPrintln("72kByte.");
         lcdPrintln("Sorry.");
         lcdDisplay();
         getInputWait();
@@ -1341,44 +1279,37 @@ void modplay(char *fname) {
     initmodplayer();
     loadmod(modfile);
 
-    samples_start();
+    audio_init((uint16_t*) SAMPLES_BUF, SAMPLES_SIZE/2, SAMPLE_RATE, RITIMER_RATE);
+    audio_play();
+
     for(;;) {
         char key = getInputRaw();
         if (key == BTN_LEFT) {
-            samples_done = 1;
+            audio_stop();
             return;
         } else if (key == BTN_DOWN) {
-            if(dac_amp == 1 && dac_volume == 1) {
-                ON(MIC_AMP_DIS); // disable amp
-                dac_amp = 0;
-                dac_volume = 4;
-            } else if(dac_volume > 1) {
-                dac_volume--;
+            int vol = audio_get_volume();
+            if(vol == 9) {
+                audio_set_volume(4);
+            } else if(vol > 1) {
+                audio_set_volume(vol-1);
             }
         } else if (key == BTN_UP) {
-            if(dac_amp == 0 && dac_volume == 4) {
-                OFF(MIC_AMP_DIS); // enable amp
-                dac_amp = 1;
-                dac_volume = 1;
-            } else if(dac_amp == 0) {
-                // do not increase volume when amp is enabled.
-                // it is more than loud enough.
-                dac_volume++;
+            int vol = audio_get_volume();
+            if(vol == 4) {
+                audio_set_volume(9);
+            } else if(vol < 4) {
+                audio_set_volume(vol+1);
             }
         }
         TOGGLE(LED4);
-        while(samples_active == cur);
-        synthrender(samples[cur].buf, SAMPLES_BANK_SIZE);
-        cur = samples_active;
+        while(audio_fill() > SAMPLES_SIZE/4);
+        synthrender(SAMPLES_SIZE/4);
     }
 }
 
 //# MENU MODPlayer
 void select_mod(void) {
-    void *old_ri_isr = ritimer_isr;
-
-	SETUPgout(MIC_AMP_DIS);
-	dac_init(false); 
     char filename[FLEN];
 
     for(;;) {
@@ -1394,7 +1325,5 @@ void select_mod(void) {
         lcdDisplay();
         modplay(filename);
     }
-    ON(MIC_AMP_DIS); // disable amp
     return;
 }
-
