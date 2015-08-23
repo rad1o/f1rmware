@@ -45,6 +45,7 @@ sudo make install
 ```
 #### udev rule:
  - Copy `90-rad1o-flash.rules` to `/etc/udev/rules.d`
+ - reload rules ```$ sudo udevadm control --reload```
 
 
 #### perl Curses module
