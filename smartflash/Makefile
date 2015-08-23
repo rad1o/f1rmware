@@ -45,7 +45,7 @@ gather:
 	dd if=../bootloader/boot.b1n of=$(hdrimg) conv=notrunc
 
 run:
-	./FLASHgui
+	PATH="../../dfu-util/src/:${PATH}" ./FLASHgui
 
 ### Rebuild everything
 rebuild: build gather
