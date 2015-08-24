@@ -107,7 +107,7 @@ void board_init(board_t* b, uint w, uint h, const char* font)
     b->n = 4;
   }
 
-  b->seed = 0;
+  b->seed = 1;
   //b->cells = malloc(b->n * sizeof(cell_t));
 
   for (uint i = 0; i < b->n; i ++) {
