@@ -74,7 +74,7 @@ int fsUsage(FATFS *fs, FS_USAGE *fs_usage)
     return 0;
 }
 
-int readFile(char * filename, char * data, int len){
+int readFile(char * filename, void * data, int len){
     FIL file;
     UINT readbytes;
     int res;
