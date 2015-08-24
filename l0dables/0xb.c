@@ -182,9 +182,11 @@ void board_menu_draw(board_t* b)
     lcdNl();
   }
 
-  lcdPrintln(b->font);
-  setExtFont(b->font);
-  lcdPrint("789ab");
+  if (b->menu_item == 1) {
+    lcdPrintln(b->font);
+    setExtFont(b->font);
+    lcdPrint("789ab");
+  }
 }
 
 void board_draw(board_t* b)
