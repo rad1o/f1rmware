@@ -1,3 +1,11 @@
+/* 0xb -- number game for the rad1o
+
+   (c) Neels Hofmeyr <neels@hofmeyr.de>
+   Published under the GNU General Public License v2.
+
+   This game is based on the idea of 2048, but uses hexadecimal digits.
+   https://github.com/gabrielecirulli/2048
+ */
 #include <stdlib.h>
 
 #include <r0ketlib/display.h>
