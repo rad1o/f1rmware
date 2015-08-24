@@ -88,7 +88,6 @@ typedef struct {
   uint h;
   uint n;
   const char* font;
-  uint seed;
   cell_t cells[BOARD_ABSOLUTE_MAX_CELLS];
   uint cell_size_px;
   uint n_empty_cells;
@@ -123,16 +122,12 @@ void board_reinit(board_t* b)
     b->n = 4;
   }
 
-  b->seed = 1;
-
   for (uint i = 0; i < b->n; i ++) {
     cell_init(b->cells + i);
   }
   b->n_empty_cells = b->n;
 
   b->n_moves = 0;
-
-  srand(b->seed);
 }
 
 void board_set_font(board_t* b, const char* font)
