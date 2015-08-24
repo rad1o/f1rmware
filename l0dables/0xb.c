@@ -15,14 +15,14 @@
 #include "usetable.h"
 
 #define N_FONTS 7
-const char* font_list[N_FONTS] = {
-    "-"
+const char*const font_list[N_FONTS] = {
     "marker18.f0n",
     "orbit14.f0n",
     "pt18.f0n",
     "ptone18.f0n",
     "soviet18.f0n",
     "ubuntu18.f0n",
+    "-"
 };
 
 
