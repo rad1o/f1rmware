@@ -9,11 +9,16 @@
 #include <stdlib.h>
 
 #include <r0ketlib/display.h>
+#include <r0ketlib/print.h>
 #include <r0ketlib/fonts.h>
 #include <r0ketlib/keyin.h>
 
 #include "usetable.h"
 
+typedef unsigned int uint;
+
+
+// This font list is kind of stupid. Patches welcome.
 #define N_FONTS 7
 const char*const font_list[N_FONTS] = {
     "marker18.f0n",
@@ -24,9 +29,6 @@ const char*const font_list[N_FONTS] = {
     "ubuntu18.f0n",
     "-"
 };
-
-
-typedef unsigned int uint;
 
 typedef struct {
   uint8_t fg;
@@ -54,7 +56,6 @@ typedef struct {
 void cell_init(cell_t* c)
 {
   c->val = 0;
-  //c->col = colors[1];
 }
 
 char cell_chr(cell_t* c)
@@ -67,13 +68,6 @@ char cell_chr(cell_t* c)
 void cell_set_new_value(cell_t* c, uint val)
 {
   c->val = val;
-
-  /*
-  static uint8_t last_cell_color = -1;
-  last_cell_color ++;
-  last_cell_color %= N_COLORS;
-  c->col = colors[last_cell_color];
-  */
 }
 
 const color_t* cell_col(cell_t* c)
@@ -99,15 +93,29 @@ typedef struct {
   uint cell_size_px;
   uint n_empty_cells;
   uint n_moves;
+
+  bool menu_active;
+  uint menu_item;
 } board_t;
 
 void board_set_font(board_t* b, const char* font);
+void board_reinit(board_t* b);
 
 void board_init(board_t* b, uint w, uint h, const char* font)
 {
   b->w = w;
   b->h = h;
-  b->n = w * h;
+
+  board_set_font(b, font);
+
+  b->menu_active = true;
+  b->menu_item = 0;
+  board_reinit(b);
+}
+
+void board_reinit(board_t* b)
+{
+  b->n = b->w * b->h;
 
   if (b->n > BOARD_ABSOLUTE_MAX_CELLS) {
     b->w = 2;
@@ -116,14 +124,11 @@ void board_init(board_t* b, uint w, uint h, const char* font)
   }
 
   b->seed = 1;
-  //b->cells = malloc(b->n * sizeof(cell_t));
 
   for (uint i = 0; i < b->n; i ++) {
     cell_init(b->cells + i);
   }
   b->n_empty_cells = b->n;
-
-  board_set_font(b, font);
 
   b->n_moves = 0;
 
@@ -140,8 +145,58 @@ cell_t* board_cell(board_t* b, uint x, uint y)
   return b->cells + (y*b->w + x);
 }
 
+#define menu_N 5
+static const char * const menu_str[menu_N] =
+  { "play!", "font", "width", "height", "quit" };
+
+void board_menu_draw(board_t* b)
+{
+  setTextColor(0, 0xff);
+  setIntFont(&Font_7x8);
+
+  const int lineh = getFontHeight();
+
+  lcdSetCrsr(0, 0);
+  lcdPrintln("0xb number game");
+  lcdPrintln("Push left/right/");
+  lcdPrintln("up/down. Same");
+  lcdPrintln("numbers combine.");
+  lcdPrintln("Try to reach 'b'!");
+  lcdNl();
+
+  for (uint i = 0; i < menu_N; i ++) {
+    if (i == b->menu_item)
+      lcdPrint(">> ");
+    else
+      lcdPrint("   ");
+    lcdPrint(menu_str[i]);
+
+    switch (i) {
+      case 2:
+        // width
+        lcdPrint(" = ");
+        lcdPrint(IntToStr(b->w, 2, 0));
+        break;
+      case 3:
+        // width
+        lcdPrint(" = ");
+        lcdPrint(IntToStr(b->h, 2, 0));
+      default:
+        break;
+    }
+    lcdNl();
+  }
+
+  lcdPrintln(b->font);
+  setExtFont(b->font);
+  lcdPrint("789ab");
+}
+
 void board_draw(board_t* b)
 {
+  if (b->menu_active)
+    return board_menu_draw(b);
+
   setTextColor(0, 0xff);
   setIntFont(&Font_7x8);
   if (b->n_moves < 3)
@@ -254,66 +309,155 @@ bool board_handle_input(board_t* b)
   getInputWaitRelease();
   uint8_t key = getInputWait();
 
-  int pitch0;
-  int pitch1;
-  uint n0;
-  uint n1;
-  cell_t* start;
+  bool reinit_board = false;
 
-  switch (key) {
-    case BTN_LEFT:
-      n0 = b->w;
-      n1 = b->h;
-      pitch0 = 1;
-      pitch1 = b->w;
-      start = b->cells;
-      break;
+  if (b->menu_active) {
+    switch (key) {
+      case BTN_UP:
+        if (b->menu_item == 0)
+          b->menu_item = menu_N - 1;
+        else
+          b->menu_item --;
+        break;
 
-    case BTN_RIGHT:
-      n0 = b->w;
-      n1 = b->h;
-      pitch0 = -1;
-      pitch1 = b->w;
-      start = b->cells + (b->w - 1);
-      break;
+      case BTN_DOWN:
+        b->menu_item ++;
+        if (b->menu_item >= menu_N)
+          b->menu_item = 0;
+        break;
 
-    case BTN_UP:
-      n0 = b->h;
-      n1 = b->w;
-      pitch0 = b->w;
-      pitch1 = 1;
-      start = b->cells;
-      break;
+      case BTN_ENTER:
+        b->menu_active = false;
+        return b->menu_item != 4; // != quit
 
-    case BTN_DOWN:
-      n0 = b->w;
-      n1 = b->h;
-      pitch0 = - b->w;
-      pitch1 = 1;
-      start = b->cells + ((b->h - 1) * b->w);
-      break;
+      default:
 
-    case BTN_ENTER:
-      current_font ++;
-      current_font %= N_FONTS;
-      board_set_font(b, font_list[current_font]);
-      return true;
+        switch (b->menu_item) {
+          case 0:
+            b->menu_active = false;
+            break;
 
-    default:
-      // unknown input. do nothing and go on.
-      return true;
+          case 1:
+            // font
+            if (key == BTN_LEFT) {
+              if (current_font == 0)
+                current_font = N_FONTS - 1;
+              else
+                current_font --;
+            }
+            else
+            if (key == BTN_RIGHT) {
+              current_font ++;
+              if (current_font >= N_FONTS)
+                current_font = 0;
+            }
+            board_set_font(b, font_list[current_font]);
+            break;
+
+          case 2:
+            // width
+            reinit_board = true;
+            if (key == BTN_LEFT) {
+              if (b->w > 2)
+                b->w --;
+            }
+            else
+            if (key == BTN_RIGHT) {
+              if (b->w < 8)
+                b->w ++;
+            }
+            else
+              reinit_board = false;
+            break;
+
+          case 3:
+            // height
+            reinit_board = true;
+            if (key == BTN_LEFT) {
+              if (b->h > 2)
+                b->h --;
+            }
+            else
+            if (key == BTN_RIGHT) {
+              if (b->h < 8)
+                b->h ++;
+            }
+            else
+              reinit_board = false;
+            break;
+
+          case 4:
+            return false;
+        }
+    }
+
+    if (reinit_board) {
+      board_reinit(b);
+    }
+  }
+  else {
+
+    int pitch0;
+    int pitch1;
+    uint n0;
+    uint n1;
+    cell_t* start;
+
+    switch (key) {
+      case BTN_LEFT:
+        n0 = b->w;
+        n1 = b->h;
+        pitch0 = 1;
+        pitch1 = b->w;
+        start = b->cells;
+        break;
+
+      case BTN_RIGHT:
+        n0 = b->w;
+        n1 = b->h;
+        pitch0 = -1;
+        pitch1 = b->w;
+        start = b->cells + (b->w - 1);
+        break;
+
+      case BTN_UP:
+        n0 = b->h;
+        n1 = b->w;
+        pitch0 = b->w;
+        pitch1 = 1;
+        start = b->cells;
+        break;
+
+      case BTN_DOWN:
+        n0 = b->h;
+        n1 = b->w;
+        pitch0 = - b->w;
+        pitch1 = 1;
+        start = b->cells + ((b->h - 1) * b->w);
+        break;
+
+      case BTN_ENTER:
+        b->menu_active = true;
+        return true;
+
+      default:
+        // unknown input. do nothing and go on.
+        return true;
+    }
+
+    board_shove(b, start, pitch0, pitch1, n0, n1);
+    board_drop_new_value(b);
+    b->n_moves ++;
   }
 
-  board_shove(b, start, pitch0, pitch1, n0, n1);
-  board_drop_new_value(b);
-  b->n_moves ++;
   return true;
 }
+
 
 void ram(void) {
   board_t b;
 
-  board_init(&b, 4, 4, font_list[1]);
+  board_init(&b, 4, 4, font_list[0]);
 
   board_drop_new_value(&b);
   board_drop_new_value(&b);
