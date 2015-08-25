@@ -62,7 +62,8 @@ char cell_chr(cell_t* c)
 {
   if (c->val < 1)
     return '.';
-  return (c->val <= 9) ? ('0' + c->val) : ('a' + (c->val - 10));
+  uint val = c->val - 1;
+  return (val <= 9) ? ('0' + val) : ('a' + (val - 10));
 }
 
 void cell_set_new_value(cell_t* c, uint val)
