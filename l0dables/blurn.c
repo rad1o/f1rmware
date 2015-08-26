@@ -77,10 +77,9 @@ void ram(void)
   lcdPrintln("blurn");
   lcdPrintln("underdamped blur");
   lcdNl();
-  lcdPrintln("ENTER: respawn");
-  lcdPrintln("DOWN/UP: overdamp");
-  lcdPrintln("RIGHT: underdamp++");
-  lcdPrintln("LEFT: exit");
+  lcdPrintln("DOWN/UP cool down");
+  lcdPrintln("LEFT/RIGHT heat up");
+  lcdPrintln("ENTER exit");
   lcdNl();
   lcdPrintln("any key to start");
   lcdDisplay();
@@ -126,7 +125,6 @@ void ram(void)
   }
 
   while (1) {
-    random_seed ++;
     {
       // draw in screen resolution and repeat the high res image
       uint lcd_pos = 0;
@@ -196,18 +194,17 @@ void ram(void)
 
       case BTN_RIGHT:
         for (uint i = 0; i < N; i++) {
+          pixels[i] /= 8.58;
+        }
+        break;
+
+      case BTN_LEFT:
+        for (uint i = 0; i < N; i++) {
           pixels[i] /= 8.67;
         }
         break;
 
       case BTN_ENTER:
-        srand(random_seed);
-        for (uint i = 0; i < N; i++) {
-          pixels[i] = rand();
-        }
-        break;
-
-      case BTN_LEFT:
         return;
     }
   }
