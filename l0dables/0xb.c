@@ -37,14 +37,20 @@ typedef struct {
 
 const color_t zero_col = { 0xff, 0 };
 
-#define N_COLORS 6
+#define N_COLORS 12
 const color_t colors[N_COLORS] = {
+  { 0b00000011, 0 },
   { 0b11100000, 0 },
   { 0b00011100, 0 },
-  { 0b00000011, 0 },
   { 0b11111100, 0 },
   { 0b00011111, 0 },
-  { 0b11100011, 0 }
+  { 0b11100011, 0 },
+  { 0b01001011, 0 },
+  { 0b11101001, 0 },
+  { 0b01011101, 0 },
+  { 0b10110101, 0 },
+  { 0b01011111, 0 },
+  { 0b11101011, 0 }
 };
 
 
@@ -76,7 +82,7 @@ const color_t* cell_col(cell_t* c)
   if (c->val < 1)
     return &zero_col;
 
-  uint col = c->val % N_COLORS;
+  uint col = (c->val - 1) % N_COLORS;
   return colors + col;
 }
 
