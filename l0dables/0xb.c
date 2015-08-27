@@ -56,12 +56,19 @@ const color_t colors[N_COLORS] = {
 
 typedef struct {
   uint8_t val;
-  //color_t col;
+
+  /* For animating a move, val holds the old value, which moves to
+     b->cells[anim_to]. anim_newval holds the new value that each cell
+     should get after the animation is done. */
+  int anim_to;
+  uint8_t anim_newval;
 } cell_t;
 
 void cell_init(cell_t* c)
 {
   c->val = 0;
+  c->anim_to = -1;
+  c->anim_newval = 0;
 }
 
 char cell_chr(cell_t* c)
@@ -75,6 +82,8 @@ char cell_chr(cell_t* c)
 void cell_set_new_value(cell_t* c, uint val)
 {
   c->val = val;
+  c->anim_newval = val;
+  c->anim_to = -1;
 }
 
 const color_t* cell_col(cell_t* c)
@@ -196,7 +205,7 @@ void board_menu_draw(board_t* b)
   }
 }
 
-void board_draw(board_t* b)
+void board_draw(board_t* b, int anim_i, int anim_N)
 {
   if (b->menu_active)
     return board_menu_draw(b);
@@ -221,16 +230,38 @@ void board_draw(board_t* b)
   if (centeringy < 8)
     centeringy = 8;
 
-  uint x, y;
+  int x, y;
+  int xx, yy;
 
   for (x = 0; x < b->w; x ++) {
     for (y = 0; y < b->h; y ++) {
       cell_t* c = board_cell(b, x, y);
-      const color_t* col = cell_col(c);
-      setTextColor(col->bg, col->fg);
-      uint xx = centeringx + x * b->cell_size_px;
-      uint yy = centeringy + y * b->cell_size_px;
-      if (xx < RESX && yy < RESY)
+
+      xx = x * b->cell_size_px;
+      yy = y * b->cell_size_px;
+      if (anim_i >= anim_N) {
+        // animation ended.
+        c->val = c->anim_newval;
+        c->anim_to = -1;
+      }
+      else
+      if (c->anim_to >= 0) {
+        int from_x = xx;
+        int from_y = yy;
+        int to_x = (c->anim_to % b->w) * b->cell_size_px;
+        int to_y = (c->anim_to / b->w) * b->cell_size_px;
+        xx = from_x + anim_i * (to_x - from_x) / anim_N;
+        yy = from_y + anim_i * (to_y - from_y) / anim_N;
+      }
+
+      {
+        const color_t* col = cell_col(c);
+        setTextColor(col->bg, col->fg);
+      }
+
+      xx += centeringx;
+      yy += centeringy;
+      if ((xx >= 0) && (xx < RESX) && (yy >= 0) && (yy < RESY))
         DoChar(xx, yy, cell_chr(c));
     }
   }
@@ -254,12 +285,14 @@ void board_shove(board_t *b, cell_t* start, int pitch0, int pitch1, uint n0, uin
     uint remaining0 = n0;
     for (uint p0 = 0; p0 < n0; p0 ++, from += pitch0) {
       if (from->val) {
-        if (prev && (prev->val == from->val)) {
-          prev->val ++;
+        if (prev && (prev->anim_newval == from->val)) {
+          prev->anim_newval ++;
+          from->anim_to = prev - b->cells;
           prev = NULL;
         }
         else {
-          *to = *from;
+          from->anim_to = to - b->cells;
+          to->anim_newval = from->val;
           prev = to;
           to += pitch0;
           remaining0 --;
@@ -271,7 +304,7 @@ void board_shove(board_t *b, cell_t* start, int pitch0, int pitch1, uint n0, uin
     // cells.
     n_empty_cells += remaining0;
     for (; remaining0; remaining0 --, to += pitch0) {
-      cell_init(to);
+      to->anim_newval = 0;
     }
   }
 
@@ -299,7 +332,8 @@ void board_drop_new_value(board_t* b)
       }
       else {
         cell_set_new_value(c, 1 + board_random(b, 2)); // 1 or 2
-        break;
+        b->n_empty_cells --;
+        return;
       }
     }
   }
@@ -397,6 +431,7 @@ bool board_handle_input(board_t* b)
 
     if (reinit_board) {
       board_reinit(b);
+      board_drop_new_value(b);
     }
   }
   else {
@@ -450,7 +485,6 @@ bool board_handle_input(board_t* b)
     }
 
     board_shove(b, start, pitch0, pitch1, n0, n1);
-    board_drop_new_value(b);
     b->n_moves ++;
   }
 
@@ -464,16 +498,23 @@ void ram(void) {
   board_init(&b, 4, 4, font_list[0]);
 
   board_drop_new_value(&b);
-  board_drop_new_value(&b);
+
+  const int anim_N = 10;
 
   do {
-    lcdClear();
+    if (! b.menu_active) {
+      for (int anim_i = 1; anim_i <= anim_N; anim_i ++) {
+        lcdFill(0x00);
+        board_draw(&b, anim_i, anim_N);
+        lcdDisplay();
+      }
+
+      board_drop_new_value(&b);
+    }
+
     lcdFill(0x00);
-
-    board_draw(&b);
-
+    board_draw(&b, anim_N, anim_N);
     lcdDisplay();
-
   } while(board_handle_input(&b));
 
   setTextColor(0xFF,0x00);
