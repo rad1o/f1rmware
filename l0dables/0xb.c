@@ -21,10 +21,10 @@ typedef unsigned int uint;
 // This font list is kind of stupid. Patches welcome.
 #define N_FONTS 7
 const char*const font_list[N_FONTS] = {
+    "ptone18.f0n",
     "orbit14.f0n",
     "marker18.f0n",
     "pt18.f0n",
-    "ptone18.f0n",
     "soviet18.f0n",
     "ubuntu18.f0n",
     "-"
