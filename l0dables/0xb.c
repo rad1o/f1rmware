@@ -17,17 +17,17 @@
 
 typedef unsigned int uint;
 
-
 // This font list is kind of stupid. Patches welcome.
 #define N_FONTS 7
+#define FONT_NONE 2
 const char*const font_list[N_FONTS] = {
     "ptone18.f0n",
+    "small",
+    "blocks", // <-- FONT_NONE
     "orbit14.f0n",
     "marker18.f0n",
     "pt18.f0n",
-    "soviet18.f0n",
-    "ubuntu18.f0n",
-    "-"
+    "soviet18.f0n"
 };
 
 typedef struct {
@@ -105,7 +105,8 @@ typedef struct {
   uint n;
   const char* font;
   cell_t cells[BOARD_ABSOLUTE_MAX_CELLS];
-  uint cell_size_px;
+  uint cell_w;
+  uint cell_h;
   uint n_empty_cells;
   uint n_moves;
 
@@ -200,16 +201,23 @@ void board_menu_draw(board_t* b)
 
   if (b->menu_item == 1) {
     lcdPrintln(b->font);
-    setExtFont(b->font);
-    lcdPrint("789ab");
+    if (b->font == font_list[FONT_NONE]) {
+      uint w = RESX / N_COLORS;
+      for (uint8_t i = 0; i < N_COLORS; i++) {
+        const color_t* col = colors + i;
+        setTextColor(col->bg, col->fg);
+        DoRect(i*w, 120, w, 10);
+      }
+    }
+    else {
+      setExtFont(b->font);
+      lcdPrint("789ab");
+    }
   }
 }
 
 void board_draw(board_t* b, int anim_i, int anim_N)
 {
-  if (b->menu_active)
-    return board_menu_draw(b);
-
   setTextColor(0, 0xff);
   setIntFont(&Font_7x8);
   if (b->n_moves < 3)
@@ -217,14 +225,21 @@ void board_draw(board_t* b, int anim_i, int anim_N)
   else
     DoString(0, 0, IntToStr(b->n_moves, 6, 0));
 
-  setExtFont(b->font);
-  b->cell_size_px = getFontHeight();
+  bool blocks = (b->font == font_list[FONT_NONE]);
+  if (blocks) {
+    b->cell_w = RESX / b->w;
+    b->cell_h = (RESY - 8) / b->h;
+  }
+  else {
+    setExtFont(b->font);
+    b->cell_w = b->cell_h = getFontHeight();
+  }
 
-  uint centeringx = (RESX - (b->cell_size_px * b->w)) / 2;
+  uint centeringx = (RESX - (b->cell_w * b->w)) / 2;
   if (centeringx >= RESX)
     centeringx = 0;
 
-  uint centeringy = (RESY - (b->cell_size_px * b->h)) / 2;
+  uint centeringy = (RESY - (b->cell_h * b->h)) / 2;
   if (centeringy >= RESY)
     centeringy = 0;
   if (centeringy < 8)
@@ -237,8 +252,8 @@ void board_draw(board_t* b, int anim_i, int anim_N)
     for (y = 0; y < b->h; y ++) {
       cell_t* c = board_cell(b, x, y);
 
-      xx = x * b->cell_size_px;
-      yy = y * b->cell_size_px;
+      xx = x * b->cell_w;
+      yy = y * b->cell_h;
       if (anim_i >= anim_N) {
         // animation ended.
         c->val = c->anim_newval;
@@ -248,8 +263,8 @@ void board_draw(board_t* b, int anim_i, int anim_N)
       if (c->anim_to >= 0) {
         int from_x = xx;
         int from_y = yy;
-        int to_x = (c->anim_to % b->w) * b->cell_size_px;
-        int to_y = (c->anim_to / b->w) * b->cell_size_px;
+        int to_x = (c->anim_to % b->w) * b->cell_w;
+        int to_y = (c->anim_to / b->w) * b->cell_h;
         xx = from_x + anim_i * (to_x - from_x) / anim_N;
         yy = from_y + anim_i * (to_y - from_y) / anim_N;
       }
@@ -261,8 +276,14 @@ void board_draw(board_t* b, int anim_i, int anim_N)
 
       xx += centeringx;
       yy += centeringy;
-      if ((xx >= 0) && (xx < RESX) && (yy >= 0) && (yy < RESY))
-        DoChar(xx, yy, cell_chr(c));
+      if ((xx >= 0) && (xx < RESX) && (yy >= 0) && (yy < RESY)) {
+        if (blocks) {
+          if (c->val) // don't draw empty blocks
+            DoRect(xx, yy, b->cell_w, b->cell_h);
+        }
+        else
+          DoChar(xx, yy, cell_chr(c));
+      }
     }
   }
 
@@ -502,7 +523,12 @@ void ram(void) {
   const int anim_N = 10;
 
   do {
-    if (! b.menu_active) {
+    if (b.menu_active) {
+      lcdFill(0x00);
+      board_menu_draw(&b);
+      lcdDisplay();
+    }
+    else {
       for (int anim_i = 1; anim_i <= anim_N; anim_i ++) {
         lcdFill(0x00);
         board_draw(&b, anim_i, anim_N);
@@ -510,11 +536,12 @@ void ram(void) {
       }
 
       board_drop_new_value(&b);
+
+      lcdFill(0x00);
+      board_draw(&b, anim_N, anim_N);
+      lcdDisplay();
     }
 
-    lcdFill(0x00);
-    board_draw(&b, anim_N, anim_N);
-    lcdDisplay();
   } while(board_handle_input(&b));
 
   setTextColor(0xFF,0x00);
