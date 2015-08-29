@@ -152,9 +152,9 @@ cell_t* board_cell(board_t* b, uint x, uint y)
   return b->cells + (y*b->w + x);
 }
 
-#define menu_N 5
-static const char * const menu_str[menu_N] =
-  { "play!", "font", "width", "height", "quit" };
+#define menu_N 6
+const char * const menu_str[menu_N] =
+  { "play!", "clear", "font", "width", "height", "quit" };
 
 void board_menu_draw(board_t* b)
 {
@@ -165,10 +165,13 @@ void board_menu_draw(board_t* b)
 
   lcdSetCrsr(0, 0);
   lcdPrintln("0xb number game");
-  lcdPrintln("Push left/right/");
-  lcdPrintln("up/down. Same");
-  lcdPrintln("numbers combine.");
-  lcdPrintln("Try to reach 'b'!");
+  lcdPrintln("Push < > ^ v");
+  lcdPrintln("Add same blocks");
+  lcdPrint("Try to reach '");
+  setTextColor(colors[N_COLORS-1].bg, colors[N_COLORS-1].fg);
+  lcdPrint("b");
+  setTextColor(0, 0xff);
+  lcdPrintln("'!");
   lcdNl();
 
   for (uint i = 0; i < menu_N; i ++) {
@@ -179,13 +182,13 @@ void board_menu_draw(board_t* b)
     lcdPrint(menu_str[i]);
 
     switch (i) {
-      case 2:
+      case 3:
         // width
         lcdPrint(" = ");
         lcdPrint(IntToStr(b->w, 2, 0));
         break;
-      case 3:
-        // width
+      case 4:
+        // height
         lcdPrint(" = ");
         lcdPrint(IntToStr(b->h, 2, 0));
       default:
@@ -399,7 +402,12 @@ bool board_handle_input(board_t* b)
 
       case BTN_ENTER:
         b->menu_active = false;
-        return b->menu_item != 4; // != quit
+        if (b->menu_item == 1)
+          reinit_board = true; // clear
+        else
+        if (b->menu_item == 5)
+          return false; // quit
+        break;
 
       default:
 
@@ -409,6 +417,11 @@ bool board_handle_input(board_t* b)
             break;
 
           case 1:
+            reinit_board = true;
+            b->menu_active = false;
+            break;
+
+          case 2:
             // font
             if (key == BTN_LEFT) {
               if (b->font == 0)
@@ -424,7 +437,7 @@ bool board_handle_input(board_t* b)
             }
             break;
 
-          case 2:
+          case 3:
             // width
             reinit_board = true;
             if (key == BTN_LEFT) {
@@ -440,7 +453,7 @@ bool board_handle_input(board_t* b)
               reinit_board = false;
             break;
 
-          case 3:
+          case 4:
             // height
             reinit_board = true;
             if (key == BTN_LEFT) {
@@ -456,7 +469,7 @@ bool board_handle_input(board_t* b)
               reinit_board = false;
             break;
 
-          case 4:
+          case 5:
             return false;
         }
     }
