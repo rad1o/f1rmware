@@ -104,6 +104,7 @@ typedef struct {
   uint h;
   uint n;
   const char* font;
+  uint seed;
   cell_t cells[BOARD_ABSOLUTE_MAX_CELLS];
   uint cell_w;
   uint cell_h;
@@ -126,6 +127,8 @@ void board_init(board_t* b, uint w, uint h, const char* font)
 
   b->menu_active = true;
   b->menu_item = 0;
+  b->seed = 5;
+
   board_reinit(b);
 }
 
@@ -336,6 +339,7 @@ uint board_random(board_t* b, uint of_n)
 {
   if (of_n < 2)
     return 0;
+  srand(b->seed ++);
   return rand() % of_n;
 }
 
@@ -365,8 +369,26 @@ bool board_handle_input(board_t* b)
 {
   static uint8_t current_font = 0;
 
-  getInputWaitRelease();
-  uint8_t key = getInputWait();
+  // wait for button release
+  do {
+    while (getInputRaw() != BTN_NONE) {
+        work_queue();
+        b->seed ++;
+    }
+    delayms_queue(10); /* Delay a little more to debounce */
+  } while (getInputRaw() != BTN_NONE);
+
+  // wait for button
+
+  uint8_t key;
+
+  do {
+    while ((key = getInputRaw()) == BTN_NONE) {
+        work_queue();
+        b->seed ++;
+    }
+    delayms_queue(10); /* Delay a little more to debounce */
+  } while (getInputRaw() != key);
 
   bool reinit_board = false;
 
