@@ -103,7 +103,7 @@ typedef struct {
   uint w;
   uint h;
   uint n;
-  const char* font;
+  uint8_t font;
   uint seed;
   cell_t cells[BOARD_ABSOLUTE_MAX_CELLS];
   uint cell_w;
@@ -115,16 +115,13 @@ typedef struct {
   uint menu_item;
 } board_t;
 
-void board_set_font(board_t* b, const char* font);
 void board_reinit(board_t* b);
 
-void board_init(board_t* b, uint w, uint h, const char* font)
+void board_init(board_t* b, uint w, uint h, uint8_t font)
 {
   b->w = w;
   b->h = h;
-
-  board_set_font(b, font);
-
+  b->font = font;
   b->menu_active = true;
   b->menu_item = 0;
   b->seed = 5;
@@ -148,11 +145,6 @@ void board_reinit(board_t* b)
   b->n_empty_cells = b->n;
 
   b->n_moves = 0;
-}
-
-void board_set_font(board_t* b, const char* font)
-{
-  b->font = font;
 }
 
 cell_t* board_cell(board_t* b, uint x, uint y)
@@ -203,8 +195,8 @@ void board_menu_draw(board_t* b)
   }
 
   if (b->menu_item == 1) {
-    lcdPrintln(b->font);
-    if (b->font == font_list[FONT_NONE]) {
+    lcdPrintln(font_list[b->font]);
+    if (b->font == FONT_NONE) {
       uint w = RESX / N_COLORS;
       for (uint8_t i = 0; i < N_COLORS; i++) {
         const color_t* col = colors + i;
@@ -213,7 +205,7 @@ void board_menu_draw(board_t* b)
       }
     }
     else {
-      setExtFont(b->font);
+      setExtFont(font_list[b->font]);
       lcdPrint("789ab");
     }
   }
@@ -228,13 +220,13 @@ void board_draw(board_t* b, int anim_i, int anim_N)
   else
     DoString(0, 0, IntToStr(b->n_moves, 6, 0));
 
-  bool blocks = (b->font == font_list[FONT_NONE]);
+  bool blocks = (b->font == FONT_NONE);
   if (blocks) {
     b->cell_w = RESX / b->w;
     b->cell_h = (RESY - 8) / b->h;
   }
   else {
-    setExtFont(b->font);
+    setExtFont(font_list[b->font]);
     b->cell_w = b->cell_h = getFontHeight();
   }
 
@@ -367,8 +359,6 @@ void board_drop_new_value(board_t* b)
 /* Return true to continue running, false to exit program. */
 bool board_handle_input(board_t* b)
 {
-  static uint8_t current_font = 0;
-
   // wait for button release
   do {
     while (getInputRaw() != BTN_NONE) {
@@ -421,18 +411,17 @@ bool board_handle_input(board_t* b)
           case 1:
             // font
             if (key == BTN_LEFT) {
-              if (current_font == 0)
-                current_font = N_FONTS - 1;
+              if (b->font == 0)
+                b->font = N_FONTS - 1;
               else
-                current_font --;
+                b->font --;
             }
             else
             if (key == BTN_RIGHT) {
-              current_font ++;
-              if (current_font >= N_FONTS)
-                current_font = 0;
+              b->font ++;
+              if (b->font >= N_FONTS)
+                b->font = 0;
             }
-            board_set_font(b, font_list[current_font]);
             break;
 
           case 2:
@@ -538,9 +527,7 @@ bool board_handle_input(board_t* b)
 void ram(void) {
   board_t b;
 
-  board_init(&b, 4, 4, font_list[0]);
-
-  board_drop_new_value(&b);
+  board_init(&b, 4, 4, 0);
 
   const int anim_N = 10;
 
