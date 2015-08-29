@@ -197,7 +197,7 @@ void board_menu_draw(board_t* b)
     lcdNl();
   }
 
-  if (b->menu_item == 1) {
+  if (b->menu_item == 2) {
     lcdPrintln(font_list[b->font]);
     if (b->font == FONT_NONE) {
       uint w = RESX / N_COLORS;
