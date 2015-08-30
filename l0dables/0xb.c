@@ -97,7 +97,8 @@ const color_t* cell_col(cell_t* c)
 
 
 // working around malloc
-#define BOARD_ABSOLUTE_MAX_CELLS (8*8)
+#define BOARD_ABSOLUTE_MAX_W 6
+#define BOARD_ABSOLUTE_MAX_CELLS (BOARD_ABSOLUTE_MAX_W * BOARD_ABSOLUTE_MAX_W)
 
 typedef struct {
   uint w;
@@ -446,7 +447,7 @@ bool board_handle_input(board_t* b)
             }
             else
             if (key == BTN_RIGHT) {
-              if (b->w < 8)
+              if (b->w < BOARD_ABSOLUTE_MAX_W)
                 b->w ++;
             }
             else
@@ -462,7 +463,7 @@ bool board_handle_input(board_t* b)
             }
             else
             if (key == BTN_RIGHT) {
-              if (b->h < 8)
+              if (b->h < BOARD_ABSOLUTE_MAX_W)
                 b->h ++;
             }
             else
