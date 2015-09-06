@@ -117,7 +117,7 @@ static void rf_init() {
 	vector_table.irq[NVIC_SGPIO_IRQ] = sgpio_isr_tx;
 }
 
-static void txtest_init()
+static void amtx_init()
 {
 	// RF initialization from ppack.c:
 	dac_init(false);
@@ -205,11 +205,11 @@ static void rescale(int16_t adc)
 
 }
 
-//# MENU txtest
-void txtest()
+//# MENU amtx
+void amtx()
 {
 	int buttonPressTime;
-	txtest_init();
+	amtx_init();
 	ssp1_set_mode_max2837();
 	set_freq(freq);
 
