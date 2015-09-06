@@ -29,6 +29,7 @@
 #include <common/max2837.h>
 #include <common/streaming.h>
 #include <libopencm3/lpc43xx/dac.h>
+#include <libopencm3/lpc43xx/adc.h>
 #include <libopencm3/cm3/vector.h>
 #include <libopencm3/lpc43xx/sgpio.h>
 
@@ -37,27 +38,18 @@
 #include <math.h>
 
 #define DEFAULT_FREQ 2531000000
-#define DEFAULT_MODE MODE_SPECTRUM
 
 static volatile int64_t freq = DEFAULT_FREQ;
 
-#define MODE_SPECTRUM 10
-#define MODE_WATERFALL 20
-
-static volatile int displayMode = DEFAULT_MODE;
-
-// How long to wait before starting fast scroll
-#define FAST_CHANGE_DELAY 100
-
-// How much to change per 10 ms when scrolling fast
-#define FAST_CHANGE_CHANGE 2000000
-#define TX_BUFFER_LEN   512
+#define TX_BUFFER_LEN   (512 / 4)
+#define PRE_BUFFER_LEN   (TX_BUFFER_LEN * 4)
 
 uint32_t tx_buffer[TX_BUFFER_LEN];
+int8_t pre_buffer[PRE_BUFFER_LEN];
 uint32_t tx_buffer_index = 0;
+uint32_t trigger = 0;
 
 static void sgpio_isr_tx() {
-    TOGGLE(LED2);
 	SGPIO_CLR_STATUS_1 = (1 << SGPIO_SLICE_A);
 
 	uint32_t* const p = (uint32_t*)&tx_buffer[tx_buffer_index];
@@ -84,8 +76,10 @@ static void sgpio_isr_tx() {
 		: "r0"
 	);
 	tx_buffer_index = (tx_buffer_index + 32) & (TX_BUFFER_LEN - 1);
+    if(tx_buffer_index == 0) {
+        trigger = 1;
+    }
 }
-
 
 void rf_init() {
 	cpu_clock_pll1_max_speed();
@@ -97,14 +91,15 @@ void rf_init() {
 	rf_path_set_direction(RF_PATH_DIRECTION_TX);
 
 	rf_path_set_lna(0);
-	max2837_set_lna_gain(16);	/* 8dB increments */
-	max2837_set_vga_gain(20);	/* 2dB increments, up to 62dB */
+	max2837_set_lna_gain(8);	/* 8dB increments */
+	max2837_set_vga_gain(2);	/* 2dB increments, up to 62dB */
 
 	systick_set_reload(0xfffff); 
 	systick_set_clocksource(1);
 	systick_counter_enable();
 
 #if 0
+    // RX DMA code, kept for future reference
 	sgpio_dma_init();
 
 	sgpio_dma_configure_lli(&lli_rx[0], 1, false, sample_buffer_0, 4096);
@@ -120,10 +115,6 @@ void rf_init() {
 #endif
 
 	vector_table.irq[NVIC_SGPIO_IRQ] = sgpio_isr_tx;
-
-	//set_rx_mode(RECEIVER_CONFIGURATION_SPEC);
-
-	//set_frequency(device_state->tuned_hz);
 }
 
 static void txtest_init()
@@ -138,7 +129,8 @@ static void txtest_init()
 	sgpio_configure_pin_functions();
 	ON(EN_VDD);
 	ON(EN_1V8);
-	ON(MIC_AMP_DIS);
+	OFF(MIC_AMP_DIS); // Enable audio amp
+
 	delayms(500); // doesn't work without
 	cpu_clock_set(204); // WARP SPEED! :-)
 	si5351_init();
@@ -146,21 +138,15 @@ static void txtest_init()
 	sample_rate_set(8000000);
     baseband_streaming_enable();
 
-	//set_rx_mode(RECEIVER_CONFIGURATION_SPEC);
-	//specan_register_callback(spectrum_callback);
-
 	// defaults:
 
-	// the frequency is either initialized to DEFAULT_FREQ or set by the frequency menu
-	// resetting it here would break the menu.
-	//freq = DEFAULT_FREQ;
+    freq = DEFAULT_FREQ;
 
-	displayMode = DEFAULT_MODE;
 }
 
 static void txtest_stop()
 {
-//	nvic_disable_irq(NVIC_DMA_IRQ);
+    //nvic_disable_irq(NVIC_DMA_IRQ);
 	//sgpio_dma_stop();
 	sgpio_cpld_stream_disable();
 	OFF(EN_VDD);
@@ -168,22 +154,74 @@ static void txtest_stop()
 	ON(MIC_AMP_DIS);
 	systick_set_clocksource(0);
 	systick_set_reload(12e6/SYSTICKSPEED/1000);
-
-	//specan_register_callback(0);
 }
 
-void gnerate_signal(int div)
+void gnerate_signal(float div)
 {
-
     int i;
-    for(i=0; i<TX_BUFFER_LEN * 2; i+=2) {
-        int8_t i1 = sin(((float)i)/((float)div)*M_PI) * 30.;
-        int8_t i2 = sin(((float)i + 1)/((float)div)*M_PI) * 30.;
 
-        int8_t q1 = i1;
-        int8_t q2 = i2;
-        tx_buffer[i/2] = (q2 << 24) | (i2<<16) | (q1<<8) | i1;
+#if 0
+    // Example carrier
+    for(i=0; i<TX_BUFFER_LEN * 2; i+=2) {
+        int8_t i1 = cos(((float)i)/div*M_PI) * 127.;
+        int8_t q1 = sin(((float)i)/div*M_PI) * 127.;
+
+        int8_t i2 = cos(((float)i + 1.)/div*M_PI) * 127.;
+        int8_t q2 = sin(((float)i + 1.)/div*M_PI) * 127.;
+
+        tx_buffer[i/2] = (((uint8_t)q2) << 24) | (((uint8_t)i2)<<16) | (((uint8_t)q1)<<8) | (uint8_t)i1;
     }
+#endif
+
+
+#if 0
+    // Carrier at some frequency
+    for(i=0; i<PRE_BUFFER_LEN; i+=4) {
+        pre_buffer[i] = cos(((float)i/2)/div*M_PI) * 127.;
+        pre_buffer[i+1] = sin(((float)i/2)/div*M_PI) * 127.;
+
+        pre_buffer[i+2] = cos(((float)i/2 + 1.)/div*M_PI) * 127.;
+        pre_buffer[i+3] = sin(((float)i/2 + 1.)/div*M_PI) * 127.;
+    }
+#else
+    for(i=0; i<PRE_BUFFER_LEN; i+=4) {
+        pre_buffer[i] = 127.;
+        pre_buffer[i+1] = 0;
+
+        pre_buffer[i+2] = 127.;
+        pre_buffer[i+3] = 0;
+    }
+#endif
+
+}
+
+int16_t min = 0xFFF;
+int16_t max = 0x000;
+
+void rescale(int16_t adc)
+{
+    //adc = (64 + (adc - 512)) * 128;
+    if(adc > max)
+        max = adc;
+    if(adc < min)
+        min = adc;
+
+    //adc = (adc-278)/4;
+    //adc = adc-(512-64);
+    adc = (adc-378)/2;
+ 
+    int8_t *pre_pointer = pre_buffer;
+
+    for(int i=0; i<TX_BUFFER_LEN; i++) {
+        int8_t i0 = ((*pre_pointer++) * adc) / 128;
+        int8_t q0 = ((*pre_pointer++) * adc) / 128;
+
+        int8_t i1 = ((*pre_pointer++) * adc) / 128;
+        int8_t q1 = ((*pre_pointer++) * adc) / 128;
+
+        tx_buffer[i] = (((uint8_t)q1) << 24) | (((uint8_t)i1)<<16) | (((uint8_t)q0)<<8) | (uint8_t)i0;
+    }
+
 }
 
 //# MENU txtest
@@ -196,6 +234,9 @@ void txtest()
 
     int div = 8;
     gnerate_signal(div);
+    uint16_t adc;
+    adc = adc_get_single(ADC0,ADC_CR_CH7);
+    adc = adc_get_single(ADC0,ADC_CR_CH7);
 	while(1)
 	{
 		//getInputWaitRepeat does not seem to work?
@@ -221,5 +262,16 @@ void txtest()
 				txtest_stop();
 				return;
 		}
+        if(trigger) {
+            trigger = 0;
+            //adc++;
+            //rescale(512-64);
+            rescale(adc);
+		    //lcdClear(0xff);
+		    //lcdPrint("max: "); lcdPrint(IntToStr(max,5,F_LONG));lcdNl();
+		    //lcdPrint("min: "); lcdPrint(IntToStr(min,5,F_LONG));lcdNl();
+		    //lcdDisplay();
+            adc = adc_get_single(ADC0,ADC_CR_CH7);
+        }
 	}
 }
