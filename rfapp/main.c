@@ -14,6 +14,7 @@
 
 #include <rad1olib/pins.h>
 #include <rad1olib/systick.h>
+#include <rad1olib/battery.h>
 
 #include <r0ketlib/fs_util.h>
 

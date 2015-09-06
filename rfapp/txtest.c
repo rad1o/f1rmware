@@ -41,13 +41,13 @@
 
 static volatile int64_t freq = DEFAULT_FREQ;
 
-#define TX_BUFFER_LEN   (512 / 4)
-#define PRE_BUFFER_LEN   (TX_BUFFER_LEN * 4)
+#define TX_BUFFER_LEN   (256 * 2)
+#define PRE_BUFFER_LEN   (TX_BUFFER_LEN)
 
-uint32_t tx_buffer[TX_BUFFER_LEN];
-int8_t pre_buffer[PRE_BUFFER_LEN];
-uint32_t tx_buffer_index = 0;
-uint32_t trigger = 0;
+static int8_t tx_buffer[TX_BUFFER_LEN];
+static int8_t pre_buffer[PRE_BUFFER_LEN];
+static uint32_t tx_buffer_index = 0;
+static volatile uint32_t trigger = 0;
 
 static void sgpio_isr_tx() {
 	SGPIO_CLR_STATUS_1 = (1 << SGPIO_SLICE_A);
@@ -81,7 +81,7 @@ static void sgpio_isr_tx() {
     }
 }
 
-void rf_init() {
+static void rf_init() {
 	cpu_clock_pll1_max_speed();
 	
 	//sgpio_set_slice_mode(false);
@@ -134,7 +134,7 @@ static void txtest_init()
 	delayms(500); // doesn't work without
 	cpu_clock_set(204); // WARP SPEED! :-)
 	si5351_init();
-	rf_init(); //portapack_init();
+	rf_init();
 	sample_rate_set(8000000);
     baseband_streaming_enable();
 
@@ -156,49 +156,36 @@ static void txtest_stop()
 	systick_set_reload(12e6/SYSTICKSPEED/1000);
 }
 
-void gnerate_signal(float div)
+static void gnerate_signal(float div)
 {
     int i;
 
 #if 0
     // Example carrier
-    for(i=0; i<TX_BUFFER_LEN * 2; i+=2) {
-        int8_t i1 = cos(((float)i)/div*M_PI) * 127.;
-        int8_t q1 = sin(((float)i)/div*M_PI) * 127.;
-
-        int8_t i2 = cos(((float)i + 1.)/div*M_PI) * 127.;
-        int8_t q2 = sin(((float)i + 1.)/div*M_PI) * 127.;
-
-        tx_buffer[i/2] = (((uint8_t)q2) << 24) | (((uint8_t)i2)<<16) | (((uint8_t)q1)<<8) | (uint8_t)i1;
+    for(i=0; i<TX_BUFFER_LEN; i+=2) {
+        tx_buffer[i] = cos(((float)i)/div*M_PI) * 127.;
+        tx_buffer[i+1] = sin(((float)i)/div*M_PI) * 127.;
     }
 #endif
-
 
 #if 0
     // Carrier at some frequency
-    for(i=0; i<PRE_BUFFER_LEN; i+=4) {
+    for(i=0; i<PRE_BUFFER_LEN; i+=2) {
         pre_buffer[i] = cos(((float)i/2)/div*M_PI) * 127.;
         pre_buffer[i+1] = sin(((float)i/2)/div*M_PI) * 127.;
-
-        pre_buffer[i+2] = cos(((float)i/2 + 1.)/div*M_PI) * 127.;
-        pre_buffer[i+3] = sin(((float)i/2 + 1.)/div*M_PI) * 127.;
     }
 #else
-    for(i=0; i<PRE_BUFFER_LEN; i+=4) {
+    for(i=0; i<PRE_BUFFER_LEN; i+=2) {
         pre_buffer[i] = 127.;
         pre_buffer[i+1] = 0;
-
-        pre_buffer[i+2] = 127.;
-        pre_buffer[i+3] = 0;
     }
 #endif
-
 }
 
-int16_t min = 0xFFF;
-int16_t max = 0x000;
+static int16_t min = 0xFFF;
+static int16_t max = 0x000;
 
-void rescale(int16_t adc)
+static void rescale(int16_t adc)
 {
     //adc = (64 + (adc - 512)) * 128;
     if(adc > max)
@@ -213,13 +200,7 @@ void rescale(int16_t adc)
     int8_t *pre_pointer = pre_buffer;
 
     for(int i=0; i<TX_BUFFER_LEN; i++) {
-        int8_t i0 = ((*pre_pointer++) * adc) / 128;
-        int8_t q0 = ((*pre_pointer++) * adc) / 128;
-
-        int8_t i1 = ((*pre_pointer++) * adc) / 128;
-        int8_t q1 = ((*pre_pointer++) * adc) / 128;
-
-        tx_buffer[i] = (((uint8_t)q1) << 24) | (((uint8_t)i1)<<16) | (((uint8_t)q0)<<8) | (uint8_t)i0;
+        tx_buffer[i] = ((*pre_pointer++) * adc) / 128;
     }
 
 }
