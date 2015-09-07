@@ -76,6 +76,7 @@ int main(void) {
 	fsInit();
 	lcdFill(0xff);
 	readConfig();
+	batteryInit();
 
 	generated_init();
 
