@@ -11,9 +11,11 @@
 #include <r0ketlib/keyin.h>
 #include <r0ketlib/menu.h>
 #include <r0ketlib/config.h>
+#include <r0ketlib/config.h>
 
 #include <rad1olib/pins.h>
 #include <rad1olib/systick.h>
+#include <rad1olib/battery.h>
 
 #include <r0ketlib/fs_util.h>
 
@@ -22,7 +24,7 @@
 
 #define EVERY(x,y) if((ctr+y)%(x/SYSTICKSPEED)==0)
 
-void night_tick(void){
+void tick_batteryLED(void){
     static int ctr;
     ctr++;
 
@@ -50,7 +52,6 @@ void night_tick(void){
 
 void sys_tick_handler(void){
 	incTimer();
-	night_tick();
 	generated_tick();
 };
 
