@@ -107,10 +107,6 @@ void spectrum_init()
 
 	// defaults:
 
-	// the frequency is either initialized to DEFAULT_FREQ or set by the frequency menu
-	// resetting it here would break the menu.
-	//freq = DEFAULT_FREQ;
-
 	displayMode = DEFAULT_MODE;
 }
 
