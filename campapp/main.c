@@ -152,8 +152,6 @@ int main(void) {
 
 	generated_init();
 
-    init_nick();
-
     // XXX: TODO!
     // randomInit();
 
