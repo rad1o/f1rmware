@@ -18,13 +18,17 @@ uint8_t displayType;
 static char isTurned;
 
 void lcd_select() {
-    /* the LCD requires 9-Bit frames */
-    // Freq = PCLK / (CPSDVSR * [SCR+1])
-	/* we want 120ns / bit -> 8.3 MHz. */
-	/* SPI1 BASE CLOCK should be 40.8 MHz, CPSDVSR minimum is 2 */
-	/* so we run at SCR=1 => =~ 10MHz */
+    /*
+     * The LCD requires 9-Bit frames
+     * Freq = PCLK / (CPSDVSR * [SCR+1])
+	 * We want 120ns / bit -> 8.3 MHz.
+	 * SPI1 BASE CLOCK is expected to be 204 MHz.
+     * 204 MHz / ( 12 * (1 + 1)) = 8.5 MHz
+     *
+     * Set CPSDVSR = 12
+    */
     uint8_t serial_clock_rate = 1;
-    uint8_t clock_prescale_rate = 2;
+    uint8_t clock_prescale_rate = 12;
 
     ssp_init(LCD_SSP,
             SSP_DATA_9BITS,

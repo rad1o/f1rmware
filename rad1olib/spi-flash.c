@@ -98,13 +98,8 @@ void flashInit(void){
 	SETUPpin(SPIFI_MOSI);
 	SETUPpin(SPIFI_CS);
 
-	/* Use DIV C for flash: 204/3 = 68 MHz
+    /* DIVC is expexted to be at 68 MHz.
 	   the flash could go up to 104, but that produces bit errors */
-	CGU_IDIVC_CTRL= CGU_IDIVC_CTRL_CLK_SEL(CGU_SRC_PLL1)
-		| CGU_IDIVC_CTRL_AUTOBLOCK(1) 
-		| CGU_IDIVC_CTRL_IDIV(3-1)
-		| CGU_IDIVC_CTRL_PD(0)
-		;
 	CGU_BASE_SPIFI_CLK = CGU_BASE_SPIFI_CLK_CLK_SEL(CGU_SRC_IDIVC);
 
 	/* config SPIFI, use defaults */

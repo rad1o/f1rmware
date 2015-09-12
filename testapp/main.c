@@ -26,7 +26,6 @@ void sys_tick_handler(void){
 
 int main(void) {
 	cpuClockInit(); /* CPU Clock is now 104 MHz */
-	ssp_clock_init();
 	systickInit();
 
 //	cpu_clock_set(204);
