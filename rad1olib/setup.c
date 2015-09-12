@@ -71,7 +71,14 @@ void cpuClockInit(void) {
 		| CGU_IDIVB_CTRL_IDIV(2-1)
 		| CGU_IDIVB_CTRL_PD(0)
 		;
-	_cpu_speed=102;
+
+	/* set DIV C to 68 MHz. Used for SSP1 and SPIFI */
+	CGU_IDIVC_CTRL= CGU_IDIVC_CTRL_CLK_SEL(CGU_SRC_PLL1)
+		| CGU_IDIVC_CTRL_AUTOBLOCK(1) 
+		| CGU_IDIVC_CTRL_IDIV(3-1)
+		| CGU_IDIVC_CTRL_PD(0)
+		;
+
 
 	/* use DIV B as main clock */
 	/* This means, that possible speeds in MHz are:
@@ -79,17 +86,10 @@ void cpuClockInit(void) {
 	 */
 
 	CGU_BASE_M4_CLK = (CGU_BASE_M4_CLK_CLK_SEL(CGU_SRC_IDIVB) | CGU_BASE_M4_CLK_AUTOBLOCK(1));
+	_cpu_speed=102;
+
 
 	delayNop(WAIT_CPU_CLOCK_INIT_DELAY); /* should be 50us / 5100 @ 102MhZ */
-};
-
-void ssp_clock_init(void) {
-	/* set DIV C to 40.8 MHz */
-	CGU_IDIVC_CTRL= CGU_IDIVC_CTRL_CLK_SEL(CGU_SRC_PLL1)
-		| CGU_IDIVC_CTRL_AUTOBLOCK(1) 
-		| CGU_IDIVC_CTRL_IDIV(5-1)
-		| CGU_IDIVC_CTRL_PD(0)
-		;
 
 	/* use DIV C as SSP1 base clock */
 	CGU_BASE_SSP1_CLK = (CGU_BASE_SSP1_CLK_CLK_SEL(CGU_SRC_IDIVC) | CGU_BASE_SSP1_CLK_AUTOBLOCK(1));
