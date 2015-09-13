@@ -48,7 +48,7 @@ void t_img(void){
     getInputWait();
 }
 
-//# MENU image play_animtion
+//# MENU image play_animation
 void t_ani(void){
     char fname[FLEN];
     selectFile(fname, "AN1");
