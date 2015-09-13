@@ -28,6 +28,7 @@ A few tools and files need to be installed. The f1rmware and all other files nee
 
 #### mtools
  - On arch: `pacman -S mtools`
+ - On Fedora `sudo dnf install mtools`
 
 #### Patched dfu-util
 The patched dfu-util provides support to flash more than one rad1o at a time.
@@ -42,9 +43,11 @@ make
 sudo cp src/dfu-util `which dfu-util`
 # or install
 sudo make install
+# or adjust $PATH
 ```
 #### udev rule:
  - Copy `90-rad1o-flash.rules` to `/etc/udev/rules.d`
+ - reload rules `$ sudo udevadm control --reload`
 
 
 #### perl Curses module
@@ -58,6 +61,11 @@ apt-get install libcurses-perl
 
 ```
 pacman -S perl-curses
+```
+
+#####Fedora
+```
+sudo dnf install perl-Curses
 ```
 
 #####Directly from CPAN
