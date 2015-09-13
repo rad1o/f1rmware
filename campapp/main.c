@@ -127,8 +127,19 @@ int main(void) {
 //	cpu_clock_set(204);
 
 	SETUPgout(EN_VDD);
+	SETUPgout(TX_AMP);
+	SETUPgout(RX_LNA);
 	SETUPgout(MIXER_EN);
+	SETUPgout(CE_VCO);
+	SETUPgout(EN_1V8);
 	SETUPgout(MIC_AMP_DIS);
+
+    OFF(EN_VDD);
+	OFF(MIXER_EN);
+	OFF(CE_VCO);
+    OFF(TX_AMP);
+    OFF(RX_LNA);
+
 
 	SETUPgout(LED1);
 	SETUPgout(LED2);
