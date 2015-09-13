@@ -65,11 +65,20 @@ void cpuClockInit(void) {
 	/* Wait for PLL Lock */
 	while (!(CGU_PLL1_STAT & CGU_PLL1_STAT_LOCK_MASK));
 
-	/* set DIV B to 102 MHz */
+	/* set DIV B to 102 MHz. Used for base M4 clock.
+     * The frequency might vary over time.
+     * See cpu_clock_set() */
 	CGU_IDIVB_CTRL= CGU_IDIVB_CTRL_CLK_SEL(CGU_SRC_PLL1)
 		| CGU_IDIVB_CTRL_AUTOBLOCK(1) 
 		| CGU_IDIVB_CTRL_IDIV(2-1)
 		| CGU_IDIVB_CTRL_PD(0)
+		;
+
+	/* set DIV C to 68 MHz. Used for SPIFI */
+	CGU_IDIVC_CTRL= CGU_IDIVC_CTRL_CLK_SEL(CGU_SRC_PLL1)
+		| CGU_IDIVC_CTRL_AUTOBLOCK(1) 
+		| CGU_IDIVC_CTRL_IDIV(3-1)
+		| CGU_IDIVC_CTRL_PD(0)
 		;
 
 	/* use DIV B as main clock */
@@ -78,13 +87,6 @@ void cpuClockInit(void) {
 	 */
 	CGU_BASE_M4_CLK = (CGU_BASE_M4_CLK_CLK_SEL(CGU_SRC_IDIVB) | CGU_BASE_M4_CLK_AUTOBLOCK(1));
 	_cpu_speed=102;
-
-	/* set DIV C to 68 MHz. Used for SPIFI */
-	CGU_IDIVC_CTRL= CGU_IDIVC_CTRL_CLK_SEL(CGU_SRC_PLL1)
-		| CGU_IDIVC_CTRL_AUTOBLOCK(1) 
-		| CGU_IDIVC_CTRL_IDIV(3-1)
-		| CGU_IDIVC_CTRL_PD(0)
-		;
 
 	delayNop(WAIT_CPU_CLOCK_INIT_DELAY); /* should be 50us / 5100 @ 102MhZ */
 };
