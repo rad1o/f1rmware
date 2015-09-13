@@ -1,9 +1,12 @@
 #include <r0ketlib/config.h>
 #include <r0ketlib/select.h>
 #include <r0ketlib/print.h>
+#include <r0ketlib/display.h>
 #include <rad1olib/light_ws2812_cortex.h>
 #include <r0ketlib/fs_util.h>
+#include <r0ketlib/keyin.h>
 #include <string.h>
+#include <campapp/rad1oconfig.h>
 
 #define MAX_LED_FRAMES 50
 #define BUF_SIZE 3*8*MAX_LED_FRAMES+2
@@ -54,10 +57,35 @@ void tick_rgbLeds(void) {
 
 //# MENU rgb_leds
 void selectLedFile(void){
-    if( selectFile(GLOBAL(ledfile),"L3D") != 0){
-        lcdPrintln("No file selected.");
-        return;
-    };
-	writeFile("ledfile.cfg",GLOBAL(ledfile),strlen(GLOBAL(ledfile)));
-	init_rgbLeds();
+    if(GLOBAL(rgbleds)) {
+        if(init_selectFile("L3D")){
+            while(selectFileRepeat(GLOBAL(ledfile),"L3D") >= 0) {
+                writeFile("ledfile.cfg", GLOBAL(ledfile), strlen(GLOBAL(ledfile)));
+                init_rgbLeds();
+            }
+        }
+    } else {
+        lcdClear();
+        lcdNl();
+        lcdPrintln("You need to enable");
+        lcdPrintln("<rgbleds> in the");
+        lcdPrintln("config to use");
+        lcdPrintln("this!");
+        lcdNl();
+        lcdPrintln(" LEFT: back");
+        lcdPrintln(" ENTER/RIGHT:");
+        lcdPrintln("       open config");
+        lcdDisplay();
+
+        while(1){
+            switch(getInput()){
+                case BTN_LEFT:
+                    return;
+                case BTN_RIGHT:
+                case BTN_ENTER:
+                    menu_config();
+                    return;
+            }
+        }
+    }
 }
