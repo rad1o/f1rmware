@@ -53,6 +53,7 @@ struct Tile {
 };
 
 struct Tile currentTile;
+struct Tile nextTile;
 
 static void init();
 static void newGame();
@@ -60,9 +61,10 @@ static bool handleInput();
 static bool checkPos();
 static void getNewTile();
 static void drawTile();
+static void drawNextTile();
 static bool placeTile();
 static void drawBlock();
-static void theEnd();
+static bool theEnd();
 static void setHighscore();
 static int getHighscore();
 int atoi();
@@ -85,10 +87,6 @@ void ram(void)
 
     while (1)
     {
-        //DoString(80,60,stop?"yes":"no");
-        //DoString(80,70,IntToStr(speed,6,0));
-        //DoString(80,80,IntToStr(c,6,0));
-        //lcdDisplay();
         if(!(++c % speed) && !stop) {
             if( checkPos( currentTile.pos.x, currentTile.pos.y+1, currentTile.rotation ) ) {
                 currentTile.pos.y++;
@@ -96,7 +94,7 @@ void ram(void)
                 if( placeTile() ) {
                     stop = 1;
                     drawTile();
-                    theEnd();
+                    if( theEnd() ) return;
                 } else {
                     speed--;
                     getNewTile();
@@ -186,10 +184,18 @@ static bool checkPos(int x, int y, int rotation) {
 };
 
 static void getNewTile() {
-    currentTile.type = getRandom()%7;
-    currentTile.rotation = getRandom()%4;
-    currentTile.pos.x = 5;
-    currentTile.pos.y = -2;
+    bool first = nextTile.type == -1? true:false;
+    //bool init = true;
+
+    currentTile.type     = first? getRandom()%7 : nextTile.type;
+    currentTile.rotation = first? getRandom()%4 : nextTile.rotation;
+    currentTile.pos.x    = 5;
+    currentTile.pos.y    = -2;
+
+    nextTile.type = getRandom()%7;
+    nextTile.rotation = getRandom()%4;
+
+    drawNextTile();
 }; 
 
 static bool placeTile() {
@@ -241,10 +247,10 @@ static bool placeTile() {
             }
         }
 
-        DoString(85,30,IntToStr(score,6,0));
+        DoString(85,50,IntToStr(score,6,0));
         if( score > highscore ) {
             highscore = score;
-            DoString(85,60,IntToStr(highscore,6,0));
+            DoString(85,80,IntToStr(highscore,6,0));
         }   
     }
 
@@ -303,7 +309,12 @@ static void init() {
 static void newGame() {
     int i,j;
 
-    currentTile.type = -1;
+    struct Tile nt = {.type = -1, .rotation = 0, .pos = { .x=0, .y=0 }};
+    struct Tile ct = {.type = -1, .rotation = 0, .pos = { .x=0, .y=0 }};
+
+    nextTile = nt;
+    currentTile = ct;
+
     score = 0;
     stop = 0;
     speed = 333;
@@ -327,10 +338,10 @@ static void newGame() {
         }
     }
 
-    DoString(85,20,"Score");
-    DoString(85,30,IntToStr(score,6,0));
-    DoString(85,50,"High");
-    DoString(85,60,IntToStr(highscore,6,0));
+    DoString(85,40,"Score");
+    DoString(85,50,IntToStr(score,6,0));
+    DoString(85,70,"High");
+    DoString(85,80,IntToStr(highscore,6,0));
     getNewTile();
 
     lcdDisplay();
@@ -361,7 +372,25 @@ static void drawTile() {
     }
     
     lcdDisplay();
-}
+};
+
+static void drawNextTile() {
+
+    int i,j;
+    struct Tile ct = nextTile;
+    
+    int *tile = BLOCKS[ct.type][ct.rotation];
+
+    for( i=0 ; i<4 ; i++ ) for( j=0 ; j<4 ; j ++ ) drawBlock( 13+i , j , 0xff);
+    for( i=0 ; i<BLOCKS_CNT ; i++ ) {
+        int x = 15 + tile[i*2],
+            y = 1 + tile[i*2+1];
+        
+        drawBlock( x, y, colors[ct.type] );
+    }
+    
+    lcdDisplay();
+};
 
 static void drawBlock(int x, int y, int f) {
   x = x * BLOCK_SIZE + COL_OFFSET;
@@ -405,20 +434,27 @@ static void drawBlock(int x, int y, int f) {
   lcdSetPixel(x+5, y+5, f);
 }
 
-static void theEnd() {
-    DoString(32,75,"GAME OVER");
-    DoString(15,100,"Press button...");
+static bool theEnd() {
+    DoString(32,95,"GAME OVER");
+    DoString(15,115,"Press button...");
     lcdDisplay();
     
     setHighscore(highscore);
     
     while(1) {
+       int key = getInputRaw();
+       if( key == 0 ) break;
+    }
+    while(1) {
         int key = getInputRaw();
-        if( key != 0 ) {
+        if( key&BTN_LEFT ) {
+            return true;
+        } else if( key != 0 ) {
             newGame();
             stop = 0;
-            return;
+            return false;
         }
+        delayms(3);
     }
 }
 
