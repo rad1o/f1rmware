@@ -466,7 +466,6 @@ void main_ui(void) {
     ssp1_init();
 
     lcdInit();
-    ssp_clock_init();
     render_display();
 
     max2837_stop();
@@ -496,7 +495,6 @@ void main_ui(void) {
                 g_freq = 2590000000U + (500000 * g_channel);
 
                 /* Select the lcd display. */
-                ssp_clock_init();
                 render_display();
 
                 /* Select the max2837. */
@@ -532,7 +530,6 @@ void main_ui(void) {
                 g_freq = 2590000000U + (500000 * g_channel);
 
                 /* Update the lcd display. */
-                ssp_clock_init();
                 render_display();
 
                 if (g_current_mode == TELEGRAPH_RX_MODE) {
@@ -574,7 +571,6 @@ void main_ui(void) {
               g_volume = 0.1;
 
             /* Update the lcd display. */
-            ssp_clock_init();
             render_display();
           }
           break;
@@ -587,7 +583,6 @@ void main_ui(void) {
               g_volume = 1.0;
 
             /* Update the lcd display. */
-            ssp_clock_init();
             render_display();
           }
           break;
@@ -643,7 +638,6 @@ void telegraph_main(void) {
 	telegraph_init();
 
     /* Init r0cketlib in order to use the LCD display and the joystick. */
-    ssp_clock_init();
 	systickInit();
 
 	SETUPgout(LED4);
