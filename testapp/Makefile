@@ -42,6 +42,7 @@ OBJS += ../lpcapi/cdc/cdc_vcom.o
 OBJS += ../rad1olib/light_ws2812_cortex.o
 OBJS += ../rad1olib/battery.o
 OBJS += ../rad1olib/draw.o
+OBJS += ../rad1olib/colorspace.o
 
 # CPLD
 OBJS += ../hackrf/firmware/common/xapp058/micro.o

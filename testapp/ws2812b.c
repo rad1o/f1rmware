@@ -8,6 +8,34 @@
 #include <rad1olib/setup.h>
 #include <r0ketlib/display.h>
 
+void ws1812b_animation(void)
+{
+	const uint8_t nleds = 8;
+	uint8_t pattern[nleds * 3];
+
+	const uint16_t hue_max = 767;
+	uint16_t base_hue = 0, hue = 0;
+
+	lcdPrintln("Animating...");
+	lcdPrintln("Any key to exit");
+	lcdDisplay();
+	while(!getInput())
+	{
+		for(uint8_t nled = 0; nled < nleds; nled++)
+		{
+			// distribute the complete 16 bit hue amongh all leds
+			hue = base_hue + (nled * (hue_max / nleds));
+			hsl2rgb(hue, 255, 255, &pattern[nled * 3]);
+		}
+
+		//hsl2rgb(base_hue, 255, 255, &pattern[0]);
+		ws2812_sendarray(pattern, sizeof(pattern));
+
+		if(++base_hue == hue_max) base_hue = 0;
+		delayNop(100000);
+	}
+}
+
 //# MENU ws2812b
 void ws1812b_menu(){
     uint8_t pattern[] = {
@@ -33,6 +61,7 @@ void ws1812b_menu(){
 		lcdPrintln("WS2812B test");
 		lcdPrintln("UP: pattern");
 		lcdPrintln("DOWN: green");
+		lcdPrintln("RIGHT: animation");
 		lcdPrintln("ENTER: exit");
 		lcdDisplay();
 
@@ -46,6 +75,7 @@ void ws1812b_menu(){
 			case BTN_LEFT:
 				break;
 			case BTN_RIGHT:
+				ws1812b_animation();
 				break;
 			case BTN_ENTER:
 				return;
