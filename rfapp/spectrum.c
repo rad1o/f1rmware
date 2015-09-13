@@ -107,10 +107,6 @@ void spectrum_init()
 
 	// defaults:
 
-	// the frequency is either initialized to DEFAULT_FREQ or set by the frequency menu
-	// resetting it here would break the menu.
-	//freq = DEFAULT_FREQ;
-
 	displayMode = DEFAULT_MODE;
 }
 
@@ -148,43 +144,45 @@ void spectrum_show()
 		{
 			case BTN_UP:
 				displayMode=MODE_WATERFALL;
-                while(getInputRaw()==BTN_UP)
-                    ;
+				while(getInputRaw()==BTN_UP)
+					;
 				break;
 			case BTN_DOWN:
 				displayMode=MODE_SPECTRUM;
-                while(getInputRaw()==BTN_DOWN)
-                    ;
+				while(getInputRaw()==BTN_DOWN)
+					;
 				break;
 			case BTN_LEFT:
-        buttonPressTime = _timectr;
+				buttonPressTime = _timectr;
 				freq -= 2000000;
 				ssp1_set_mode_max2837();
 				set_freq(freq);
-                while(getInputRaw()==BTN_LEFT){
-                    if (_timectr > buttonPressTime + FAST_CHANGE_DELAY/SYSTICKSPEED)
-                    {
-                        freq -= FAST_CHANGE_CHANGE;
-                        ssp1_set_mode_max2837();
-                        set_freq(freq);
-                        delayms(10);
-                    }
-                }
+				while(getInputRaw()==BTN_LEFT)
+				{
+					if (_timectr > buttonPressTime + FAST_CHANGE_DELAY/SYSTICKSPEED)
+					{
+						freq -= FAST_CHANGE_CHANGE;
+						ssp1_set_mode_max2837();
+						set_freq(freq);
+						delayms(10);
+					}
+				}
 				break;
 			case BTN_RIGHT:
-        buttonPressTime = _timectr;
+				buttonPressTime = _timectr;
 				freq += 2000000;
 				ssp1_set_mode_max2837();
 				set_freq(freq);
-                while(getInputRaw()==BTN_RIGHT){
-                    if (_timectr > buttonPressTime + FAST_CHANGE_DELAY/SYSTICKSPEED)
-                    {
-                        freq += FAST_CHANGE_CHANGE;
-                        ssp1_set_mode_max2837();
-                        set_freq(freq);
-                        delayms(10);
-                    }
-                }
+				while(getInputRaw()==BTN_RIGHT)
+				{
+					if (_timectr > buttonPressTime + FAST_CHANGE_DELAY/SYSTICKSPEED)
+					{
+						freq += FAST_CHANGE_CHANGE;
+						ssp1_set_mode_max2837();
+						set_freq(freq);
+						delayms(10);
+					}
+				}
 				break;
 			case BTN_ENTER:
 				spectrum_stop();

@@ -50,6 +50,7 @@ void fancyNickname(void) {
 
 /**************************************************************************/
 
+// every function name starting with init_ is added to generated_init automatically
 void init_nick(void){
 	readTextFile("nick.cfg",GLOBAL(nickname),MAXNICK);
 	readTextFile("font.cfg",GLOBAL(nickfont),FLEN);
