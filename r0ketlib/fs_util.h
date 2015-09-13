@@ -15,7 +15,7 @@ void fsReInit(void);
 
 int fsInfo(FATFS *fs);
 int fsUsage(FATFS *fs, FS_USAGE *fs_usage);
-int readFile(char * filename, char * data, int len);
+int readFile(char * filename, void * data, int len);
 int readTextFile(char * filename, char * data, int len);
 int writeFile(char * filename, const void * data, int len);
 int getFileSize(char * filename);
