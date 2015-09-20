@@ -107,6 +107,10 @@ void night_tick(void){
             }
         };
     };
+    //Debounce rutine runs every 10 systick
+    EVERY(10,0){
+	inputDebounce();
+    };
 
     return;
 }
