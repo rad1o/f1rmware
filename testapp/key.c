@@ -145,13 +145,16 @@ void keyTestWaitRepeat(void) {
     lcdPrint("Up");
     lcdSetCrsr(0, 60);
     lcdPrint("Enter");
+    lcdSetCrsr(0, 70);
+    lcdPrint("Down");
     lcdDisplay();
 
-    int countEnter;
-    int countUp;
+    int countEnter = 0;
+    int countUp = 0;
+    int countDown = 0;
 
     while( getInputRaw() != BTN_LEFT) {
-	if (getInputWaitRepeat == BTN_ENTER){
+	if (getInputWaitRepeat() == BTN_ENTER){
 	    lcdSetCrsr(50, 60);
 	    countEnter ++;
 	    lcdPrintInt(countEnter);
@@ -162,6 +165,13 @@ void keyTestWaitRepeat(void) {
 	    lcdSetCrsr(50, 50);
 	    countUp ++;
 	    lcdPrintInt(countUp);
+	    lcdDisplay();
+	}
+
+	if (getInputWaitRepeat() == BTN_DOWN){
+	    lcdSetCrsr(50, 70);
+	    countDown ++;
+	    lcdPrintInt(countDown);
 	    lcdDisplay();
 	}
 
