@@ -18,7 +18,7 @@ void inputInit(void);
 uint8_t getInputWait(void);			//Waits for key press
 uint8_t getInputWaitTimeout(int timeout);	//Waits timeout ms for key press
 uint8_t getInputWaitRepeat(void);//Repeats the same key while holding down
-void getInputWaitRelease(void);			//Waits until key is relesed
+void getInputWaitRelease(void);			//Waits for any key
 uint8_t getInputChange(void);			//Returns 1 for 10ms on an edge
 void inputDebounce(void);	 //Does the actual debounce, runs in system tick
 

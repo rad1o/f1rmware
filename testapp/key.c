@@ -22,20 +22,28 @@
 //# MENU key keyInputRaw
 void keyTestRaw(void) {
     lcdClear();
-    lcdPrintln("Press enter to increse count");
-    lcdPrintln("with getInputRaw()");
-    lcdPrintln("exit with left");
+    lcdPrintln("getInputRaw()");
+    lcdPrintln("Press left to exit");
     lcdNl();
     lcdSetCrsr(0, 50);
     lcdPrint("Up");
     lcdSetCrsr(0, 60);
     lcdPrint("Enter");
+    lcdSetCrsr(0, 70);
+    lcdPrint("Down");
     lcdDisplay();
 
     int countEnter;
     int countUp;
+    int countDown;
 
     while( getInputRaw() != BTN_LEFT) {
+	if (getInputRaw() == BTN_UP){
+	    lcdSetCrsr(50, 50);
+	    countUp ++;
+	    lcdPrintInt(countUp);
+	    lcdDisplay();
+	}
 	if (getInputRaw() == BTN_ENTER){
 	    lcdSetCrsr(50, 60);
 	    countEnter ++;
@@ -43,10 +51,10 @@ void keyTestRaw(void) {
 	    lcdDisplay();
 	}
 
-	if (getInputRaw() == BTN_UP){
-	    lcdSetCrsr(50, 50);
-	    countUp ++;
-	    lcdPrintInt(countUp);
+	if (getInputRaw() == BTN_DOWN){
+	    lcdSetCrsr(50, 70);
+	    countDown ++;
+	    lcdPrintInt(countDown);
 	    lcdDisplay();
 	}
 
@@ -58,24 +66,33 @@ void keyTestRaw(void) {
 //Counts on rising edge of keyInputRaw
 void keyTestRawEdge(void) {
     lcdClear();
-    lcdPrintln("Press enter to increse count");
-    lcdPrintln("with getInputRaw()");
-    lcdPrintln("exit with left");
+    lcdPrintln("getInputRaw()");
+    lcdPrintln("with edge detection");
+    lcdPrintln("Press left to exit");
     lcdNl();
     lcdSetCrsr(0, 50);
     lcdPrint("Up");
     lcdSetCrsr(0, 60);
     lcdPrint("Enter");
+    lcdSetCrsr(0, 70);
+    lcdPrint("Down");
     lcdDisplay();
 
     int countEnter;
     int countUp;
+    int countDown;
 
     uint8_t lastInput = BTN_NONE;
     uint8_t currentInput = BTN_NONE;
     
     while( getInputRaw() != BTN_LEFT) {
 	currentInput = getInputRaw();	
+	if (currentInput == BTN_UP && lastInput != BTN_UP){
+	    lcdSetCrsr(50, 50);
+	    countUp ++;
+	    lcdPrintInt(countUp);
+	    lcdDisplay();
+	}
 	if (currentInput == BTN_ENTER && lastInput != BTN_ENTER){
 	    lcdSetCrsr(50, 60);
 	    countEnter ++;
@@ -83,10 +100,10 @@ void keyTestRawEdge(void) {
 	    lcdDisplay();
 	}
 
-	if (currentInput == BTN_UP && lastInput != BTN_UP){
+	if (currentInput == BTN_DOWN && lastInput != BTN_DOWN){
 	    lcdSetCrsr(50, 50);
-	    countUp ++;
-	    lcdPrintInt(countUp);
+	    countDown ++;
+	    lcdPrintInt(countDown);
 	    lcdDisplay();
 	}
 	lastInput = currentInput;
@@ -100,16 +117,19 @@ void keyTestDebounce(void) {
     lcdClear();
     lcdPrintln("Press enter to increse count");
     lcdPrintln("with getInput");
-    lcdPrintln("exit with left");
+    lcdPrintln("Press left to exit");
     lcdNl();
     lcdSetCrsr(0, 50);
     lcdPrint("Up");
     lcdSetCrsr(0, 60);
     lcdPrint("Enter");
+    lcdSetCrsr(0, 70);
+    lcdPrint("Down");
     lcdDisplay();
 
     int countEnter;
     int countUp;
+    int countDown;
 
     uint8_t changeInput = BTN_NONE;
     uint8_t currentInput = BTN_NONE;
@@ -117,19 +137,25 @@ void keyTestDebounce(void) {
     while( getInputRaw() != BTN_LEFT) {
 	currentInput = getInput();
 	changeInput = getInputChange();	
-	if (currentInput == BTN_ENTER && changeInput == BTN_ENTER){
-	    lcdSetCrsr(50, 60);
-	    countEnter ++;
-	    lcdPrintInt(countEnter);
-	    lcdDisplay();
-	}
-
 	if (currentInput == BTN_UP && changeInput == BTN_UP){
 	    lcdSetCrsr(50, 50);
 	    countUp ++;
 	    lcdPrintInt(countUp);
 	    lcdDisplay();
 	}
+	if (currentInput == BTN_ENTER && changeInput == BTN_ENTER){
+	    lcdSetCrsr(50, 60);
+	    countEnter ++;
+	    lcdPrintInt(countEnter);
+	    lcdDisplay();
+	}
+	if (currentInput == BTN_DOWN && changeInput == BTN_DOWN){
+	    lcdSetCrsr(50, 70);
+	    countDown ++;
+	    lcdPrintInt(countDown);
+	    lcdDisplay();
+	}
+
     }
 
 }
@@ -139,7 +165,7 @@ void keyTestWaitRepeat(void) {
     lcdClear();
     lcdPrintln("Press enter to increse count");
     lcdPrintln("with getInputWaitRepeat()");
-    lcdPrintln("exit with left");
+    lcdPrintln("Press left to exit");
     lcdNl();
     lcdSetCrsr(0, 50);
     lcdPrint("Up");
@@ -154,17 +180,17 @@ void keyTestWaitRepeat(void) {
     int countDown = 0;
 
     while( getInputRaw() != BTN_LEFT) {
-	if (getInputWaitRepeat() == BTN_ENTER){
-	    lcdSetCrsr(50, 60);
-	    countEnter ++;
-	    lcdPrintInt(countEnter);
-	    lcdDisplay();
-	}
-
 	if (getInputWaitRepeat() == BTN_UP){
 	    lcdSetCrsr(50, 50);
 	    countUp ++;
 	    lcdPrintInt(countUp);
+	    lcdDisplay();
+	}
+
+	if (getInputWaitRepeat() == BTN_ENTER){
+	    lcdSetCrsr(50, 60);
+	    countEnter ++;
+	    lcdPrintInt(countEnter);
 	    lcdDisplay();
 	}
 
@@ -178,3 +204,4 @@ void keyTestWaitRepeat(void) {
     }
 
 }
+
