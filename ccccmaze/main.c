@@ -19,8 +19,18 @@
 
 #include "main.gen"
 
+#define EVERY(x,y) if((ctr+y)%(x/SYSTICKSPEED)==0)
+void debounce_tick(){
+	static int ctr;
+	ctr++;
+	EVERY(10,0){
+	    inputDebounce();
+	};
+
+}
 void sys_tick_handler(void){
 	incTimer();
+	debounce_tick();
 	generated_tick();
 };
 
