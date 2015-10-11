@@ -1,6 +1,9 @@
-/*
+/* FM Radio RX/TX
+ *
  * Copyright (C) 2015 Hans-Werner Hilse <hwhilse@gmail.com>
- * Copyright (C) 2013 Jared Boone, ShareBrained Technology, Inc.
+ *
+ * some parts (receive/filters) are
+ *   Copyright (C) 2013 Jared Boone, ShareBrained Technology, Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,24 +54,33 @@
 // define this to enable transmit functionality
 #define TRANSMIT
 
-#define FREQSTART 94100000
+// default to 100 MHz
+#define FREQSTART 100000000
+// by default, frequency steps are 100 kHz
+#define FREQSTEP 100000
 
+// receive options
 #define BANDWIDTH  1750000
 #define SAMPLERATE 12288000
 #define DECIMATION 4
 #define FREQOFFSET -(SAMPLERATE/DECIMATION/4)
 
+// transmit options
 #define TX_BANDWIDTH  1750000
 #define TX_SAMPLERATE 8000000
 #define TX_FREQOFFSET -(TX_SAMPLERATE/16)
 #define TX_DECIMATION 1
 
+// default audio output level
 #define AUDIOVOLUME 20
 
 static volatile int audiovolume = AUDIOVOLUME;
 
 static int freq_offset = FREQOFFSET;
+
+static int64_t frequency_step = FREQSTEP;
 static int64_t frequency = FREQSTART;
+
 static void my_set_frequency(const int64_t new_frequency) {
     const int64_t tuned_frequency = new_frequency + freq_offset;
     ssp1_set_mode_max2837();
@@ -204,21 +216,13 @@ static void my_fir_cic4_decim_2_real_s16_s16(
 	}
 }
 
-#define DEMOD_SAMPLING_RATE 768000
-#define DEMOD_DEVIATION 75000
-#define M_PI (3.14159265358979323846264338327950f)
-
 static void my_fm_demodulate_s16_s16(
 	const complex_s16_t* const src,
 	int16_t* dst,
 	int32_t n
 ) {
 	static complex_s16_t z1;
-	static float k = DEMOD_SAMPLING_RATE / (2.0f * M_PI * DEMOD_DEVIATION);
 
-	// TODO: Gain compensation based on ratio of sampling rate and deviation?
-	//const int32_t decimation_rate = 1;
-	//const float k = k * 4096.0f / decimation_rate;
 	const complex_s16_t* p = src;
 	for(; n>0; n-=1) {
 		const complex_s16_t s = *(p++);
@@ -645,15 +649,11 @@ static void rfinit() {
     baseband_streaming_enable();
 }
 
-static int tune = 100000;
-#define TUNE_FINE 5000
-#define TUNE_COARSE 100000
-
 //static int menuitem = 0;
 #ifdef TRANSMIT
-static enum {MENU_FREQ, MENU_TRANSMIT, MENU_VOLUME, MENU_LNA, MENU_BBLNA, MENU_BBVGA, MENU_BBTXVGA, MENU_EXIT, MENUITEMS} menuitem = MENU_FREQ;
+static enum {MENU_FREQ, MENU_STEP, MENU_TRANSMIT, MENU_VOLUME, MENU_LNA, MENU_BBLNA, MENU_BBVGA, MENU_BBTXVGA, MENU_EXIT, MENUITEMS} menuitem = MENU_FREQ;
 #else // TRANSMIT
-static enum {MENU_FREQ, MENU_VOLUME, MENU_LNA, MENU_BBLNA, MENU_BBVGA, MENU_EXIT, MENUITEMS} menuitem = MENU_FREQ;
+static enum {MENU_FREQ, MENU_STEP, MENU_VOLUME, MENU_LNA, MENU_BBLNA, MENU_BBVGA, MENU_EXIT, MENUITEMS} menuitem = MENU_FREQ;
 #endif // TRANSMIT
 
 static void status() {
@@ -661,14 +661,17 @@ static void status() {
     lcdSetCrsr(0,0);
     lcdPrintln("WFM rad1o  [@hilse]");
     lcdPrintln("-o-o-o-o-o-o-o-o-o-");
-    lcdNl();
 
     if(menuitem == MENU_FREQ) lcdPrint("> "); else lcdPrint("  ");
     lcdPrint(IntToStr(frequency/1000000,4,F_LONG));
     lcdPrint(",");
     lcdPrint(IntToStr((frequency%1000000) / 1000, 3, F_LONG | F_ZEROS));
-    lcdPrint(" MHz ");
-    if(tune == TUNE_FINE) lcdPrintln("(F)"); else lcdNl();
+    lcdPrintln(" MHz ");
+
+    if(menuitem == MENU_STEP) lcdPrint("> Step: "); else lcdPrint("  Step: ");
+    lcdPrint(IntToStr(frequency_step/1000000,3,F_LONG));
+    lcdPrint(",");
+    lcdPrintln(IntToStr((frequency_step%1000000) / 1000, 3, F_LONG | F_ZEROS));
 
 #ifdef TRANSMIT
     if(menuitem == MENU_TRANSMIT) lcdPrint("> RX/TX: "); else lcdPrint("  RX/TX: ");
@@ -737,7 +740,10 @@ void wfm_menu() {
             case BTN_LEFT:
                 switch (menuitem) {
                     case MENU_FREQ:
-                        my_set_frequency(frequency - tune);
+                        my_set_frequency(frequency - frequency_step);
+                        break;
+                    case MENU_STEP:
+                        if(frequency_step > 1000) frequency_step /= 10;
                         break;
                     case MENU_VOLUME:
                         if(audiovolume > 0) audiovolume--;
@@ -769,7 +775,10 @@ void wfm_menu() {
             case BTN_RIGHT:
                 switch (menuitem) {
                     case MENU_FREQ:
-                        my_set_frequency(frequency + tune);
+                        my_set_frequency(frequency + frequency_step);
+                        break;
+                    case MENU_STEP:
+                        if(frequency_step < 100000000) frequency_step *= 10;
                         break;
                     case MENU_VOLUME:
                         if(audiovolume < 80) audiovolume++;
@@ -801,16 +810,6 @@ void wfm_menu() {
                         transmit(!transmitting);
                         break;
 #endif // TRANSMIT
-                    default: /*nothing*/ break;
-                }
-                break;
-            case BTN_ENTER:
-                switch (menuitem) {
-                    case MENU_FREQ:
-                        if(tune == TUNE_FINE) tune = TUNE_COARSE; else tune = TUNE_FINE;
-                        break;
-                    case MENU_EXIT:
-                        goto stop;
                     default: /*nothing*/ break;
                 }
                 break;
