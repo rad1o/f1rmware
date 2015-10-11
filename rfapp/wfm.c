@@ -38,6 +38,7 @@
 #include <common/max2837.h>
 #include <common/streaming.h>
 #include <libopencm3/lpc43xx/dac.h>
+#include <libopencm3/lpc43xx/adc.h>
 #include <libopencm3/lpc43xx/sgpio.h>
 #include <libopencm3/lpc43xx/m4/nvic.h>
 #include <libopencm3/cm3/vector.h>
@@ -47,16 +48,34 @@
 #include <portalib/fxpt_atan2.h>
 #include <stddef.h>
 
+// define this to enable transmit functionality
+#define TRANSMIT
+
 #define FREQSTART 94100000
 
 #define BANDWIDTH  1750000
 #define SAMPLERATE 12288000
 #define DECIMATION 4
-
 #define FREQOFFSET -(SAMPLERATE/DECIMATION/4)
 
+#define TX_BANDWIDTH  1750000
+#define TX_SAMPLERATE 8000000
+#define TX_FREQOFFSET -(TX_SAMPLERATE/16)
+#define TX_DECIMATION 1
+
 #define AUDIOVOLUME 20
+
 static volatile int audiovolume = AUDIOVOLUME;
+
+static int freq_offset = FREQOFFSET;
+static int64_t frequency = FREQSTART;
+static void my_set_frequency(const int64_t new_frequency) {
+    const int64_t tuned_frequency = new_frequency + freq_offset;
+    ssp1_set_mode_max2837();
+    if(set_freq(tuned_frequency)) {
+        frequency = new_frequency;
+    }
+}
 
 /* filter functions from portapack C code, slightly modified */
 
@@ -294,25 +313,282 @@ static void sgpio_isr_rx() {
     dac_set(u);
 }
 
+#ifdef TRANSMIT
+/* table of cos/sin pairs for x=0..1023:
+ * cos(x*pi*2/1024) * 127, sin(x*pi*2/1024) * 127
+ */
+static const int8_t cos_sin_tbl[] = {
+    127, 0, 126, 0, 126, 1, 126, 2, 126, 3, 126, 3, 126, 4, 126, 5, 126, 6,
+    126, 7, 126, 7, 126, 8, 126, 9, 126, 10, 126, 10, 126, 11, 126, 12, 126,
+    13, 126, 13, 126, 14, 126, 15, 125, 16, 125, 17, 125, 17, 125, 18, 125, 19,
+    125, 20, 125, 20, 125, 21, 124, 22, 124, 23, 124, 24, 124, 24, 124, 25,
+    124, 26, 124, 27, 123, 27, 123, 28, 123, 29, 123, 30, 123, 30, 123, 31,
+    122, 32, 122, 33, 122, 33, 122, 34, 121, 35, 121, 36, 121, 36, 121, 37,
+    121, 38, 120, 39, 120, 39, 120, 40, 120, 41, 119, 42, 119, 42, 119, 43,
+    119, 44, 118, 44, 118, 45, 118, 46, 117, 47, 117, 47, 117, 48, 117, 49,
+    116, 50, 116, 50, 116, 51, 115, 52, 115, 52, 115, 53, 114, 54, 114, 55,
+    114, 55, 113, 56, 113, 57, 113, 57, 112, 58, 112, 59, 112, 59, 111, 60,
+    111, 61, 110, 61, 110, 62, 110, 63, 109, 63, 109, 64, 108, 65, 108, 65,
+    108, 66, 107, 67, 107, 67, 106, 68, 106, 69, 106, 69, 105, 70, 105, 71,
+    104, 71, 104, 72, 103, 73, 103, 73, 102, 74, 102, 75, 102, 75, 101, 76,
+    101, 76, 100, 77, 100, 78, 99, 78, 99, 79, 98, 79, 98, 80, 97, 81, 97, 81,
+    96, 82, 96, 82, 95, 83, 95, 84, 94, 84, 94, 85, 93, 85, 93, 86, 92, 87, 91,
+    87, 91, 88, 90, 88, 90, 89, 89, 89, 89, 90, 88, 90, 88, 91, 87, 91, 87, 92,
+    86, 93, 85, 93, 85, 94, 84, 94, 84, 95, 83, 95, 82, 96, 82, 96, 81, 97, 81,
+    97, 80, 98, 79, 98, 79, 99, 78, 99, 78, 100, 77, 100, 76, 101, 76, 101, 75,
+    102, 75, 102, 74, 102, 73, 103, 73, 103, 72, 104, 71, 104, 71, 105, 70,
+    105, 69, 106, 69, 106, 68, 106, 67, 107, 67, 107, 66, 108, 65, 108, 65,
+    108, 64, 109, 63, 109, 63, 110, 62, 110, 61, 110, 61, 111, 60, 111, 59,
+    112, 59, 112, 58, 112, 57, 113, 57, 113, 56, 113, 55, 114, 55, 114, 54,
+    114, 53, 115, 52, 115, 52, 115, 51, 116, 50, 116, 50, 116, 49, 117, 48,
+    117, 47, 117, 47, 117, 46, 118, 45, 118, 44, 118, 44, 119, 43, 119, 42,
+    119, 42, 119, 41, 120, 40, 120, 39, 120, 39, 120, 38, 121, 37, 121, 36,
+    121, 36, 121, 35, 121, 34, 122, 33, 122, 33, 122, 32, 122, 31, 123, 30,
+    123, 30, 123, 29, 123, 28, 123, 27, 123, 27, 124, 26, 124, 25, 124, 24,
+    124, 24, 124, 23, 124, 22, 124, 21, 125, 20, 125, 20, 125, 19, 125, 18,
+    125, 17, 125, 17, 125, 16, 125, 15, 126, 14, 126, 13, 126, 13, 126, 12,
+    126, 11, 126, 10, 126, 10, 126, 9, 126, 8, 126, 7, 126, 7, 126, 6, 126, 5,
+    126, 4, 126, 3, 126, 3, 126, 2, 126, 1, 126, 0, 126, 0, 127, -1, 126, -2,
+    126, -3, 126, -4, 126, -4, 126, -5, 126, -6, 126, -7, 126, -8, 126, -8,
+    126, -9, 126, -10, 126, -11, 126, -11, 126, -12, 126, -13, 126, -14, 126,
+    -14, 126, -15, 126, -16, 126, -17, 125, -18, 125, -18, 125, -19, 125, -20,
+    125, -21, 125, -21, 125, -22, 125, -23, 124, -24, 124, -25, 124, -25, 124,
+    -26, 124, -27, 124, -28, 124, -28, 123, -29, 123, -30, 123, -31, 123, -31,
+    123, -32, 123, -33, 122, -34, 122, -34, 122, -35, 122, -36, 121, -37, 121,
+    -37, 121, -38, 121, -39, 121, -40, 120, -40, 120, -41, 120, -42, 120, -43,
+    119, -43, 119, -44, 119, -45, 119, -45, 118, -46, 118, -47, 118, -48, 117,
+    -48, 117, -49, 117, -50, 117, -51, 116, -51, 116, -52, 116, -53, 115, -53,
+    115, -54, 115, -55, 114, -56, 114, -56, 114, -57, 113, -58, 113, -58, 113,
+    -59, 112, -60, 112, -60, 112, -61, 111, -62, 111, -62, 110, -63, 110, -64,
+    110, -64, 109, -65, 109, -66, 108, -66, 108, -67, 108, -68, 107, -68, 107,
+    -69, 106, -70, 106, -70, 106, -71, 105, -72, 105, -72, 104, -73, 104, -74,
+    103, -74, 103, -75, 102, -76, 102, -76, 102, -77, 101, -77, 101, -78, 100,
+    -79, 100, -79, 99, -80, 99, -80, 98, -81, 98, -82, 97, -82, 97, -83, 96,
+    -83, 96, -84, 95, -85, 95, -85, 94, -86, 94, -86, 93, -87, 93, -88, 92,
+    -88, 91, -89, 91, -89, 90, -90, 90, -90, 89, -91, 89, -91, 88, -92, 88,
+    -92, 87, -93, 87, -94, 86, -94, 85, -95, 85, -95, 84, -96, 84, -96, 83,
+    -97, 82, -97, 82, -98, 81, -98, 81, -99, 80, -99, 79, -100, 79, -100, 78,
+    -101, 78, -101, 77, -102, 76, -102, 76, -103, 75, -103, 75, -103, 74, -104,
+    73, -104, 73, -105, 72, -105, 71, -106, 71, -106, 70, -107, 69, -107, 69,
+    -107, 68, -108, 67, -108, 67, -109, 66, -109, 65, -109, 65, -110, 64, -110,
+    63, -111, 63, -111, 62, -111, 61, -112, 61, -112, 60, -113, 59, -113, 59,
+    -113, 58, -114, 57, -114, 57, -114, 56, -115, 55, -115, 55, -115, 54, -116,
+    53, -116, 52, -116, 52, -117, 51, -117, 50, -117, 50, -118, 49, -118, 48,
+    -118, 47, -118, 47, -119, 46, -119, 45, -119, 44, -120, 44, -120, 43, -120,
+    42, -120, 42, -121, 41, -121, 40, -121, 39, -121, 39, -122, 38, -122, 37,
+    -122, 36, -122, 36, -122, 35, -123, 34, -123, 33, -123, 33, -123, 32, -124,
+    31, -124, 30, -124, 30, -124, 29, -124, 28, -124, 27, -125, 27, -125, 26,
+    -125, 25, -125, 24, -125, 24, -125, 23, -125, 22, -126, 21, -126, 20, -126,
+    20, -126, 19, -126, 18, -126, 17, -126, 17, -126, 16, -127, 15, -127, 14,
+    -127, 13, -127, 13, -127, 12, -127, 11, -127, 10, -127, 10, -127, 9, -127,
+    8, -127, 7, -127, 7, -127, 6, -127, 5, -127, 4, -127, 3, -127, 3, -127, 2,
+    -127, 1, -127, 0, -127, 0, -127, -1, -127, -2, -127, -3, -127, -4, -127,
+    -4, -127, -5, -127, -6, -127, -7, -127, -8, -127, -8, -127, -9, -127, -10,
+    -127, -11, -127, -11, -127, -12, -127, -13, -127, -14, -127, -14, -127,
+    -15, -127, -16, -126, -17, -126, -18, -126, -18, -126, -19, -126, -20,
+    -126, -21, -126, -21, -126, -22, -125, -23, -125, -24, -125, -25, -125,
+    -25, -125, -26, -125, -27, -125, -28, -124, -28, -124, -29, -124, -30,
+    -124, -31, -124, -31, -124, -32, -123, -33, -123, -34, -123, -34, -123,
+    -35, -122, -36, -122, -37, -122, -37, -122, -38, -122, -39, -121, -40,
+    -121, -40, -121, -41, -121, -42, -120, -43, -120, -43, -120, -44, -120,
+    -45, -119, -45, -119, -46, -119, -47, -118, -48, -118, -48, -118, -49,
+    -118, -50, -117, -51, -117, -51, -117, -52, -116, -53, -116, -53, -116,
+    -54, -115, -55, -115, -56, -115, -56, -114, -57, -114, -58, -114, -58,
+    -113, -59, -113, -60, -113, -60, -112, -61, -112, -62, -111, -62, -111,
+    -63, -111, -64, -110, -64, -110, -65, -109, -66, -109, -66, -109, -67,
+    -108, -68, -108, -68, -107, -69, -107, -70, -107, -70, -106, -71, -106,
+    -72, -105, -72, -105, -73, -104, -74, -104, -74, -103, -75, -103, -76,
+    -103, -76, -102, -77, -102, -77, -101, -78, -101, -79, -100, -79, -100,
+    -80, -99, -80, -99, -81, -98, -82, -98, -82, -97, -83, -97, -83, -96, -84,
+    -96, -85, -95, -85, -95, -86, -94, -86, -94, -87, -93, -88, -92, -88, -92,
+    -89, -91, -89, -91, -90, -90, -90, -90, -91, -89, -91, -89, -92, -88, -92,
+    -88, -93, -87, -94, -86, -94, -86, -95, -85, -95, -85, -96, -84, -96, -83,
+    -97, -83, -97, -82, -98, -82, -98, -81, -99, -80, -99, -80, -100, -79,
+    -100, -79, -101, -78, -101, -77, -102, -77, -102, -76, -103, -76, -103,
+    -75, -103, -74, -104, -74, -104, -73, -105, -72, -105, -72, -106, -71,
+    -106, -70, -107, -70, -107, -69, -107, -68, -108, -68, -108, -67, -109,
+    -66, -109, -66, -109, -65, -110, -64, -110, -64, -111, -63, -111, -62,
+    -111, -62, -112, -61, -112, -60, -113, -60, -113, -59, -113, -58, -114,
+    -58, -114, -57, -114, -56, -115, -56, -115, -55, -115, -54, -116, -53,
+    -116, -53, -116, -52, -117, -51, -117, -51, -117, -50, -118, -49, -118,
+    -48, -118, -48, -118, -47, -119, -46, -119, -45, -119, -45, -120, -44,
+    -120, -43, -120, -43, -120, -42, -121, -41, -121, -40, -121, -40, -121,
+    -39, -122, -38, -122, -37, -122, -37, -122, -36, -122, -35, -123, -34,
+    -123, -34, -123, -33, -123, -32, -124, -31, -124, -31, -124, -30, -124,
+    -29, -124, -28, -124, -28, -125, -27, -125, -26, -125, -25, -125, -25,
+    -125, -24, -125, -23, -125, -22, -126, -21, -126, -21, -126, -20, -126,
+    -19, -126, -18, -126, -18, -126, -17, -126, -16, -127, -15, -127, -14,
+    -127, -14, -127, -13, -127, -12, -127, -11, -127, -11, -127, -10, -127, -9,
+    -127, -8, -127, -8, -127, -7, -127, -6, -127, -5, -127, -4, -127, -4, -127,
+    -3, -127, -2, -127, -1, -127, -1, -127, 0, -127, 1, -127, 2, -127, 3, -127,
+    3, -127, 4, -127, 5, -127, 6, -127, 7, -127, 7, -127, 8, -127, 9, -127, 10,
+    -127, 10, -127, 11, -127, 12, -127, 13, -127, 13, -127, 14, -127, 15, -127,
+    16, -126, 17, -126, 17, -126, 18, -126, 19, -126, 20, -126, 20, -126, 21,
+    -126, 22, -125, 23, -125, 24, -125, 24, -125, 25, -125, 26, -125, 27, -125,
+    27, -124, 28, -124, 29, -124, 30, -124, 30, -124, 31, -124, 32, -123, 33,
+    -123, 33, -123, 34, -123, 35, -122, 36, -122, 36, -122, 37, -122, 38, -122,
+    39, -121, 39, -121, 40, -121, 41, -121, 42, -120, 42, -120, 43, -120, 44,
+    -120, 44, -119, 45, -119, 46, -119, 47, -118, 47, -118, 48, -118, 49, -118,
+    50, -117, 50, -117, 51, -117, 52, -116, 52, -116, 53, -116, 54, -115, 55,
+    -115, 55, -115, 56, -114, 57, -114, 57, -114, 58, -113, 59, -113, 59, -113,
+    60, -112, 61, -112, 61, -111, 62, -111, 63, -111, 63, -110, 64, -110, 65,
+    -109, 65, -109, 66, -109, 67, -108, 67, -108, 68, -107, 69, -107, 69, -107,
+    70, -106, 71, -106, 71, -105, 72, -105, 73, -104, 73, -104, 74, -103, 75,
+    -103, 75, -103, 76, -102, 76, -102, 77, -101, 78, -101, 78, -100, 79, -100,
+    79, -99, 80, -99, 81, -98, 81, -98, 82, -97, 82, -97, 83, -96, 84, -96, 84,
+    -95, 85, -95, 85, -94, 86, -94, 87, -93, 87, -92, 88, -92, 88, -91, 89,
+    -91, 89, -90, 90, -90, 90, -89, 91, -89, 91, -88, 92, -88, 93, -87, 93,
+    -86, 94, -86, 94, -85, 95, -85, 95, -84, 96, -83, 96, -83, 97, -82, 97,
+    -82, 98, -81, 98, -80, 99, -80, 99, -79, 100, -79, 100, -78, 101, -77, 101,
+    -77, 102, -76, 102, -76, 102, -75, 103, -74, 103, -74, 104, -73, 104, -72,
+    105, -72, 105, -71, 106, -70, 106, -70, 106, -69, 107, -68, 107, -68, 108,
+    -67, 108, -66, 108, -66, 109, -65, 109, -64, 110, -64, 110, -63, 110, -62,
+    111, -62, 111, -61, 112, -60, 112, -60, 112, -59, 113, -58, 113, -58, 113,
+    -57, 114, -56, 114, -56, 114, -55, 115, -54, 115, -53, 115, -53, 116, -52,
+    116, -51, 116, -51, 117, -50, 117, -49, 117, -48, 117, -48, 118, -47, 118,
+    -46, 118, -45, 119, -45, 119, -44, 119, -43, 119, -43, 120, -42, 120, -41,
+    120, -40, 120, -40, 121, -39, 121, -38, 121, -37, 121, -37, 121, -36, 122,
+    -35, 122, -34, 122, -34, 122, -33, 123, -32, 123, -31, 123, -31, 123, -30,
+    123, -29, 123, -28, 124, -28, 124, -27, 124, -26, 124, -25, 124, -25, 124,
+    -24, 124, -23, 125, -22, 125, -21, 125, -21, 125, -20, 125, -19, 125, -18,
+    125, -18, 125, -17, 126, -16, 126, -15, 126, -14, 126, -14, 126, -13, 126,
+    -12, 126, -11, 126, -11, 126, -10, 126, -9, 126, -8, 126, -8, 126, -7, 126,
+    -6, 126, -5, 126, -4, 126, -4, 126, -3, 126, -2, 126, -1, 127, -1
+};
+/* easier handling: */
+static const uint16_t *cos_sin = (uint16_t*) cos_sin_tbl;
+
+/* from libopencm3, we copy it here to have it inlined */
+inline uint16_t my_adc_get_single(uint32_t adc, uint32_t flags)
+{
+	uint32_t result;
+	ADC_CR(adc)=flags | ADC_CR_CLKDIV((uint8_t)(208/4.5))|ADC_CR_10BITS|ADC_CR_POWER|ADC_CR_START;
+
+	do {
+		result=ADC_GDR(adc);
+	} while( (!ADC_DR_DONE(result)) );
+
+	return ADC_DR_VREF(result);
+};
+
+/*
+ * the following follows the example of hackrf's sgpio_isr
+ * which triggers write to SGPIO on 8 planes
+ * will be triggered with FREQ/16
+ **/
+void sgpio_isr_tx() {
+    static uint16_t samplebuf[16];
+    static uint32_t audiosamplebuf = 0; // we use this to rotate 3x 10bit
+    static uint32_t audiosample = 0;
+    static int16_t audiosample_diff = 0;
+    static uint8_t audioctr = 0;
+
+	SGPIO_CLR_STATUS_1 = (1 << SGPIO_SLICE_A);
+
+	uint32_t* const p = (uint32_t*)samplebuf;
+	__asm__(
+		"ldr r0, [%[p], #0]\n\t"
+		"str r0, [%[SGPIO_REG_SS], #44]\n\t"
+		"ldr r0, [%[p], #4]\n\t"
+		"str r0, [%[SGPIO_REG_SS], #20]\n\t"
+		"ldr r0, [%[p], #8]\n\t"
+		"str r0, [%[SGPIO_REG_SS], #40]\n\t"
+		"ldr r0, [%[p], #12]\n\t"
+		"str r0, [%[SGPIO_REG_SS], #8]\n\t"
+		"ldr r0, [%[p], #16]\n\t"
+		"str r0, [%[SGPIO_REG_SS], #36]\n\t"
+		"ldr r0, [%[p], #20]\n\t"
+		"str r0, [%[SGPIO_REG_SS], #16]\n\t"
+		"ldr r0, [%[p], #24]\n\t"
+		"str r0, [%[SGPIO_REG_SS], #32]\n\t"
+		"ldr r0, [%[p], #28]\n\t"
+		"str r0, [%[SGPIO_REG_SS], #0]\n\t"
+		:
+		: [SGPIO_REG_SS] "l" (SGPIO_PORT_BASE + 0x100),
+		  [p] "l" (p)
+		: "r0"
+	);
+    /* ADC 10 bit conversion time is 2.45 us minimum (see UM10503, ch. 47)
+     * so we fetch a new audio sample only every 4th run.
+     * This means we get 1 new audio sample per 64 generated I/Q samples.
+     **/
+    if(0 == (audioctr++ & 3)) {
+        // f = 125kHz, -> 8us
+
+        // moving average over 4 samples:
+        uint16_t sample = my_adc_get_single(ADC0,ADC_CR_CH7);
+
+        uint32_t audiosample_new =
+            sample +
+            (audiosamplebuf & 0x3FF) +
+            ((audiosamplebuf & (0x3FF<<11)) >> 11) +
+            (audiosamplebuf >> 22);
+
+        audiosamplebuf = (audiosamplebuf << 11) + sample;
+
+        /* we will linearly go from previous sample to this over 4x 16 steps.
+         * we start with 64x the previous sample (already accumulated in the
+         * variable), 0x the current one, and will on each step add the
+         * difference, which we need to calculate here:
+         **/
+        audiosample_diff = audiosample_new - (audiosample >> 6);
+    }
+    /* prepare 16 I/Q samples.
+     * "audiosample" contains the sum of 64 audio samples and thus
+     * needs to be shifted/divided.
+     **/
+    uint16_t j = 0;
+    for(int i=0; i<16; i++) {
+        audiosample += audiosample_diff;
+        samplebuf[i] = cos_sin[(j + (audiosample >> 5)) % 1024];
+        j += 64;
+    }
+}
+
+static bool transmitting = false;
+
+static void transmit(bool enable) {
+    baseband_streaming_disable();
+    if(enable) {
+        vector_table.irq[NVIC_SGPIO_IRQ] = sgpio_isr_tx;
+        freq_offset = TX_FREQOFFSET;
+        my_set_frequency(frequency);
+        rf_path_set_direction(RF_PATH_DIRECTION_TX);
+        sample_rate_set(TX_SAMPLERATE);
+        baseband_filter_bandwidth_set(TX_BANDWIDTH);
+        sgpio_cpld_stream_rx_set_decimation(TX_DECIMATION);
+        dac_set(0);
+        OFF(MIC_AMP_DIS); // enable amp
+    } else {
+        vector_table.irq[NVIC_SGPIO_IRQ] = sgpio_isr_rx;
+        freq_offset = FREQOFFSET;
+        my_set_frequency(frequency);
+        rf_path_set_direction(RF_PATH_DIRECTION_RX);
+        sample_rate_set(SAMPLERATE);
+        baseband_filter_bandwidth_set(BANDWIDTH);
+        sgpio_cpld_stream_rx_set_decimation(DECIMATION);
+        ON(MIC_AMP_DIS); // disable amp
+    }
+    transmitting = enable;
+    baseband_streaming_enable();
+}
+
+static int32_t txvga_gain_db = 20;
+#endif // TRANSMIT
+
 static bool lna_enable = true;
 static int32_t lna_gain_db = 24;
 static int32_t vga_gain_db = 20;
 
 /* set amps */
-static void set_rx_params() {
+static void set_rf_params() {
     ssp1_set_mode_max2837(); // need to reset this since display driver will hassle with SSP1
     rf_path_set_lna(lna_enable ? 1 : 0);
-    max2837_set_lna_gain(lna_gain_db);    /* 8dB increments */
-    max2837_set_vga_gain(vga_gain_db);    /* 2dB increments, up to 62dB */
-}
-
-static int64_t frequency = FREQSTART;
-static void my_set_frequency(const int64_t new_frequency) {
-    const int64_t tuned_frequency = new_frequency + FREQOFFSET;
-    ssp1_set_mode_max2837();
-    if(set_freq(tuned_frequency)) {
-        frequency = new_frequency;
-    }
+    max2837_set_lna_gain(lna_gain_db);     /* 8dB increments */
+    max2837_set_vga_gain(vga_gain_db);     /* 2dB increments, up to 62dB */
+#ifdef TRANSMIT
+    max2837_set_txvga_gain(txvga_gain_db); /* 1dB increments, up to 47dB */
+#endif
 }
 
 /* portapack_init plus a bunch of stuff from here and there, cleaned up */
@@ -351,14 +627,13 @@ static void rfinit() {
 
     cpu_clock_pll1_max_speed();
     
-    set_rx_params();
-
     // set up SGPIO ISR
     vector_table.irq[NVIC_SGPIO_IRQ] = sgpio_isr_rx;
 
     ssp1_init();
 
     rf_path_init();
+    set_rf_params();
     rf_path_set_direction(RF_PATH_DIRECTION_RX);
 
     my_set_frequency(frequency);
@@ -374,14 +649,12 @@ static int tune = 100000;
 #define TUNE_FINE 5000
 #define TUNE_COARSE 100000
 
-static int menuitem = 0;
-#define MENU_FREQ 0
-#define MENU_VOLUME 1
-#define MENU_LNA 2
-#define MENU_BBLNA 3
-#define MENU_BBVGA 4
-#define MENU_EXIT 5
-#define MENUITEMS 6
+//static int menuitem = 0;
+#ifdef TRANSMIT
+static enum {MENU_FREQ, MENU_TRANSMIT, MENU_VOLUME, MENU_LNA, MENU_BBLNA, MENU_BBVGA, MENU_BBTXVGA, MENU_EXIT, MENUITEMS} menuitem = MENU_FREQ;
+#else // TRANSMIT
+static enum {MENU_FREQ, MENU_VOLUME, MENU_LNA, MENU_BBLNA, MENU_BBVGA, MENU_EXIT, MENUITEMS} menuitem = MENU_FREQ;
+#endif // TRANSMIT
 
 static void status() {
     lcdClear();
@@ -396,6 +669,11 @@ static void status() {
     lcdPrint(IntToStr((frequency%1000000) / 1000, 3, F_LONG | F_ZEROS));
     lcdPrint(" MHz ");
     if(tune == TUNE_FINE) lcdPrintln("(F)"); else lcdNl();
+
+#ifdef TRANSMIT
+    if(menuitem == MENU_TRANSMIT) lcdPrint("> RX/TX: "); else lcdPrint("  RX/TX: ");
+    if(transmitting) lcdPrintln("SENDING"); else lcdPrintln("listening");
+#endif
 
     lcdNl();
 
@@ -416,6 +694,12 @@ static void status() {
     if(menuitem == MENU_BBVGA) lcdPrint("> BBVGA: +"); else lcdPrint("  BBVGA: +");
     lcdPrint(IntToStr(vga_gain_db,2,F_LONG));
     lcdPrintln(" dB");
+
+#ifdef TRANSMIT
+    if(menuitem == MENU_BBTXVGA) lcdPrint("> BBTXVGA: +"); else lcdPrint("  BBTXVGA: +");
+    lcdPrint(IntToStr(txvga_gain_db,2,F_LONG));
+    lcdPrintln(" dB");
+#endif
 
     lcdNl();
     if(menuitem == MENU_EXIT) lcdPrintln("> Exit"); else lcdPrintln("  Exit");
@@ -443,10 +727,12 @@ void wfm_menu() {
     while(1) {
         switch (getInputWaitRepeat()) {
             case BTN_UP:
-                menuitem = (menuitem - 1) % MENUITEMS;
+                if(menuitem == 0) menuitem = MENUITEMS;
+                menuitem--;
                 break;
             case BTN_DOWN:
-                menuitem = (menuitem + 1) % MENUITEMS;
+                menuitem++;
+                if(menuitem == MENUITEMS) menuitem = 0;
                 break;
             case BTN_LEFT:
                 switch (menuitem) {
@@ -458,16 +744,26 @@ void wfm_menu() {
                         break;
                     case MENU_LNA:
                         if(lna_enable) lna_enable=false; else lna_enable=true;
-                        set_rx_params();
+                        set_rf_params();
                         break;
                     case MENU_BBLNA:
                         if(lna_gain_db > 0) lna_gain_db-=8;
-                        set_rx_params();
+                        set_rf_params();
                         break;
                     case MENU_BBVGA:
                         if(vga_gain_db > 0) vga_gain_db-=2;
-                        set_rx_params();
+                        set_rf_params();
                         break;
+#ifdef TRANSMIT
+                    case MENU_BBTXVGA:
+                        if(txvga_gain_db > 0) txvga_gain_db--;
+                        set_rf_params();
+                        break;
+                    case MENU_TRANSMIT:
+                        transmit(!transmitting);
+                        break;
+#endif // TRANSMIT
+                    default: /*nothing*/ break;
                 }
                 break;
             case BTN_RIGHT:
@@ -482,16 +778,30 @@ void wfm_menu() {
                         goto stop;
                     case MENU_LNA:
                         if(lna_enable) lna_enable=false; else lna_enable=true;
-                        set_rx_params();
+                        set_rf_params();
                         break;
                     case MENU_BBLNA:
                         if(lna_gain_db < 40) lna_gain_db+=8;
-                        set_rx_params();
+                        set_rf_params();
                         break;
                     case MENU_BBVGA:
                         if(vga_gain_db < 62) vga_gain_db+=2;
-                        set_rx_params();
+                        set_rf_params();
                         break;
+#ifdef TRANSMIT
+                    case MENU_BBTXVGA:
+                        if(txvga_gain_db < 47) txvga_gain_db++;
+                        set_rf_params();
+                        break;
+                    case MENU_TRANSMIT:
+                        // transmit as long as key is being held
+                        transmit(!transmitting);
+                        status();
+                        getInputWaitRelease();
+                        transmit(!transmitting);
+                        break;
+#endif // TRANSMIT
+                    default: /*nothing*/ break;
                 }
                 break;
             case BTN_ENTER:
@@ -501,6 +811,7 @@ void wfm_menu() {
                         break;
                     case MENU_EXIT:
                         goto stop;
+                    default: /*nothing*/ break;
                 }
                 break;
         }
@@ -509,5 +820,7 @@ void wfm_menu() {
 stop:
     baseband_streaming_disable();
     dac_set(0);
+    OFF(EN_1V8);
+    OFF(EN_VDD);
     return;
 }
