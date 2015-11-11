@@ -541,11 +541,11 @@ void sgpio_isr_tx() {
      * "audiosample" contains the sum of 64 audio samples and thus
      * needs to be shifted/divided.
      **/
-    uint16_t j = 0;
+    static uint32_t j = 0;
     for(int i=0; i<16; i++) {
         audiosample += audiosample_diff;
-        samplebuf[i] = cos_sin[(j + (audiosample >> 5)) % 1024];
-        j += 64;
+        j = j + audiosample + ((2048 - 128) << 11);
+        samplebuf[i] = cos_sin[(j >> 16) % 1024];
     }
 }
 
