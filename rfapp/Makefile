@@ -81,11 +81,16 @@ OBJS += ../hackrf/firmware/common/rf_path.o
 OBJS += ../hackrf/firmware/common/max5864.o
 OBJS += ../hackrf/firmware/common/hackrf_core.o
 OBJS += ../hackrf/firmware/common/sgpio.o
+OBJS += ../hackrf/firmware/common/streaming.o
 LIBS += -lm
 
 LDSCRIPT=../ld/app.ld
 RPATH=..
 include ../Makefile.inc
+
+wfm.o : wfm.c $(DEPDIR)
+	$(CC) $(CFLAGS) -O3 $(INCLUDE_PATHS) -o $@ $<
+	$(CC) -MM $(CFLAGS) $(INCLUDE_PATHS) $< > $(df).d
 
 main.o: main.gen
 
