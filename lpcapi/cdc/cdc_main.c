@@ -56,6 +56,8 @@ void CDCenable(void) {
 
 	usb_clock_init();
 
+	usb_phy_enable();
+
 	/* Init USB API structure */
 	g_pUsbApi = (const USBD_API_T *) LPC_ROM_API->usbdApiBase;
 
