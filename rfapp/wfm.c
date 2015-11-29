@@ -73,8 +73,10 @@
 
 // default audio output level
 #define AUDIOVOLUME 20
+#define TXVOLUME 4
 
 static volatile int audiovolume = AUDIOVOLUME;
+static volatile int txvolume = TXVOLUME;
 
 static int freq_offset = FREQOFFSET;
 
@@ -544,6 +546,7 @@ void sgpio_isr_tx() {
          * accumulated above */
         audiosample_new -= 512 * 4;
         
+        audiosample_new *= txvolume;
         /* we will linearly go from previous sample to this over 4x 16 steps.
          * we start with 64x the previous sample (already accumulated in the
          * variable), 0x the current one, and will on each step add the
@@ -695,8 +698,13 @@ static void status() {
 
     lcdNl();
 
-    if(menuitem == MENU_VOLUME) lcdPrint("> Vol: "); else lcdPrint("  Vol: ");
-    lcdPrintln(IntToStr(audiovolume,3,F_LONG));
+    if(transmitting) {
+        if(menuitem == MENU_VOLUME) lcdPrint("> TX Vol: "); else lcdPrint("  TX Vol: ");
+        lcdPrintln(IntToStr(txvolume,3,F_LONG));
+    } else {
+        if(menuitem == MENU_VOLUME) lcdPrint("> RX Vol: "); else lcdPrint("  RX Vol: ");
+        lcdPrintln(IntToStr(audiovolume,3,F_LONG));
+    }
 
     lcdNl();
     lcdPrintln("  Settings:");
@@ -761,7 +769,8 @@ void wfm_menu() {
                         if(frequency_step > 1000) frequency_step /= 10;
                         break;
                     case MENU_VOLUME:
-                        if(audiovolume > 0) audiovolume--;
+                        if(transmitting && txvolume > 0) txvolume--;
+                        if(!transmitting && audiovolume > 0) audiovolume--;
                         break;
                     case MENU_LNA:
                         if(lna_enable) lna_enable=false; else lna_enable=true;
@@ -796,7 +805,8 @@ void wfm_menu() {
                         if(frequency_step < 100000000) frequency_step *= 10;
                         break;
                     case MENU_VOLUME:
-                        if(audiovolume < 80) audiovolume++;
+                        if(transmitting && txvolume < 16) txvolume++;
+                        if(!transmitting && audiovolume < 80) audiovolume++;
                         break;
                     case MENU_EXIT:
                         goto stop;
