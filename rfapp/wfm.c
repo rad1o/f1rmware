@@ -68,7 +68,7 @@
 // transmit options
 #define TX_BANDWIDTH  1750000
 #define TX_SAMPLERATE 8000000
-#define TX_FREQOFFSET -(TX_SAMPLERATE/16)
+#define TX_FREQOFFSET 0
 #define TX_DECIMATION 1
 
 // default audio output level
@@ -530,7 +530,7 @@ void sgpio_isr_tx() {
         // moving average over 4 samples:
         uint16_t sample = my_adc_get_single(ADC0,ADC_CR_CH7);
 
-        uint32_t audiosample_new =
+        int32_t audiosample_new =
             sample +
             (audiosamplebuf & 0x3FF) +
             ((audiosamplebuf & (0x3FF<<11)) >> 11) +
@@ -538,6 +538,12 @@ void sgpio_isr_tx() {
 
         audiosamplebuf = (audiosamplebuf << 11) + sample;
 
+        /* Remove the ADC offset (roughly).
+         * Some filter would better.
+         * 4 times, as the sample from the ADC gets
+         * accumulated above */
+        audiosample_new -= 512 * 4;
+        
         /* we will linearly go from previous sample to this over 4x 16 steps.
          * we start with 64x the previous sample (already accumulated in the
          * variable), 0x the current one, and will on each step add the
@@ -552,7 +558,7 @@ void sgpio_isr_tx() {
     static uint32_t j = 0;
     for(int i=0; i<16; i++) {
         audiosample += audiosample_diff;
-        j = j + audiosample + ((2048 - 128) << 11);
+        j = j + audiosample;
         samplebuf[i] = cos_sin[(j >> 16) % 1024];
     }
 }
