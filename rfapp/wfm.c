@@ -462,17 +462,25 @@ static const int8_t cos_sin_tbl[] = {
 /* easier handling: */
 static const uint16_t *cos_sin = (uint16_t*) cos_sin_tbl;
 
+inline void my_adc_start(uint32_t adc, uint32_t flags)
+{
+	ADC_CR(adc)=flags | ADC_CR_CLKDIV((uint8_t)(208/4.5))|ADC_CR_10BITS|ADC_CR_POWER|ADC_CR_START;
+}
+
 /* from libopencm3, we copy it here to have it inlined */
 inline uint16_t my_adc_get_single(uint32_t adc, uint32_t flags)
 {
 	uint32_t result;
-	ADC_CR(adc)=flags | ADC_CR_CLKDIV((uint8_t)(208/4.5))|ADC_CR_10BITS|ADC_CR_POWER|ADC_CR_START;
 
 	do {
 		result=ADC_GDR(adc);
 	} while( (!ADC_DR_DONE(result)) );
 
-	return ADC_DR_VREF(result);
+    uint16_t adc_value = ADC_DR_VREF(result);
+
+    my_adc_start(adc, flags);
+
+	return adc_value;
 };
 
 /*
@@ -554,6 +562,7 @@ static bool transmitting = false;
 static void transmit(bool enable) {
     baseband_streaming_disable();
     if(enable) {
+        my_adc_start(ADC0,ADC_CR_CH7);
         vector_table.irq[NVIC_SGPIO_IRQ] = sgpio_isr_tx;
         freq_offset = TX_FREQOFFSET;
         my_set_frequency(frequency);
