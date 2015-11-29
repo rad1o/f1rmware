@@ -567,7 +567,7 @@ static void transmit(bool enable) {
         freq_offset = TX_FREQOFFSET;
         my_set_frequency(frequency);
         rf_path_set_direction(RF_PATH_DIRECTION_TX);
-        sample_rate_set(TX_SAMPLERATE);
+        sample_rate_frac_set(TX_SAMPLERATE * 2, 1);
         baseband_filter_bandwidth_set(TX_BANDWIDTH);
         sgpio_cpld_stream_rx_set_decimation(TX_DECIMATION);
         dac_set(0);
@@ -577,7 +577,7 @@ static void transmit(bool enable) {
         freq_offset = FREQOFFSET;
         my_set_frequency(frequency);
         rf_path_set_direction(RF_PATH_DIRECTION_RX);
-        sample_rate_set(SAMPLERATE);
+        sample_rate_frac_set(SAMPLERATE * 2, 1);
         baseband_filter_bandwidth_set(BANDWIDTH);
         sgpio_cpld_stream_rx_set_decimation(DECIMATION);
         ON(MIC_AMP_DIS); // disable amp
@@ -651,7 +651,7 @@ static void rfinit() {
 
     my_set_frequency(frequency);
 
-    sample_rate_set(SAMPLERATE);
+    sample_rate_frac_set(SAMPLERATE * 2, 1);
     baseband_filter_bandwidth_set(BANDWIDTH);
     sgpio_cpld_stream_rx_set_decimation(DECIMATION);
 
