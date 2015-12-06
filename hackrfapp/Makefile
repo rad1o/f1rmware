@@ -72,7 +72,7 @@ SOBJS = $(foreach mod,$(SRCS),$(subst .c,.o,$(mod)))
 
 OBJS += $(SOBJS)
 
-CFLAGS=-Wno-unused-variable -DRAD1O -DLPC43XX_M4 -DVERSION_STRING=\"git-xxx\"
+CFLAGS=-Wno-unused-variable -DRAD1O -DLPC43XX_M4 -DVERSION_STRING=\"git-xxx\" -DHACKRF_ENABLE_UI=1 -I.
 OBJS += ../hackrf/firmware/common/w25q80bv.o
 OBJS += ../hackrf/firmware/common/max2871.o
 
