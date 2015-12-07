@@ -1,4 +1,4 @@
-APP=hackrfapp
+APP=hkrf-app
 
 OBJS =
 
