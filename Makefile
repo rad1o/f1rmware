@@ -10,6 +10,7 @@ subdirs:
 	$(MAKE) -C testapp
 	$(MAKE) -C musicapp
 	$(MAKE) -C rfapp
+	$(MAKE) -C hackrfapp
 	$(MAKE) -C bootloader
 	$(MAKE) -C flashapp
 	$(MAKE) -C l0dables
