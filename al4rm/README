@@ -1,0 +1,34 @@
+al4rm
+=====
+
+Data-Frame
+
++---------+------------+------------------+
+| Channel | Frame-Size | Data             |
++---------+------------+------------------+
+| 8-Bit   | 8-bit      | n-byte (n=0-255) |
++---------+------------+------------------+
+
+| Channel | size | Description              | Data                     |
++---------+------+--------------------------+--------------------------+
+| 0x10    | 0    | All LEDs off             |   -                      |
+| 0x11    | 3    | LED 1 Color              | RGB                      |
+| 0x12    | 3    | LED 2 Color              | RGB                      |
+| 0x13    | 3    | LED 3 Color              | RGB                      |
+| 0x14    | 3    | LED 4 Color              | RGB                      |
+| 0x15    | 3    | LED 5 Color              | RGB                      |
+| 0x16    | 3    | LED 6 Color              | RGB                      |
+| 0x17    | 3    | LED 7 Color              | RGB                      |
+| 0x18    | 3    | LED 8 Color              | RGB                      |
+| 0x19    |      | res                      |                          |
+| 0x1A    |      | res                      |                          |
+| 0x1B    |      | res                      |                          |
+| 0x1C    |      | res                      |                          |
+| 0x1D    |      | res                      |                          |
+| 0x1E    |      | res                      |                          |
+| 0x1F    | 3    | Display Color            | RGB                      |
+| 0x20    | 3    | All LEDs same Color      | RGB                      |
+| 0x21    | 24   | All LEDs diffrent Color  | RGBRGBRGBRGBRGBRGBRGBRGB |
+| 0x22    | 1    | Run LED animation Number | N                        |
+| 0x23    | 1    | Run Display animation No | N                        |
+
