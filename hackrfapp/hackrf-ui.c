@@ -19,7 +19,7 @@ uint64_t freq = 0;
 uint32_t sample_rate = 0;
 uint32_t filter_bw = 0;
 rf_path_direction_t direction;
-uint32_t bblna_gain = 0; 
+uint32_t bblna_gain = 0;
 uint32_t bbvga_gain = 0;
 uint32_t bbtxvga_gain = 0;
 bool lna_on = false;
@@ -110,9 +110,9 @@ void hackrf_ui_update(void)
     lcdPrint("HackRF Mode");lcdNl();
 
     drawHLine(11, 0, RESX - 1, WHITE);
-    
+
     lcdSetCrsr(2, 12);
-    draw_frequency(); 
+    draw_frequency();
 
     drawHLine(40, 0, RESX - 1, WHITE);
 
