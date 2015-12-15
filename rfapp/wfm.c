@@ -199,12 +199,12 @@ static void my_fir_cic3_decim_2_s16_s16(
 }
 
 static void my_fir_cic4_decim_2_real_s16_s16(
+    int16_t* z,
 	int16_t* src,
 	int16_t* dst,
 	const size_t sample_count
 ) {
 	static const int16_t tap[] = { 1, 4, 6, 4, 1 };
-	static int16_t z[7];
 
 	int32_t n = sample_count;
 	for(; n>0; n-=2) {
@@ -308,12 +308,14 @@ static void sgpio_isr_rx() {
     /* 768kHz int16[N/4]
      * -> 4th order CIC decimation by 2, gain of 1
      * -> 384kHz int16[N/8] */
-    my_fir_cic4_decim_2_real_s16_s16(work_int16, work_int16, 4);
+    static int16_t z1[7];
+    my_fir_cic4_decim_2_real_s16_s16(z1, work_int16, work_int16, 4);
 
     /* 384kHz int16[N/8]
      * -> 4th order CIC decimation by 2, gain of 1
      * -> 192kHz int16[N/16] */
-    my_fir_cic4_decim_2_real_s16_s16(work_int16, work_int16, 2);
+    static int16_t z2[7];
+    my_fir_cic4_decim_2_real_s16_s16(z2, work_int16, work_int16, 2);
 
     int32_t v = work_int16[0] * audiovolume + 0x8000;
     // clip:
