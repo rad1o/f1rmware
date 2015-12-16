@@ -2,33 +2,59 @@ al4rm
 =====
 
 Data-Frame
++---------+--------------+------------------+
+| Header (fixed size)    | Payload (var)    |
++---------+--------------+------------------+
+| TypeId  | PayloadSize  | Data             |
++---------+--------------+------------------+
+| 8-Bit   | 8-bit        | n-byte (n=0-255) |
++---------+--------------+------------------+
 
-+---------+------------+------------------+
-| Channel | Frame-Size | Data             |
-+---------+------------+------------------+
-| 8-Bit   | 8-bit      | n-byte (n=0-255) |
-+---------+------------+------------------+
+| TypeId  | PSize | Description   | Data                      |
++---------+-------+----------------+--------------------------+
+| 0x00    | 1     | LEDMode        | Mode (see DMX)           |
+| 0x01    | 1     | DisplayMode    | Mode (see DMX)           |
+| 0x10    | 3     | Display Color  | RGB                      |
+| 0x11    | 3     | LED 0 Color    | RGB                      |
+| 0x12    | 3     | LED 1 Color    | RGB                      |
+| 0x13    | 3     | LED 2 Color    | RGB                      |
+| 0x14    | 3     | LED 3 Color    | RGB                      |
+| 0x15    | 3     | LED 4 Color    | RGB                      |
+| 0x16    | 3     | LED 5 Color    | RGB                      |
+| 0x17    | 3     | LED 6 Color    | RGB                      |
+| 0x18    | 3     | LED 7 Color    | RGB                      |
+| 0xF0    | 24    | All LED Colors | RGBRGBRGBRGBRGBRGBRGBRGB |
 
-| Channel | size | Description              | Data                     |
-+---------+------+--------------------------+--------------------------+
-| 0x10    | 0    | All LEDs off             |   -                      |
-| 0x11    | 3    | LED 1 Color              | RGB                      |
-| 0x12    | 3    | LED 2 Color              | RGB                      |
-| 0x13    | 3    | LED 3 Color              | RGB                      |
-| 0x14    | 3    | LED 4 Color              | RGB                      |
-| 0x15    | 3    | LED 5 Color              | RGB                      |
-| 0x16    | 3    | LED 6 Color              | RGB                      |
-| 0x17    | 3    | LED 7 Color              | RGB                      |
-| 0x18    | 3    | LED 8 Color              | RGB                      |
-| 0x19    |      | res                      |                          |
-| 0x1A    |      | res                      |                          |
-| 0x1B    |      | res                      |                          |
-| 0x1C    |      | res                      |                          |
-| 0x1D    |      | res                      |                          |
-| 0x1E    |      | res                      |                          |
-| 0x1F    | 3    | Display Color            | RGB                      |
-| 0x20    | 3    | All LEDs same Color      | RGB                      |
-| 0x21    | 24   | All LEDs diffrent Color  | RGBRGBRGBRGBRGBRGBRGBRGB |
-| 0x22    | 1    | Run LED animation Number | N                        |
-| 0x23    | 1    | Run Display animation No | N                        |
 
+DMX Channels
+
+| Channel | Description  | Value   | Settings             |
++---------+------------- +---------+----------------------+
+|     000 | LED Mode     |     000 | All LEDs off         |
+|         |              |     001 | All like LED0        |
+|         |              |     002 | Individual Colors    |
+|         |              | 003-009 | reserved             |
+|         |              | 010-255 | Animations           |
+|     001 | Display Mode |     000 | Display off          |
+|         |              |     001 | Same Color like LED0 |
+|         |              |     002 | Individual Color     |
+|         |              | 003-009 | reserved             |
+|         |              | 010-255 | Animations           |
+| 002-012 | reserved     |       - |                      |
+|     013 | Display R    | 000-255 | -                    |
+|     014 | Display G    | 000-255 | -                    |
+|     015 | Display B    | 000-255 | -                    |
+|     016 | LED 0 R      | 000-255 | -                    |
+|     017 | LED 0 G      | 000-255 | -                    |
+|     018 | LED 0 B      | 000-255 | -                    |
+|     019 | LED 1 R      | 000-255 | -                    |
+|     020 | LED 1 G      | 000-255 | -                    |
+|     021 | LED 1 B      | 000-255 | -                    |
+| cont'd  | -            |       - | -                    |
+|     037 | LED 7 R      | 000-255 | -                    |
+|     038 | LED 7 G      | 000-255 | -                    |
+|     039 | LED 7 B      | 000-255 | -                    |
+| cont'd  | -            |       - | -                    |
+|     253 | LED 80 R     | 000-255 | -                    |
+|     254 | LED 80 G     | 000-255 | -                    |
+|     255 | LED 80 B     | 000-255 | -                    |
