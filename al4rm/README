@@ -1,32 +1,40 @@
-al4rm
+# al4rm
 =====
 
-Data-Frame
-+---------+--------------+------------------+
-| Header (fixed size)    | Payload (var)    |
-+---------+--------------+------------------+
-| TypeId  | PayloadSize  | Data             |
-+---------+--------------+------------------+
-| 8-Bit   | 8-bit        | n-byte (n=0-255) |
-+---------+--------------+------------------+
+## Data-Frame
++---------+-------------+------------------+
+| Header (fixed size)   | Payload (var)    |
++---------+--------------------------------+
+| TypeId  | PayloadSize | Data             |
++---------+--------------------------------+
+| 1 byte  | 1 byte      | n-byte (n=0-255) |
++---------+--------------------------------+
 
-| TypeId  | PSize | Description   | Data                      |
-+---------+-------+----------------+--------------------------+
-| 0x00    | 1     | LEDMode        | Mode (see DMX)           |
-| 0x01    | 1     | DisplayMode    | Mode (see DMX)           |
-| 0x10    | 3     | Display Color  | RGB                      |
-| 0x11    | 3     | LED 0 Color    | RGB                      |
-| 0x12    | 3     | LED 1 Color    | RGB                      |
-| 0x13    | 3     | LED 2 Color    | RGB                      |
-| 0x14    | 3     | LED 3 Color    | RGB                      |
-| 0x15    | 3     | LED 4 Color    | RGB                      |
-| 0x16    | 3     | LED 5 Color    | RGB                      |
-| 0x17    | 3     | LED 6 Color    | RGB                      |
-| 0x18    | 3     | LED 7 Color    | RGB                      |
-| 0xF0    | 24    | All LED Colors | RGBRGBRGBRGBRGBRGBRGBRGB |
+### LED Subframe
+Type 0x10-0x1F (0x1 == (TypeId >> 4))
++----------+--------------+-------------------------+
+| LEDMode  | DisplayMode  | LEDData                 |
++----------+--------------+-------------------------+
+| 1 byte   | 1 byte       | n-byte (n=0-253)        |
++----------+--------------+-------------------------+
+| see DMX Channels        |                         |
++-------------------------+-------------------------+
 
+| TypeId  | PSize | Description    | Data                           |
++---------+-------+----------------+--------------------------------+
+| 0x10    | 5     | Display Color  | LM DM RGB                      |
+| 0x11    | 5     | LED 0 Color    | LM DM RGB                      |
+| 0x12    | 5     | LED 1 Color    | LM DM RGB                      |
+| 0x13    | 5     | LED 2 Color    | LM DM RGB                      |
+| 0x14    | 5     | LED 3 Color    | LM DM RGB                      |
+| 0x15    | 5     | LED 4 Color    | LM DM RGB                      |
+| 0x16    | 5     | LED 5 Color    | LM DM RGB                      |
+| 0x17    | 5     | LED 6 Color    | LM DM RGB                      |
+| 0x18    | 5     | LED 7 Color    | LM DM RGB                      |
+| 0x1F    | 26    | All LED Colors | LM DM RGBRGBRGBRGBRGBRGBRGBRGB |
+LM = LEDMode, DM = DisplayMode
 
-DMX Channels
+## DMX Channels
 
 | Channel | Description  | Value   | Settings             |
 +---------+------------- +---------+----------------------+
