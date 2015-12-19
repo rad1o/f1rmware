@@ -43,17 +43,6 @@ OBJS += ../rad1olib/light_ws2812_cortex.o
 OBJS += ../rad1olib/battery.o
 OBJS += ../rad1olib/draw.o
 
-# hackrf code
-OBJS += ../hackrf/firmware/common/max2871.o
-OBJS += ../hackrf/firmware/common/sgpio_dma.o
-OBJS += ../hackrf/firmware/common/gpdma.o
-OBJS += ../hackrf/firmware/common/tuning.o
-OBJS += ../hackrf/firmware/common/max2837.o
-OBJS += ../hackrf/firmware/common/rf_path.o
-OBJS += ../hackrf/firmware/common/max5864.o
-OBJS += ../hackrf/firmware/common/hackrf_core.o
-OBJS += ../hackrf/firmware/common/sgpio.o
-
 # atan2 implementation from portalib
 OBJS += ../portalib/fxpt_atan2.o
 
@@ -75,7 +64,7 @@ main.o: main.gen
 main.gen: $(SRCS)
 	../tools/mkfirmware.pl $(SRCS) > main.gen
 
-m0/m0.bin:
+m0/m0.bin: m0/m0.c
 	$(MAKE) -C m0
 
 m0_bin.o: m0_bin.s m0/m0.bin
