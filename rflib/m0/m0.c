@@ -421,11 +421,6 @@ static void rxbfsk(int16_t** const buf, int16_t i, int16_t q) {
     static int32_t offset = 0;
     static uint16_t old_w = 0;
     static uint16_t c = 0;
-    const int32_t sig = i * i + q * q;
-    if(sig < 500) {
-        /* noise floor */
-        return decoder(buf, -1);
-    }
     const uint16_t w = atan2Cordic(i, q);
     const int32_t f = (int16_t)(w - old_w);
     old_w = w;
