@@ -1,15 +1,21 @@
 #include <r0ketlib/display.h>
-#include <rad1olib/systick.h>
 #include <r0ketlib/print.h>
 #include <r0ketlib/itoa.h>
 #include <r0ketlib/fonts.h>
 #include <r0ketlib/fonts/smallfonts.h>
 #include <r0ketlib/render.h>
-#include <rad1olib/draw.h>
 #include <r0ketlib/fs_util.h>
+
+#include <rad1olib/systick.h>
+#include <rad1olib/draw.h>
+#include <rad1olib/setup.h>
+#include <rad1olib/pins.h>
 
 #include <rf_path.h>
 #include <hackrf_core.h>
+
+#include <libopencm3/lpc43xx/scu.h>
+#include <libopencm3/lpc43xx/gpio.h>
 
 #include <string.h>
 #include <stdint.h>
@@ -172,9 +178,13 @@ void hackrf_ui_update(void)
 
 void hackrf_ui_init(void)
 {
+    SETUPgout(RGB_LED);
     systickInit();
     fsInit();
     lcdInit();
+    uint8_t pattern[8 * 3];
+    memset(pattern, 0, sizeof(pattern));
+    ws2812_sendarray(pattern, sizeof(pattern));
     hackrf_ui_update();
 }
 
