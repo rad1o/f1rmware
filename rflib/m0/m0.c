@@ -206,7 +206,7 @@ static void rf_off() {
 }
 
 /* interrupt handler for interrupts triggered by the M4 core */
-void m4core_ipc_isr() {
+static void m4core_ipc_isr() {
     CREG_M4TXEVENT = 0; /* clear interrupt flag */
     nvic_clear_pending_irq(NVIC_M4CORE_IRQ);
     uint32_t syn = *m0_syn;
@@ -267,8 +267,9 @@ void m4core_ipc_isr() {
  * work at a sample rate of 1500000
  */
 
-#define BRAD_PI_SHIFT 14
+#define BRAD_PI_SHIFT 15
 #define BRAD_PI (1<<BRAD_PI_SHIFT)
+
 // Get the octant a coordinate pair is in.
 #define OCTANTIFY(_x, _y, _o)   do {                            \
     int _t; _o= 0;                                              \
@@ -281,8 +282,7 @@ static const uint16_t atan2Cordic_list[] = {
     0x0051, 0x0029, 0x0014, 0x000A, 0x0005, 0x0003, 0x0001, 0x0001
 };
 // atan via CORDIC (coordinate rotations).
-// Returns [0,2pi), where pi ~ 0x4000.
-// atan(2^-i) terms using PI=0x10000 for accuracy
+// Returns [0,2pi), where pi ~ 0x8000.
 static inline uint16_t atan2Cordic(int x, int y)
 {
     if(y==0)    return (x>=0 ? 0 : BRAD_PI);
@@ -317,20 +317,159 @@ static inline uint16_t atan2Cordic(int x, int y)
             dphi -= atan2Cordic_list[i];
         }
     }
-    return phi + (dphi>>2);
+    return phi + (dphi>>1);
+}
+
+#define MAX_PACKET_LEN 255
+/* we use a peamble of 0xFFF0 - so mostly 1 bits - in order to keep the
+ * phase constant as long as possible during the time the PLL is still about
+ * to lock. The PLL should lock when a few other 1-bits (0xFFFF) are sent
+ * before sending this peamble. So when sending, just send 0xFFFFFFF0.
+ *
+ * the row of 1 bits will put a running decoding out of sync if
+ * encountered for whatever reason during data decode
+ */
+#define PREAMBLE 0xFFF0
+static void decoder(int16_t** const buf, const int8_t bit) {
+    /* shift register for received data */
+    static uint16_t shift = 0;
+    /* flag to determine whether we have seen a header and are in sync
+     * also, counter for received data bits (+1)
+     */
+    static uint8_t sync = 0;
+    /* number of bytes in packet to receive */
+    static int16_t pkglen;
+    static int16_t c = 0;
+    static uint8_t *curbuf = 0;
+
+    /* enforce desync? */
+    if(bit == -1) goto desync;
+    shift <<= 1;
+    shift |= bit;
+    if(sync == 0) {
+        /* wait for sync */
+        if(shift == PREAMBLE) {
+            pkglen = -1;
+            sync = 1;
+            if(curbuf == (uint8_t*)buf) {
+                curbuf = (uint8_t*)(buf+RX_BANK_SIZE);
+            } else {
+                curbuf = (uint8_t*)buf;
+            }
+        }
+    } else if(sync == 9) {
+        /* the first of every 9 bits must be 0, otherwise, lose sync.*/
+        if(shift & 0x100)
+            goto desync;
+
+        /* start new byte */
+        sync = 1;
+
+        /* check if we're at the start of a new packet */
+        if(pkglen == -1) {
+            /* we have already received one byte */
+            pkglen = shift & 0xFF;
+            if(pkglen > MAX_PACKET_LEN)
+                goto desync;
+
+            curbuf[0] = pkglen;
+
+            pkglen++; /* add the length byte itself */
+            c = 1;
+            return;
+        }
+        if(c < pkglen) {
+            curbuf[c] = shift & 0xFF;
+            c++;
+            if(c == pkglen) {
+                /* got full packet, notify M4
+                 * we do this here since it might not correspond with the
+                 * sample interval of the main receive() routine.
+                 */
+                *rx_bank_ready = (int16_t*) curbuf;
+                *m0_ack = ACK_NOTIFY_RX;
+                send_interrupt();
+                /* we also desync when we're done. */
+                sync = 0;
+            }
+        }
+    } else {
+        sync++;
+    }
+    return;
+
+desync:
+    sync = 0;
+    return;
+}
+
+/* try to lock the offset into a window of this size:
+ * (a bit more than the mathematically exact window size to
+ * avoid being too jittery)
+ *
+ * The window will never be moved outside of the frequency
+ * value range, which is -32768..32767.
+ *
+ * This allows for about 62.5kHz frequency error between
+ * sender and receiver and it will still lock.
+ */
+#define WINDOW_SIZE 18000
+
+/* even further process an RX sample: decode BFSK */
+static void rxbfsk(int16_t** const buf, int16_t i, int16_t q) {
+    static int32_t old_f = 0;
+    static int32_t offset = 0;
+    static uint16_t old_w = 0;
+    static uint16_t c = 0;
+    const int32_t sig = i * i + q * q;
+    if(sig < 500) {
+        /* noise floor */
+        return decoder(buf, -1);
+    }
+    const uint16_t w = atan2Cordic(i, q);
+    const int32_t f = (int16_t)(w - old_w);
+    old_w = w;
+    if((f > (offset+WINDOW_SIZE/2)) || (f < (offset-WINDOW_SIZE/2))) {
+        offset += (f - (offset+WINDOW_SIZE/2)) >> 2;
+    }
+    if(c++ % 2) {
+        /* we just add two samples and look whether they are above
+         * or below the offset (x2, since we compare with the sum of
+         * two samples).
+         */
+        if(old_f+f > 2*offset) {
+            return decoder(buf, 1);
+        } else {
+            return decoder(buf, 0);
+        }
+    }
+    old_f = f;
+}
+
+/* write frequency and signal strength (^2) to ring buffer */
+static void rxfreq(int16_t** const buf, int16_t i, int16_t q) {
+    static uint16_t old_w = 0;
+    const int32_t sig = i * i + q * q;
+    const uint16_t w = atan2Cordic(i, q);
+    const int16_t f = (int16_t)(w - old_w);
+    old_w = w;
+    **buf = f;
+    (*buf)++;
+    **buf = sig>>12; // TODO: calculate a good value for the shift
+    (*buf)++;
 }
 
 /* write an RX sample to ring buffer */
-static int rxtobuf(int16_t* const buf, int16_t i, int16_t q) {
-    buf[0] = i;
-    buf[1] = q;
-    return 2;
+static void rxtobuf(int16_t** const buf, int16_t i, int16_t q) {
+    **buf = i;
+    (*buf)++;
+    **buf = q;
+    (*buf)++;
 }
 
 /* further process an RX sample: atan2(i, q) */
-static int rxatan2tobuf(int16_t* const buf, int16_t i, int16_t q) {
-    *buf = atan2Cordic(i, q);
-    return 1;
+static void rxatan2tobuf(int16_t** const buf, int16_t i, int16_t q) {
+    **buf = atan2Cordic(i, q);
 }
 
 /* this allows access to the single parts of a sample data word from
@@ -359,22 +498,36 @@ static void receive() {
     rf_path_set_lna(rxlna_enable);
 
     rflib_set_frequency(frequency, -(rxsamplerate>>2));
-    sample_rate_frac_set(rxsamplerate * 2, 1);
+    sample_rate_frac_set(rxsamplerate * rxdecimation * 2, 1);
     baseband_filter_bandwidth_set(rxbandwidth);
     sgpio_cpld_stream_rx_set_decimation(rxdecimation);
     set_rf_params();
-
-    /* sample processing function, defaults to write out */
-    int (*outfunc)(int16_t *const, int16_t, int16_t) = rxtobuf;
-    /* other mode(s): */
-    if(mode == MODE_RECEIVE_ATAN2) {
-        outfunc = rxatan2tobuf;
-    }
+    /* send interrupt now in order to allow the M4 code that has
+     * put us into receive mode to wait until the RF setup is done
+     * - which is needed to manage access to the SPI bus, so the
+     * cores don't do conflicting access.
+     */
+    *m0_ack = ACK_RF_SETUP;
+    send_interrupt();
 
     /* ring buffer pointer */
     int16_t* buf = (int16_t*) RX_BUF_BASE;
     /* reference to start of current bank */
     int16_t* oldbuf = buf;
+
+    /* sample processing function, defaults to write out */
+    void (*outfunc)(int16_t **const, int16_t, int16_t) = rxtobuf;
+    /* other mode(s): */
+    if(mode == MODE_RECEIVE_ATAN2) {
+        outfunc = rxatan2tobuf;
+    } else if(mode == MODE_RECEIVE_FREQ) {
+        outfunc = rxfreq;
+    } else if(mode == MODE_RECEIVE_BFSK) {
+        /* BFSK mode will manage the buffer on its own and won't touch
+         * the "buf" pointer
+         */
+        outfunc = rxbfsk;
+    }
 
     sgpio_cpld_stream_enable();
     while(1) {
@@ -386,7 +539,7 @@ static void receive() {
             /* check for exit condition here so we don't lock up when
              * the SGPIO stops getting data
              */
-            if(!(mode == MODE_RECEIVE || mode == MODE_RECEIVE_ATAN2)) {
+            if(!(mode & MODE_RECEIVE)) {
                 return;
             }
         };
@@ -416,7 +569,7 @@ static void receive() {
         const int16_t t1i = (v0.i0 - v1.q1) + 3 * (v0.q1 - v1.i0);
         const int16_t t1q = (v1.i1 + v0.q0) - 3 * (v1.q0 + v0.i1);
 
-        buf += outfunc(buf, t6i + 3* t7i + 3* t0i + t1i, t6q + 3* t7q + 3* t0q + t1q);
+        outfunc(&buf, t6i + 3* t7i + 3* t0i + t1i, t6q + 3* t7q + 3* t0q + t1q);
 
         const sgpio_val_t v2 = (sgpio_val_t) SGPIO_REG_SS(10);
 
@@ -428,7 +581,7 @@ static void receive() {
         const int16_t t3i = (v2.i0 - v3.q1) + 3 * (v2.q1 - v3.i0);
         const int16_t t3q = (v3.i1 + v2.q0) - 3 * (v3.q0 + v2.i1);
 
-        buf += outfunc(buf, t0i + 3* t1i + 3* t2i + t3i, t0q + 3* t1q + 3* t2q + t3q);
+        outfunc(&buf, t0i + 3* t1i + 3* t2i + t3i, t0q + 3* t1q + 3* t2q + t3q);
 
         const sgpio_val_t v4 = (sgpio_val_t) SGPIO_REG_SS(9);
 
@@ -440,7 +593,7 @@ static void receive() {
         const int16_t t5i = (v4.i0 - v5.q1) + 3 * (v4.q1 - v5.i0);
         const int16_t t5q = (v5.i1 + v4.q0) - 3 * (v5.q0 + v4.i1);
 
-        buf += outfunc(buf, t2i + 3* t3i + 3* t4i + t5i, t2q + 3* t3q + 3* t4q + t5q);
+        outfunc(&buf, t2i + 3* t3i + 3* t4i + t5i, t2q + 3* t3q + 3* t4q + t5q);
 
         const sgpio_val_t v6 = (sgpio_val_t) SGPIO_REG_SS(8);
 
@@ -452,12 +605,12 @@ static void receive() {
         t7i = (v6.i0 - v7.q1) + 3 * (v6.q1 - v7.i0);
         t7q = (v7.i1 + v6.q0) - 3 * (v7.q0 + v6.i1);
 
-        buf += outfunc(buf, t4i + 3* t5i + 3* t6i + t7i, t4q + 3* t5q + 3* t6q + t7q);
+        outfunc(&buf, t4i + 3* t5i + 3* t6i + t7i, t4q + 3* t5q + 3* t6q + t7q);
 
-        if(((uintptr_t)buf % (RX_BANK_SIZE)) == 0) {
+        if(buf == (oldbuf + RX_BANK_SIZE)) {
             /* filled a bank of the ring buffer */
             *rx_bank_ready = oldbuf;
-            if(((uintptr_t)buf % RX_BUF_SIZE) == 0) {
+            if(buf == ((int16_t*) RX_BUF_BASE + RX_BUF_SIZE)) {
                 /* it was the last bank, start at head of the ring buffer */
                 buf = (int16_t*) RX_BUF_BASE;
             }
@@ -556,6 +709,8 @@ static void transmit_bfsk() {
     sample_rate_frac_set(txsamplerate * 2, 1);
     baseband_filter_bandwidth_set(txbandwidth);
     set_rf_params();
+    *m0_ack = ACK_RF_SETUP;
+    send_interrupt();
 
     tx_data_ptr = tx_data;
 
@@ -638,17 +793,18 @@ int main(void) {
     nvic_set_priority(NVIC_M4CORE_IRQ, 0);
     nvic_enable_irq(NVIC_M4CORE_IRQ);
     while(1) {
-        if(mode == MODE_RECEIVE || mode ==MODE_RECEIVE_ATAN2) {
-            *m0_mode = mode;
+        if(mode & MODE_RECEIVE) {
             receive();
         } else if(mode == MODE_TRANSMIT_BFSK) {
-            *m0_mode = mode;
             transmit_bfsk();
         } else if(mode == MODE_OFF || mode == MODE_STANDBY) {
             sgpio_cpld_stream_disable();
             rf_path_set_direction(RF_PATH_DIRECTION_OFF);
-            if(mode == MODE_OFF) rf_off();
-            *m0_mode = mode;
+            if(mode == MODE_OFF) {
+                rf_off();
+                *m0_ack = ACK_SWITCHED_OFF;
+                send_interrupt();
+            }
             __asm__("dsb \n wfe");
         }
     }

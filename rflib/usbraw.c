@@ -1,7 +1,4 @@
-/* BPSK RX/TX
- *
- * Send/Receive BFSK transmissions using the directional pad
- * (predefined strings) or via USB/CDC (whatever you want)
+/* send samples over USB/CDC ACMi
  *
  * An example application using RFlib
  * (c) 2015 Hans-Werner Hilse (@hilse)
@@ -27,28 +24,18 @@
 // default to 2496 MHz
 #define FREQSTART 2496000000
 
-static void transmit(char *str) {
-    rflib_bfsk_transmit((uint8_t*)str, strlen(str), true);
-    getInputWaitRelease();
-}
-
 static void receive() {
-    static uint8_t rxbuf[256];
-    int rx = rflib_bfsk_get_packet(rxbuf, 255);
+    static int16_t rxbuf[256];
+    int rx = rflib_get_data(rxbuf, 256);
     if(rx > 0) {
-        rxbuf[rx] = '\0';
-        lcdPrintln((char*)rxbuf);
-        rflib_lcdDisplay();
-        /* also: write to USB-CDC */
-        if(vcom_connected()) vcom_write((uint8_t*)rxbuf, rx);
+        if(vcom_connected()) vcom_write((uint8_t*)rxbuf, rx*2);
     }
 }
 
-//# MENU BPSK
-void bfsk_menu() {
+//# MENU USBraw
+void usbraw_menu() {
     lcdClear();
     lcdPrintln("ENTER to go back");
-    lcdPrintln("L/R/U/D to xmit");
     rflib_lcdDisplay();
     getInputWaitRelease();
 
@@ -56,33 +43,25 @@ void bfsk_menu() {
     CDCenable();
 
     rflib_init();
-    rflib_bfsk_init();
     rflib_set_freq(FREQSTART);
-    rflib_bfsk_receive();
+    rflib_set_rxsamplerate(1000000);
+    rflib_set_rxdecimation(2);
+    rflib_set_rxbandwidth(1750000);
+    rflib_raw_receive();
 
     while(1) {
         switch (getInputRaw()) {
-            case BTN_UP:
-                transmit("up");
-                break;
-            case BTN_DOWN:
-                transmit("down");
-                break;
-            case BTN_RIGHT:
-                transmit("right");
-                break;
-            case BTN_LEFT:
-                transmit("left");
-                break;
             case BTN_ENTER:
                 goto stop;
         }
+#if 0
         if(vcom_connected()) {
             /* check if we got data from USB-CDC, transmit it, if so. */
             uint8_t sendbuf[255];
             uint32_t read = vcom_bread(sendbuf, 255);
             if(read > 0) rflib_bfsk_transmit(sendbuf, read, true);
         }
+#endif
         receive();
     }
 stop:
