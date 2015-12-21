@@ -99,7 +99,8 @@ void night_tick(void){
             }
         };
 
-        if(batteryGetVoltage()<3600){
+        uint32_t battery_voltage = batteryGetVoltage();
+        if(battery_voltage < 3600 && battery_voltage > 1000){
             if( (ctr/(50/SYSTICKSPEED))%10 == 1 ) {
                 ON(LED4);
             } else {
