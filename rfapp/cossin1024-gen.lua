@@ -6,11 +6,11 @@ io.stdout:write([[
 #include <stdint.h>
 #include <portalib/complex.h>
 
-/* table of sin/cos pairs for x=0..1023:
- * sin(x*pi*2/1024) * 127
+/* table of cos/sin pairs for x=0..1023:
  * cos(x*pi*2/1024) * 127
+ * sin(x*pi*2/1024) * 127
  */
-static const int8_t sin_cos_tbl[] = {
+static const int8_t cos_sin_tbl[] = {
 ]])
 
 for phase = 0, 1023 do
@@ -26,20 +26,12 @@ for phase = 0, 1023 do
     end
     io.stdout:write(string.format(
         "%d,\t%d\t/* %+0.3f, %+0.3f */",
-        s_dumb, c_dumb, s_err, c_err
+        c_dumb, s_dumb, c_err, s_err
     ))
 end
 io.stdout:write([[
 
 };
 
-/* the complex_s8_t type stores the I value in the first
- * octet, the Q value in the second octet.
- * Since when thinking about complex numbers I tend to
- * start with the Q value myself (a + bi), the accessor
- * is named the other way around here to present the fact
- * that we have a cosine function for the Q value and
- * a sine function for the I value
- */
-const complex_s8_t *cos_sin = (complex_s8_t*) sin_cos_tbl;
+const complex_s8_t *cos_sin = (complex_s8_t*) cos_sin_tbl;
 ]])

@@ -36,13 +36,16 @@ void ws2812_sendarray(uint8_t *data,int datlen)
 /* Workaround to match CPU speed to the ws2812 "baudrate" */	
 	uint32_t old_cpu_speed = _cpu_speed;
 	cpu_clock_set(51);
-	
+
+    __asm__ volatile(
+        "CPSID I \n\t"
+		ws2812_DEL32
+    );
+
 	while (datlen--) {
 		curbyte=*data++/1;
 
 	__asm__ volatile(
-
-            "CPSID I \n\t"
 			"		lsl %[dat],#24				\n\t"
 			"		movs %[ctr],#8				\n\t"
 			"ilop%=:							\n\t"
@@ -129,11 +132,16 @@ void ws2812_sendarray(uint8_t *data,int datlen)
 			"		subs %[ctr], #1				\n\t"
 			"		bne 	ilop%=					\n\t"
 			"end%=:								\n\t"
-            "CPSIE I \n\t"
 			:	[ctr] "+r" (i)
 			:	[dat] "r" (curbyte), [set] "r" (set), [clr] "r" (clr), [masklo] "r" (masklo), [maskhi] "r" (maskhi)
 			);
 	}
+
+    __asm__ volatile(
+	    ws2812_DEL32
+        "CPSIE I \n\t"
+    );
+
 	/* Reset CPU speed to previous */
 	cpu_clock_set(old_cpu_speed);
 }

@@ -31,6 +31,7 @@ gather:
 	cp ../ccccmaze/ccccmaze.b1n $(fsdir)/
 	cp ../ccccmaze/story/*.csm $(fsdir)/
 	cp ../rfapp/rfapp.b1n $(fsdir)/
+	cp ../hackrfapp/hkrf-app.b1n $(fsdir)/
 	-cp ../l0dables/*.c1d $(fsdir)/
 	for a in ../assets/*.led ; do ../tools/convertleds.py -o ${fsdir} $$a || exit ;done
 	-for a in ../l0dables/*.n1k ; do b=$${a##*/}; cp $$a ${fsdir}/$${b#nick_} ; done
