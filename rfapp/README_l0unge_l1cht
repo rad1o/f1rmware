@@ -1,0 +1,25 @@
+# l0unge Air Protocol
+Version 0.1
+
+## Data-Frame
++---------+-------------+------------------+
+| Header (fixed size)   | Payload (var)    |
++---------+--------------------------------+
+| TypeId  | PayloadSize | Data             |
++---------+--------------------------------+
+| 1 byte  | 1 byte      | n-byte (n=0-255) |
++---------+--------------------------------+
+
+### LED Subframe
+Type 0x10-0x1F (0x1 == (TypeId >> 4))
+| TypeId  | size | Description              | Data                     |
++---------+------+--------------------------+--------------------------+
+| 0x10    | 0    | All LEDs and Display off | -                        |
+| 0x11    | 3    | All LEDs same Color      | RGB                      |
+| 0x12    | 3    | Display Color            | RGB                      |
+| 0x13    | 1    | Run LED animation Number | N                        |
+| 0x14    | 1    | Run Display animation No | N                        |
+| 0x15    | 4    | LED x Color              | x RGB                    |
+| 0x1D    | 24   | All LEDs different Color | RGBRGBRGBRGBRGBRGBRGBRGB |
+| 0x1E    | -    | -                        | -                        |
+| 0x1F    | -    | -                        | -                        |
