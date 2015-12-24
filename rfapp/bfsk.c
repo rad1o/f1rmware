@@ -73,9 +73,9 @@ static void my_set_frequency(const int64_t new_frequency, const int32_t offset) 
 
 static bool lna_enable = true;
 static bool txlna_enable = false;
-static int32_t lna_gain_db = 20;
-static int32_t vga_gain_db = 20;
-static int32_t txvga_gain_db = 30;
+static int32_t lna_gain_db = 10;
+static int32_t vga_gain_db = 10;
+static int32_t txvga_gain_db = 10;
 
 /* set amps */
 static void set_rf_params(bool rx) {
@@ -765,14 +765,35 @@ void set_all(uint8_t *pattern, uint8_t r, uint8_t g, uint8_t b)
     }
 }
 
+void display_nick(uint8_t nickCol, uint8_t lcdCol)
+{
+  uint8_t dx;
+  uint8_t dy;
+
+  dx=DoString(0,0,GLOBAL(nickname));
+  dx=(RESX-dx)/2;
+  if(dx<0)
+    dx=0;
+  dy=(RESY-getFontHeight())/2;
+  setExtFont(GLOBAL(nickfont));
+  setTextColor(lcdCol,nickCol);
+  lcdFill(lcdCol);
+  lcdSetCrsr(dx,dy);
+  lcdPrint(GLOBAL(nickname));
+  lcdDisplay();
+}
+
 void serial_handler(uint8_t data)
 {
     static uint8_t buf[128];
     static int index = 0;
     static bool sync = false;
-    static uint8_t lcdLed = 0x00;
+    static uint8_t lcdCol = 0x00;
+    static uint8_t nickCol = 0xFF;
     static uint8_t lcdBrightness = 0x00;
     uint8_t pattern[nleds * 3];
+    uint8_t led_bright = 4;
+
 
     buf[index] = data;
 
@@ -793,24 +814,59 @@ void serial_handler(uint8_t data)
     }
 
     if(sync && index > 3) {
-        if(index == buf[3] + 5) {
-            if(buf[index] == '\r' || buf[index] == '\n') {
-                //lcdPrint("RGB: ");
-                //lcdPrint(IntToStr(buf[4],4,F_LONG));
-                //lcdPrint(IntToStr(buf[5],4,F_LONG));
-                //lcdPrintln(IntToStr(buf[6],4,F_LONG));
-                //lcdDisplay();
 
-                senddata(buf + 2, buf[3] + 2);
+        if(index == buf[3] + 5) { //All data received
+            if(buf[index] == '\r' || buf[index] == '\n') { //CRLF at the End
 
-                set_all(pattern, buf[5]/5, buf[4]/5, buf[6]/5);
-                baseband_streaming_disable();
-                ws2812_sendarray(pattern, sizeof(pattern));
-                //Set LCD Color
-                lcdLed = (RGB_TO_8BIT(buf[4],buf[5],buf[6]));
-                lcdFill(lcdLed);
-                lcdDisplay();
-                baseband_streaming_enable();
+                senddata(buf + 2, buf[3] + 2);  //SendData
+
+                //Show the Pattern on the master
+                switch (buf[2]) {
+                    case 0x10: //All LEDs off
+                      set_all(pattern, 0, 0, 0);
+                      baseband_streaming_disable();
+                      ws2812_sendarray(pattern, sizeof(pattern));
+                      baseband_streaming_enable();
+                      break;
+                    case 0x11: //All LEDs same Color
+                      set_all(pattern, buf[5]/led_bright, buf[4]/led_bright, buf[6]/led_bright);
+                      baseband_streaming_disable();
+                      lcdCol = (RGB_TO_8BIT(buf[4],buf[5],buf[6]));
+                      nickCol = (RGB_TO_8BIT((0xFF-buf[4]),(0xFF-buf[5]),(0xFF-buf[6])));
+                      display_nick(nickCol, lcdCol);
+                      ws2812_sendarray(pattern, sizeof(pattern));
+                      baseband_streaming_enable();
+                      break;
+                    case 0x12: //Set Display Color
+                      baseband_streaming_disable();
+                      lcdCol = (RGB_TO_8BIT(buf[4],buf[5],buf[6]));
+                      nickCol = (RGB_TO_8BIT((0xFF-buf[4]),(0xFF-buf[5]),(0xFF-buf[6])));
+                      display_nick(nickCol, lcdCol);
+                      lcdDisplay();
+                      baseband_streaming_enable();
+                      break;
+                    case 0x13: //Set Animation No
+                      //Not implemented yet
+                      break;
+                    case 0x14: //Set Display Animation No
+                        //Not implemented yet
+                      break;
+                    case 0x15: //Set one LED
+                      set_led(pattern, buf[4], buf[6]/led_bright, buf[5]/led_bright, buf[7]/led_bright);
+                      baseband_streaming_disable();
+                      ws2812_sendarray(pattern, sizeof(pattern));
+                      baseband_streaming_enable();
+                      break;
+                    case 0x1D: //set All LEDs diffrent
+                      set_all(pattern,0,0,0); //all Off
+                      for(uint8_t i = 0; i < buf[3]/3; i++){
+                        set_led(pattern, i, buf[5+(3*i)]/led_bright,buf[4+(3*i)]/led_bright,buf[6+(3*i)]/led_bright);
+                      }
+                      baseband_streaming_disable();
+                      ws2812_sendarray(pattern, sizeof(pattern));
+                      baseband_streaming_enable();
+                      break;
+                }
             }
             sync = false;
             index = -1;
@@ -833,11 +889,8 @@ void bfsk_menu() {
     int dy=0;
     static uint8_t lcdCol = 0x00;
     static uint8_t nickCol = 0xFF;
-    //lcdSetContrast(55);
-    //lcdClear();
-    //lcdPrintln("ENTER to go back");
-    //lcdPrintln("L/R/U/D to xmit");
-    //lcdDisplay();
+    uint8_t led_bright = 4;
+
     getInputWaitRelease();
 
     memset(pattern, 0, sizeof(pattern));
@@ -854,65 +907,61 @@ void bfsk_menu() {
     receive();
 
     while(1) {
-        /*switch (getInputRaw()) {
-            case BTN_UP:
-                j = 1;
-                break;
-            case BTN_DOWN:
-                set_all(pattern, 0, 255, 0);
-                senddata(pattern, sizeof(pattern));
-                getInputWaitRelease();
-                j = 0;
-                break;
-            case BTN_RIGHT:
-                set_all(pattern, 0, 0, 255);
-                senddata(pattern, sizeof(pattern));
-                getInputWaitRelease();
-                j = 0;
-                break;
-            case BTN_LEFT:
-                set_all(pattern, 255, 0, 0);
-                senddata(pattern, sizeof(pattern));
-                getInputWaitRelease();
-                j = 0;
-                break;
+       //MENU
+        switch (getInputRaw()) {
             case BTN_ENTER:
                 goto stop;
         }
-        i += j;
-
-        if(i == 1000) {
-            animation_tx();
-            i = 0;
-            uart_write(UART0_NUM, 0xAA);
-        }*/
 
         if(rx_pkg_flag) {
             rx_pkg_flag = false;
             if(rx_pkg_len > 2 && rx_pkg[1] == rx_pkg_len - 2) {
-                // All LEDs and Display same Color as LED0 (0x11)
-                if((rx_pkg[0] == 0x10 || 1) && rx_pkg[1] == 3) {
-                    set_all(pattern, rx_pkg[3]/5, rx_pkg[2]/5, rx_pkg[4]/5); //LEDs are GRB
-                    baseband_streaming_disable();
-                    ws2812_sendarray(pattern, sizeof(pattern));
-                    //Display with Nick
-                    lcdCol = (RGB_TO_8BIT(rx_pkg[2],rx_pkg[3],rx_pkg[4]));
-                    nickCol = (RGB_TO_8BIT((0xFF-rx_pkg[2]),(0xFF-rx_pkg[3]),(0xFF-rx_pkg[4])));
-                     //Display is 0bRRRGGGBB
-
-                    setExtFont(GLOBAL(nickfont));
-                    setTextColor(lcdCol,nickCol);
-                    dx=DoString(0,0,GLOBAL(nickname));
-                    dx=(RESX-dx)/2;
-                    if(dx<0)
-                      dx=0;
-                    dy=(RESY-getFontHeight())/2;
-                    lcdFill(lcdCol);
-                    lcdSetCrsr(dx,dy);
-                    lcdPrint(GLOBAL(nickname));
-                    lcdDisplay();
-                    //Reanable Baseband
-                    baseband_streaming_enable();
+                if((rx_pkg[0] == 0x10 || 1) && rx_pkg[1] <= 24) {
+                  switch (rx_pkg[0]) {
+                      case 0x10: //All LEDs off
+                        set_all(pattern, 0, 0, 0);
+                        baseband_streaming_disable();
+                        ws2812_sendarray(pattern, sizeof(pattern));
+                        baseband_streaming_enable();
+                        break;
+                      case 0x11: //All LEDs same Color
+                        set_all(pattern, rx_pkg[3]/led_bright, rx_pkg[2]/led_bright, rx_pkg[4]/led_bright);
+                        baseband_streaming_disable();
+                        lcdCol = (RGB_TO_8BIT(rx_pkg[2],rx_pkg[3],rx_pkg[4]));
+                        nickCol = (RGB_TO_8BIT((0xFF-rx_pkg[2]),(0xFF-rx_pkg[3]),(0xFF-rx_pkg[4])));
+                        display_nick(nickCol, lcdCol);
+                        ws2812_sendarray(pattern, sizeof(pattern));
+                        baseband_streaming_enable();
+                        break;
+                      case 0x12: //Set Display Color
+                        baseband_streaming_disable();
+                        lcdCol = (RGB_TO_8BIT(rx_pkg[2],rx_pkg[3],rx_pkg[4]));
+                        nickCol = (RGB_TO_8BIT((0xFF-rx_pkg[2]),(0xFF-rx_pkg[3]),(0xFF-rx_pkg[4])));
+                        display_nick(nickCol, lcdCol);
+                        baseband_streaming_enable();
+                        break;
+                      case 0x13: //Set Animation No
+                        //Not implemented yet
+                        break;
+                      case 0x14: //Set Display Animation No
+                          //Not implemented yet
+                        break;
+                      case 0x15: //Set one LED
+                        set_led(pattern, rx_pkg[2], rx_pkg[4]/led_bright, rx_pkg[3]/led_bright, rx_pkg[5]/led_bright);
+                        baseband_streaming_disable();
+                        ws2812_sendarray(pattern, sizeof(pattern));
+                        baseband_streaming_enable();
+                        break;
+                      case 0x1D: //set All LEDs diffrent
+                        set_all(pattern,0,0,0); //all Off
+                        for(uint8_t i = 0; i < rx_pkg[1]/3; i++){
+                          set_led(pattern, i, rx_pkg[3+(3*i)]/led_bright,rx_pkg[2+(3*i)]/led_bright,rx_pkg[4+(3*i)]/led_bright);
+                        }
+                        baseband_streaming_disable();
+                        ws2812_sendarray(pattern, sizeof(pattern));
+                        baseband_streaming_enable();
+                        break;
+                  }
                 }
             }
         }
