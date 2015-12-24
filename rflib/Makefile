@@ -16,7 +16,6 @@ OBJS += ../r0ketlib/menu.o
 OBJS += ../rad1olib/spi-flash.o
 OBJS += ../rad1olib/assert.o
 OBJS += ../rad1olib/systick.o
-OBJS += ../hackrf/firmware/common/si5351c.o
 OBJS += ../fatfs/diskio.o
 OBJS += ../fatfs/ff.o
 OBJS += ../r0ketlib/select.o
@@ -42,9 +41,6 @@ OBJS += ../lpcapi/cdc/cdc_vcom.o
 OBJS += ../rad1olib/light_ws2812_cortex.o
 OBJS += ../rad1olib/battery.o
 OBJS += ../rad1olib/draw.o
-
-# atan2 implementation from portalib
-OBJS += ../portalib/fxpt_atan2.o
 
 SRCS = $(wildcard *.c)
 SOBJS = $(foreach mod,$(SRCS),$(subst .c,.o,$(mod)))
