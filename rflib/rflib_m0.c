@@ -27,8 +27,9 @@
 #include <libopencm3/cm3/vector.h>
 
 #include <r0ketlib/display.h>
-
-#include <portalib/fxpt_atan2.h>
+#include <rad1olib/pins.h>
+#include <libopencm3/lpc43xx/scu.h>
+#include <libopencm3/lpc43xx/gpio.h>
 
 #include "m0_bin.h"
 #include "m0/m0rxtx.h"
@@ -44,26 +45,28 @@ static void (*rx_handler)() = NULL;
  * the same chipset devices.
  */
 static volatile bool in_rf_setup = false;
+/* flag that indicates whether we await M0 core acknowledgement */
+static volatile bool m0_wait_for_ack = false;
 
-static uint32_t get_syn() {
-    static uint32_t syn = 0;
-    syn++;
-    if(syn > 0xFFFF0000) syn = 0;
-    return syn;
-}
-
-static void send_cmd(const uint32_t cmd, const uint32_t arg, const uint32_t arg2, const uint32_t arg3) {
+/* send a command to the M0 core
+ *
+ * do not wait for acknowledgement when this is called from ISR context, since
+ * the acknowledgement will be delivered using the same interrupt mechanism
+ * that is still handling the previous interrupt request, so it would
+ * deadlock.
+ */
+static void send_cmd(const uint32_t cmd, const uint32_t arg, const uint32_t arg2, const uint32_t arg3, const bool wait_for_ack) {
     *m0_command = cmd;
     *m0_arg = arg;
     *m0_arg2 = arg2;
     *m0_arg3 = arg3;
-    const uint32_t syn = get_syn();
-    *m0_syn = syn;
-    send_interrupt();
-    do {
+    m0_wait_for_ack = wait_for_ack;
+    /* send an interrupt to the other core(s) */
+    __asm volatile("dsb \n sev" : : : "memory");
+    while(m0_wait_for_ack == true) {
         /* wait until command has been handled */
         __asm__ volatile ("nop");
-    } while(*m0_ack != syn);
+    }
 }
 
 /* interrupt handler: */
@@ -79,7 +82,7 @@ static void rflib_m0_isr() {
             if(mode_after_transmit != MODE_STANDBY) {
                 in_rf_setup = true;
             }
-            send_cmd(CMD_SET_MODE, mode_after_transmit, 0, 0);
+            send_cmd(CMD_SET_MODE, mode_after_transmit, 0, 0, false);
             break;
         case ACK_TX_ABORTED:
             /* this will happen when switching to another mode
@@ -91,8 +94,8 @@ static void rflib_m0_isr() {
         case ACK_RF_SETUP:
             in_rf_setup = false;
             break;
-        case ACK_SWITCHED_OFF:
-            ipc_halt_m0();
+        case ACK_COMMAND_DONE:
+            m0_wait_for_ack = false;
             break;
     }
 }
@@ -109,39 +112,39 @@ void rflib_lcdDisplay() {
 void rflib_set_freq(const int64_t freq) {
     const uint32_t f2 = freq & 0xFFFFFFFF;
     const uint32_t f1 = freq >> 32;
-    send_cmd(CMD_SET_FREQ, f1, f2, 0);
+    send_cmd(CMD_SET_FREQ, f1, f2, 0, true);
 }
 
 void rflib_set_bbamp(const int lna_gain_db, const int vga_gain_db, const int txvga_gain_db) {
-    send_cmd(CMD_SET_BBAMP, lna_gain_db, vga_gain_db, txvga_gain_db);
+    send_cmd(CMD_SET_BBAMP, lna_gain_db, vga_gain_db, txvga_gain_db, true);
 }
 
 void rflib_set_rxlna(const int enable) {
-    send_cmd(CMD_SET_RXLNA, enable, 0, 0);
+    send_cmd(CMD_SET_RXLNA, enable, 0, 0, true);
 }
 
 void rflib_set_txlna(const int enable) {
-    send_cmd(CMD_SET_TXLNA, enable, 0, 0);
+    send_cmd(CMD_SET_TXLNA, enable, 0, 0, true);
 }
 
 void rflib_set_rxsamplerate(const int samplerate) {
-    send_cmd(CMD_SET_RXSAMPLERATE, samplerate, 0, 0);
+    send_cmd(CMD_SET_RXSAMPLERATE, samplerate, 0, 0, true);
 }
 
 void rflib_set_rxdecimation(const int decimation) {
-    send_cmd(CMD_SET_RXDECIMATION, decimation, 0, 0);
+    send_cmd(CMD_SET_RXDECIMATION, decimation, 0, 0, true);
 }
 
 void rflib_set_rxbandwidth(const int bandwidth) {
-    send_cmd(CMD_SET_RXBANDWIDTH, bandwidth, 0, 0);
+    send_cmd(CMD_SET_RXBANDWIDTH, bandwidth, 0, 0, true);
 }
 
 void rflib_set_txsamplerate(const int samplerate) {
-    send_cmd(CMD_SET_TXSAMPLERATE, samplerate, 0, 0);
+    send_cmd(CMD_SET_TXSAMPLERATE, samplerate, 0, 0, true);
 }
 
 void rflib_set_txbandwidth(const int bandwidth) {
-    send_cmd(CMD_SET_TXBANDWIDTH, bandwidth, 0, 0);
+    send_cmd(CMD_SET_TXBANDWIDTH, bandwidth, 0, 0, true);
 }
 
 /********************************* BFSK **********************************/
@@ -178,7 +181,7 @@ void rflib_bfsk_receive() {
     };
     rx_handler = rxlib_receive_handler;
     in_rf_setup = true;
-    send_cmd(CMD_SET_MODE, MODE_RECEIVE_BFSK, 0, 0);
+    send_cmd(CMD_SET_MODE, MODE_RECEIVE_BFSK, 0, 0, true);
 }
 
 void rflib_bfsk_transmit(uint8_t* const data, const uint16_t length, const bool continue_receive) {
@@ -197,7 +200,7 @@ void rflib_bfsk_transmit(uint8_t* const data, const uint16_t length, const bool 
     tx_len[0] = length;
 
     in_rf_setup = true;
-    send_cmd(CMD_SET_MODE, MODE_TRANSMIT_BFSK, 0, 0);
+    send_cmd(CMD_SET_MODE, MODE_TRANSMIT_BFSK, 0, 0, true);
 }
 
 /*************************************************************************/
@@ -207,7 +210,7 @@ int rflib_get_data(int16_t* const data, const int max_len) {
     rx_pkg_flag = false;
     int read_len = RX_BANK_SIZE;
     if(RX_BANK_SIZE > max_len) read_len = max_len;
-    memcpy((uint8_t*) data, (uint8_t*) *rx_bank_ready, read_len*2);
+    memcpy((uint8_t*) data, (uint8_t*) *rx_bank_ready, read_len);
     return read_len;
 }
 
@@ -217,7 +220,7 @@ void rflib_freq_receive() {
     };
     rx_handler = rxlib_receive_handler;
     in_rf_setup = true;
-    send_cmd(CMD_SET_MODE, MODE_RECEIVE_FREQ, 0, 0);
+    send_cmd(CMD_SET_MODE, MODE_RECEIVE_FREQ, 0, 0, true);
 }
 
 void rflib_raw_receive() {
@@ -226,7 +229,7 @@ void rflib_raw_receive() {
     };
     rx_handler = rxlib_receive_handler;
     in_rf_setup = true;
-    send_cmd(CMD_SET_MODE, MODE_RECEIVE, 0, 0);
+    send_cmd(CMD_SET_MODE, MODE_RECEIVE, 0, 0, true);
 }
 
 /*************************************************************************/
@@ -237,11 +240,20 @@ void rflib_init() {
     nvic_enable_irq(NVIC_M0CORE_IRQ);
 
     ipc_halt_m0();
+
+    m0_wait_for_ack = true;
     unsigned char *cm0 = (unsigned char*) cm0_exec_baseaddr;
     for(int i=0; i<m0_bin_size; i++) cm0[i] = m0_bin[i];
-    ipc_start_m0(cm0_exec_baseaddr);
+    ipc_start_m0((uintptr_t)cm0_exec_baseaddr);
+
+    while(m0_wait_for_ack == true) {
+        /* wait until command has been handled */
+        __asm__ volatile ("nop");
+    }
 }
 
 void rflib_shutdown() {
-    send_cmd(CMD_SET_MODE, MODE_OFF, 0, 0);
+    send_cmd(CMD_SET_MODE, MODE_OFF, 0, 0, true);
+    nvic_disable_irq(NVIC_M0CORE_IRQ);
+    ipc_halt_m0();
 }

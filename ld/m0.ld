@@ -1,34 +1,4 @@
-MEMORY
-{
-	/* rom is really the shadow region that points to SPI flash or elsewhere */
-	rom (rx)  : ORIGIN = 0x00000000, LENGTH =  1M
-	ram_local1 (rwx) : ORIGIN = 0x10000000, LENGTH =  128K
-	ram_l0dable(rwx) : ORIGIN = 0x10080000, LENGTH = 16K
-	ram_m0(rwx) : ORIGIN = 0x10080000, LENGTH = 12K
-	ram_local2 (rwx) : ORIGIN = 0x10084000, LENGTH = 48K
-	ram_sleep  (rwx) : ORIGIN = 0x10090000, LENGTH = 8K
-
-	ram_m0_stack (rwx) : ORIGIN = 0x10083000, LENGTH =  4K
-    /*
-	ram_ahb1_spare    (rwx) : ORIGIN = 0x20001000, LENGTH =  3K
-	ram_ahb1_m4_share (rwx) : ORIGIN = 0x20001C00, LENGTH =  1K
-	ram_ahb1_adchs (rwx)    : ORIGIN = 0x20002000, LENGTH =  4K
-	ram_ahb1_m0_share (rwx) : ORIGIN = 0x20003000, LENGTH =  4K
-    */
-
-	ram_ahb1_0 (rwx) : ORIGIN = 0x20001000, LENGTH =  4K
-	/*ram_ahb1_0 (rwx) : ORIGIN = 0x20004000, LENGTH =  16K */
-	/* ram_ahb1_1 (rwx) : ORIGIN = 0x20008000, LENGTH =  16K */
-	/* ram_ahb2   (rwx) : ORIGIN = 0x2000C000, LENGTH =  16K */
-}
-
-/* cm4_data_share = ORIGIN(ram_ahb1_m4_share);	/* M4 data shared (write by M4 read by M0 */
-/* adchs_data     = ORIGIN(ram_ahb1_adchs);	/* M4 ADCHS data (write by ADCHS DMA or M4) */
-/* cm0_data_share = ORIGIN(ram_ahb1_m0_share);	/* M0 data shared (write by M0 read by M4) */
-
-cm0_exec_baseaddr = ORIGIN(ram_l0dable);	/* Used by M4 to load code from M4 RAM to M0 final exec/run addr */
-
-
+INCLUDE LPC4330_M4_memory.ld
 
 /* Enforce emmition of the vector table. */
 EXTERN(vector_table)
@@ -39,7 +9,7 @@ ENTRY(reset_handler)
 /* Define sections. */
 SECTIONS
 {
-	. = ORIGIN(ram_l0dable);
+	. = ORIGIN(ram_m0);
 
 	.text : {
 		. = ALIGN(0x400);
@@ -130,6 +100,6 @@ SECTIONS
 	end = .;
 
 	/* Leave room above stack for IAP to run. */
-	__StackTop = ORIGIN(ram_m0_stack) + LENGTH(ram_m0_stack) - 32;
+	__StackTop = ORIGIN(ram_m0) + LENGTH(ram_m0) - 32;
 	PROVIDE(_stack = __StackTop);
 }

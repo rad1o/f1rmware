@@ -21,8 +21,10 @@
 
 /* BFSK transmit mode:
  * will transmit *tx_len bytes, stored at tx_data
+ *
+ * Range 8-15 is reserved for TX modes
  */
-#define MODE_TRANSMIT_BFSK 10
+#define MODE_TRANSMIT_BFSK 8
 
 /* simple receive mode:
  * this does a frequency shift by -fs/4, FIR filter [1, 3, 3, 1],
@@ -32,60 +34,64 @@
  * overall gain is 64
  *
  * Maximum sample rate: 2500000
+ *
+ * Range 16-31 is reserved for RX modes
  */
-#define MODE_RECEIVE 256
+#define MODE_RECEIVE 16
 
 /* even more processing:
  * will return the phase angle of the samples 0-65535 (+/- 10?), atan2(i, q)
  *
  * Maximum sample rate: 1500000
  */
-#define MODE_RECEIVE_ATAN2 257
+#define MODE_RECEIVE_ATAN2 17
 
 /* still more processing:
  * will return frequency (delta(atan2(I,Q)))
  */
-#define MODE_RECEIVE_FREQ 258
+#define MODE_RECEIVE_FREQ 18
 
 /* still more processing:
  * will return decoded BFSK
  *
  * Only sample rate 1000000 is supported
  */
-#define MODE_RECEIVE_BFSK 259
+#define MODE_RECEIVE_BFSK 19
 
-/* special value for ACK SHM register:
- * this is set when new RX data is ready */
-#define ACK_NOTIFY_RX       0xFFFFFFFF
+/* values for ACK SHM register: */
+
+/* generic command acknowledgement,
+ * also used for M0 ready notification on startup
+ */
+#define ACK_COMMAND_DONE    1
+/* this is set when new RX data is ready */
+#define ACK_NOTIFY_RX       2
 /* TX is done */
-#define ACK_TX_DONE         0xFFFFFFFE
-#define ACK_TX_ABORTED      0xFFFFFFFD
+#define ACK_TX_DONE         3
+#define ACK_TX_ABORTED      4
 /* RF setup has been done after switching to a new operation mode */
-#define ACK_RF_SETUP        0xFFFFFFFC
-/* RF parts switched off, ready for halting the core */
-#define ACK_SWITCHED_OFF    0xFFFFFF00
+#define ACK_RF_SETUP        5
 
-/* memory location for RX ring buffer */
-#define RX_BUF_BASE 0x20002400
-/* size of RX ring buffer (will be split into two banks, allowed sizes 0x200, 0x100, 0x80, 0x40, 0x20, 0x10) */
+/* size of RX ring buffer (will be split into two banks) */
 #define RX_BUF_SIZE 0x200
 #define RX_BANK_SIZE (RX_BUF_SIZE/2)
 
-volatile uint32_t *const m0_command = (volatile uint32_t *const) 0x20002000;
-volatile uint32_t *const m0_arg = (volatile uint32_t *const) 0x20002004;
-volatile uint32_t *const m0_arg2 = (volatile uint32_t *const) 0x20002008;
-volatile uint32_t *const m0_arg3 = (volatile uint32_t *const) 0x2000200C;
+/* size of TX data buffer */
+#define TX_BUF_SIZE 0x100
 
-volatile uint32_t *const m0_syn = (volatile uint32_t *const) 0x20002020;
-volatile uint32_t *const m0_ack = (volatile uint32_t *const) 0x20002024;
+/* we should probably get this from the linker somehow: */
+#define M0_SHM_OFFSET 0x20007000
+/* memory location for RX ring buffer */
+volatile int16_t  *const rx_data = (volatile int16_t *const) (M0_SHM_OFFSET);
+volatile uint8_t  *const tx_data = (volatile uint8_t *const) (M0_SHM_OFFSET + RX_BUF_SIZE);
 
-volatile uint16_t *const tx_len = (volatile uint16_t *const) 0x20002040;
-volatile uint8_t  *const tx_data = (volatile uint8_t *const) 0x20002600;
-volatile int16_t* *const rx_bank_ready = (volatile int16_t* *const) 0x20002080;
+volatile uint32_t *const m0_command = (volatile uint32_t *const) (M0_SHM_OFFSET + RX_BUF_SIZE + TX_BUF_SIZE);
+volatile uint32_t *const m0_arg = (volatile uint32_t *const) (M0_SHM_OFFSET + RX_BUF_SIZE + TX_BUF_SIZE + 4);
+volatile uint32_t *const m0_arg2 = (volatile uint32_t *const) (M0_SHM_OFFSET + RX_BUF_SIZE + TX_BUF_SIZE + 8);
+volatile uint32_t *const m0_arg3 = (volatile uint32_t *const) (M0_SHM_OFFSET + RX_BUF_SIZE + TX_BUF_SIZE + 12);
 
-/* send an interrupt to the other core(s) */
-inline void send_interrupt() {
-    __asm volatile("dsb \n sev" : : : "memory");
-}
+volatile uint32_t *const m0_ack = (volatile uint32_t *const) (M0_SHM_OFFSET + RX_BUF_SIZE + TX_BUF_SIZE + 16);
 
+volatile uint16_t *const tx_len = (volatile uint16_t *const) (M0_SHM_OFFSET + RX_BUF_SIZE + TX_BUF_SIZE + 20);
+volatile int16_t* *const volatile rx_bank_ready = (volatile int16_t* *const volatile) (M0_SHM_OFFSET + RX_BUF_SIZE + TX_BUF_SIZE + 24);
 #endif // _M0RXTX_H

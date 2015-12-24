@@ -3,7 +3,7 @@ BINARY = m0
 SRC = m0.c cossin1024.c \
 	hackrf_core.c max2837.c max2871.c max5864.c rf_path.c sgpio.c si5351c.c streaming.c tuning.c
 
-LDSCRIPT ?= M0_ram_only.ld
+LDSCRIPT ?= ../../ld/m0.ld
 
 LIBOPENCM3 ?= ../../libopencm3
 
@@ -20,7 +20,7 @@ CFLAGS += -std=gnu99 -Os -g2 -Wall -Wextra -I$(LIBOPENCM3)/include \
 	-DLPC43XX -DLPC43XX_M0 -DCORE_M0 -D__CORTEX_M=0 -DRAD1O -I.
 
 LDFLAGS += -mcpu=cortex-m0 -mthumb -DTHUMB \
-        -L../common \
+		-L../../ld \
 		-L$(LIBOPENCM3)/lib -L$(LIBOPENCM3)/lib/lpc43xx_m0 \
 		-T$(LDSCRIPT) -nostartfiles -lc -lnosys \
 		-Wl,--gc-sections -Xlinker -Map=$(BINARY).map

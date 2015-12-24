@@ -20,6 +20,7 @@
  * the Free Software Foundation, Inc., 51 Franklin Street,
  * Boston, MA 02110-1301, USA.
  */
+#include <stddef.h>
 #include <libopencm3/lpc43xx/m0/nvic.h>
 #include <libopencm3/cm3/vector.h>
 #include <libopencm3/lpc43xx/sgpio.h>
@@ -84,9 +85,9 @@ static int64_t frequency;
 static int16_t rxlna_enable = 1;
 static int16_t txlna_enable = 1;
 
-static int16_t lna_gain_db = 8;
+static int16_t lna_gain_db = 16;
 static int16_t vga_gain_db = 20;
-static int16_t txvga_gain_db = 30;
+static int16_t txvga_gain_db = 47;
 
 static uint32_t rxsamplerate = 2000000;
 static uint32_t txsamplerate = 2000000;
@@ -108,6 +109,12 @@ static void set_rf_params() {
     max2837_set_lna_gain(lna_gain_db);     /* 8dB increments */
     max2837_set_vga_gain(vga_gain_db);     /* 2dB increments, up to 62dB */
     max2837_set_txvga_gain(txvga_gain_db); /* 1dB increments, up to 47dB */
+}
+
+/* send an interrupt to the other core(s) */
+static void send_interrupt(uint32_t ack) {
+    *m0_ack = ack;
+    __asm volatile("dsb \n sev" : : : "memory");
 }
 
 /* rest of hackrf clock startup
@@ -205,18 +212,31 @@ static void rf_off() {
     OFF(EN_1V8);
 }
 
+static void switch_to_mode(uint32_t new_mode) {
+    switch(new_mode) {
+        case MODE_STANDBY:
+            sgpio_cpld_stream_disable();
+            rf_path_set_direction(RF_PATH_DIRECTION_OFF);
+            break;
+        case MODE_OFF:
+            sgpio_cpld_stream_disable();
+            rf_path_set_direction(RF_PATH_DIRECTION_OFF);
+            rf_off();
+            break;
+        default:
+            if(mode == MODE_OFF) rf_init();
+    }
+    mode = new_mode;
+}
+
 /* interrupt handler for interrupts triggered by the M4 core */
-static void m4core_ipc_isr() {
+void m4core_ipc_isr() {
     CREG_M4TXEVENT = 0; /* clear interrupt flag */
     nvic_clear_pending_irq(NVIC_M4CORE_IRQ);
-    uint32_t syn = *m0_syn;
     /* handle command */
     switch(*m0_command) {
         case CMD_SET_MODE:
-            if((mode == MODE_OFF) && (*m0_arg != MODE_OFF)) {
-                rf_init();
-            }
-            mode = *m0_arg;
+            switch_to_mode(*m0_arg);
             break;
         case CMD_SET_FREQ:
             frequency = *m0_arg;
@@ -251,8 +271,21 @@ static void m4core_ipc_isr() {
             txbandwidth = *m0_arg;
             break;
     }
-    *m0_command = 0;
-    *m0_ack = syn;
+    send_interrupt(ACK_COMMAND_DONE);
+}
+
+/* CRC16 implementation */
+#define CRC16_POLYNOMIAL 0x1021
+/* There seems to be a major dispute over this one: */
+#define CRC16_START 0x1D0F
+static void crc16(const uint8_t input, uint16_t* const crc16buf) {
+    for(int i=7; i>=0; i--) {
+        if(((*crc16buf >> 15) & 1) != ((input >> i) & 1)) {
+            *crc16buf = (*crc16buf << 1) ^ CRC16_POLYNOMIAL;
+        } else {
+            *crc16buf = (*crc16buf << 1);
+        }
+    }
 }
 
 /* atan2 CORDIC approximation
@@ -321,144 +354,167 @@ static inline uint16_t atan2Cordic(int x, int y)
 }
 
 #define MAX_PACKET_LEN 255
-/* we use a peamble of 0xFFF0 - so mostly 1 bits - in order to keep the
- * phase constant as long as possible during the time the PLL is still about
- * to lock. The PLL should lock when a few other 1-bits (0xFFFF) are sent
- * before sending this peamble. So when sending, just send 0xFFFFFFF0.
- *
- * the row of 1 bits will put a running decoding out of sync if
- * encountered for whatever reason during data decode
- */
-#define PREAMBLE 0xFFF0
-static void decoder(int16_t** const buf, const int8_t bit) {
-    /* shift register for received data */
-    static uint16_t shift = 0;
-    /* flag to determine whether we have seen a header and are in sync
-     * also, counter for received data bits (+1)
-     */
-    static uint8_t sync = 0;
-    /* number of bytes in packet to receive */
-    static int16_t pkglen;
-    static int16_t c = 0;
-    static uint8_t *curbuf = 0;
 
-    /* enforce desync? */
-    if(bit == -1) goto desync;
+/* packet header, randomly chosen:
+ * 0b1010000100101100
+ */
+#define BFSK_MAGIC 0xA12C
+
+#define DECODER_STATE_STANDBY 0
+#define DECODER_STATE_PKGLEN1 (DECODER_STATE_STANDBY + 8)
+#define DECODER_STATE_PKGLEN2 (DECODER_STATE_PKGLEN1 + 8)
+#define DECODER_STATE_CRC 0x1000
+#define DECODER_STATE_STOP (DECODER_STATE_CRC + 16)
+static void decoder(const int8_t bit) {
+    /* state for state machine */
+    static uint16_t state = DECODER_STATE_STANDBY;
+    /* shift register for received data */
+    static uint16_t shift;
+    /* CRC for currently received data */
+    static uint16_t crc;
+    /* byte counter */
+    static uint16_t c;
+    /* Pointer to buffer for current packet
+     * We manage buffers & banks on our own here.
+     */
+    static uint8_t *rxbuf = (uint8_t*) rx_data;
+
+    /* put bit into shift register */
     shift <<= 1;
     shift |= bit;
-    if(sync == 0) {
-        /* wait for sync */
-        if(shift == PREAMBLE) {
-            pkglen = -1;
-            sync = 1;
-            if(curbuf == (uint8_t*)buf) {
-                curbuf = (uint8_t*)(buf+RX_BANK_SIZE);
-            } else {
-                curbuf = (uint8_t*)buf;
-            }
-        }
-    } else if(sync == 9) {
-        /* the first of every 9 bits must be 0, otherwise, lose sync.*/
-        if(shift & 0x100)
-            goto desync;
 
-        /* start new byte */
-        sync = 1;
+#ifdef BFSK_CAN_ABORT
+    /* abort condition */
+    if(bit == -1) state = DECODER_STATE_STANDBY;
+#endif
 
-        /* check if we're at the start of a new packet */
-        if(pkglen == -1) {
-            /* we have already received one byte */
-            pkglen = shift & 0xFF;
-            if(pkglen > MAX_PACKET_LEN)
-                goto desync;
-
-            curbuf[0] = pkglen;
-
-            pkglen++; /* add the length byte itself */
-            c = 1;
+    if(state == DECODER_STATE_STANDBY) {
+        if(shift != BFSK_MAGIC) {
+            /* this is the most common case:
+             * we have not seen the beginning of a packet.
+             */
             return;
         }
-        if(c < pkglen) {
-            curbuf[c] = shift & 0xFF;
-            c++;
-            if(c == pkglen) {
-                /* got full packet, notify M4
-                 * we do this here since it might not correspond with the
-                 * sample interval of the main receive() routine.
-                 */
-                *rx_bank_ready = (int16_t*) curbuf;
-                *m0_ack = ACK_NOTIFY_RX;
-                send_interrupt();
-                /* we also desync when we're done. */
-                sync = 0;
-            }
+    } else if(state == DECODER_STATE_PKGLEN1) {
+        const uint8_t pkglen = shift & 0xFF;
+        rxbuf[0] = pkglen;
+    } else if(state == DECODER_STATE_PKGLEN2) {
+        const uint8_t pkglen = shift & 0xFF;
+        if(rxbuf[0] != pkglen) {
+            state = DECODER_STATE_STANDBY;
+            return;
         }
-    } else {
-        sync++;
+        state = DECODER_STATE_CRC - (pkglen*8);
+        crc = CRC16_START;
+        c = 1;
+    } else if(state == DECODER_STATE_STOP) {
+        /* we have the supposed CRC16 in the shift register. */
+        if(shift == crc) {
+            /* got full packet, notify M4
+             * we do this here since it might not correspond with the
+             * sample interval of the main receive() routine.
+             */
+            *rx_bank_ready = (int16_t*) rxbuf;
+            send_interrupt(ACK_NOTIFY_RX);
+            /* bank switching for RX data */
+            rxbuf = (uint8_t*)((uintptr_t)rxbuf ^ RX_BANK_SIZE);
+        }
+        state = DECODER_STATE_STANDBY;
+        /* don't increment state */
+        return;
+    } else if(state > DECODER_STATE_PKGLEN2 &&
+              state <= DECODER_STATE_CRC &&
+              state % 8 == 0) {
+        /* got a full data byte */
+        const uint8_t input = shift & 0xFF;
+        rxbuf[c++] = input;
+        crc16(input, &crc);
     }
-    return;
-
-desync:
-    sync = 0;
-    return;
+    state++;
 }
 
 /* try to lock the offset into a window of this size:
- * (a bit more than the mathematically exact window size to
- * avoid being too jittery)
- *
- * The window will never be moved outside of the frequency
- * value range, which is -32768..32767.
  *
  * This allows for about 62.5kHz frequency error between
  * sender and receiver and it will still lock.
  */
-#define WINDOW_SIZE 18000
+#define WINDOW_SIZE 16384
 
 /* even further process an RX sample: decode BFSK */
-static void rxbfsk(int16_t** const buf, int16_t i, int16_t q) {
-    static int32_t old_f = 0;
-    static int32_t offset = 0;
+static void rxbfsk(__attribute__ ((unused)) int16_t** const buf, int16_t i, int16_t q) {
+    static int16_t offset = 0;
     static uint16_t old_w = 0;
     static uint16_t c = 0;
     const uint16_t w = atan2Cordic(i, q);
-    const int32_t f = (int16_t)(w - old_w);
+    const int16_t f = (int16_t)(w - old_w) - offset;
     old_w = w;
-    if((f > (offset+WINDOW_SIZE/2)) || (f < (offset-WINDOW_SIZE/2))) {
-        offset += (f - (offset+WINDOW_SIZE/2)) >> 2;
+    if(f > (WINDOW_SIZE/2)) {
+        offset += (f - (WINDOW_SIZE/2)) >> 2;
+    } else if(f < (-WINDOW_SIZE/2)) {
+        offset += (f + (WINDOW_SIZE/2)) >> 2;
     }
     if(c++ % 2) {
-        /* we just add two samples and look whether they are above
-         * or below the offset (x2, since we compare with the sum of
-         * two samples).
+        /* we should get one symbol per two samples.
+         * however, which is the right sample to decide on?
+         * in the case (b) below, every second sample is about 0:
+         * that is the case when we're sampling in the exact
+         * middle of the frequency shift.
+         * Then, however, the sample in between would be the right one
+         * to use for the decision.
+         *
+         *   |         ____            __
+         *   |        /    \          /
+         * 0_|......./......\......../...
+         *   |      /        \      /
+         *   |\____/          \____/
+         *   |
+         *     |   |   |   |   |   |   |
+         *(a)  S1  S2  S1  S2  S1  S2  S1
+         *     -   -   +   +   -   -   +
+         *
+         *       |   |   |   |   |   |
+         *(b)    S1  S2  S1  S2  S1  S2
+         *       -   0   +   0   -   0
+         *
+         * so how do we go best to sync on good samples?
+         * for now, the approach is to skip a sample if we decide
+         * that it is definitely a bad sample. We decide so if it
+         * is too much near 0.
          */
-        if(old_f+f > 2*offset) {
-            return decoder(buf, 1);
+        if(f < 2000 && f > -2000) {
+            c++;
         } else {
-            return decoder(buf, 0);
+            decoder((f > 0) ? 1 : 0);
         }
     }
-    old_f = f;
 }
 
 /* write frequency and signal strength (^2) to ring buffer */
 static void rxfreq(int16_t** const buf, int16_t i, int16_t q) {
+    int8_t sig;
+    const int32_t sig_quad = i*i + q*q;
+    /* a rough estimate of signal strength is therefore the log2, which we can
+     * approximate like this (could also do interval halving, but this is more
+     * compact):
+     */
+    for(sig=0; sig<28; sig++) {
+        if(sig_quad < (1L<<sig)) break;
+    }
     static uint16_t old_w = 0;
-    const int32_t sig = i * i + q * q;
     const uint16_t w = atan2Cordic(i, q);
     const int16_t f = (int16_t)(w - old_w);
     old_w = w;
     **buf = f;
     (*buf)++;
-    **buf = sig>>12; // TODO: calculate a good value for the shift
+    **buf = sig;
     (*buf)++;
 }
 
 /* write an RX sample to ring buffer */
 static void rxtobuf(int16_t** const buf, int16_t i, int16_t q) {
-    **buf = i;
+    **buf = i * 4;
     (*buf)++;
-    **buf = q;
+    **buf = q * 4;
     (*buf)++;
 }
 
@@ -502,11 +558,10 @@ static void receive() {
      * - which is needed to manage access to the SPI bus, so the
      * cores don't do conflicting access.
      */
-    *m0_ack = ACK_RF_SETUP;
-    send_interrupt();
+    send_interrupt(ACK_RF_SETUP);
 
     /* ring buffer pointer */
-    int16_t* buf = (int16_t*) RX_BUF_BASE;
+    int16_t* buf = (int16_t*)rx_data;
     /* reference to start of current bank */
     int16_t* oldbuf = buf;
 
@@ -602,18 +657,15 @@ static void receive() {
 
         outfunc(&buf, t4i + 3* t5i + 3* t6i + t7i, t4q + 3* t5q + 3* t6q + t7q);
 
-        if(buf == (oldbuf + RX_BANK_SIZE)) {
+        if(buf == (int16_t*)((uintptr_t)oldbuf + RX_BANK_SIZE)) {
             /* filled a bank of the ring buffer */
             *rx_bank_ready = oldbuf;
-            if(buf == ((int16_t*) RX_BUF_BASE + RX_BUF_SIZE)) {
-                /* it was the last bank, start at head of the ring buffer */
-                buf = (int16_t*) RX_BUF_BASE;
-            }
+            /* switch banks */
+            buf = (int16_t*)((uintptr_t)oldbuf ^ RX_BANK_SIZE);
             /* store pointer to start of new bank */
             oldbuf = buf;
             /* notify M4 */
-            *m0_ack = ACK_NOTIFY_RX;
-            send_interrupt();
+            send_interrupt(ACK_NOTIFY_RX);
         }
     }
 }
@@ -624,73 +676,70 @@ static void receive() {
 
 #define FSK_FREQ 8
 /* Function to encode one bit that is to be sent.
- * It should return -FSK_FREQ or +FSK_FREQ,
- * and it might return 0 to indicate that no bit
- * is to be encoded.
+ * It should return -FSK_FREQ or +FSK_FREQ
  */
-#define STATE_NULL 0
 /* when sending the preamble, in a first step we change
- * frequencies as fast as we can to set the right offset
+ * frequencies to set the right offset. Keep one frequency for a longer
+ * time in order to have it "settle".
  * on the receiving side.
+ * We do this for 16 bits.
  */
-#define STATE_PREAMBLE_FLATTER 1
-/* then we send 12x 1, 4x 0 (0xFFF0), which is what triggers
- * a new packet start with the receiver.
- */
-#define STATE_PREAMBLE_ONE 20
-#define STATE_PREAMBLE_ZERO 32
-/* then the length of the packet is sent (1 octet) */
-#define STATE_PKGLEN 36
+#define ENCODER_STATE_NULL 0
+/* then we send the value that indicates a package start */
+#define ENCODER_STATE_PREAMBLE_MAGIC 16
+/* then the length of the packet is sent (1 octet), twice */
+#define ENCODER_STATE_PKGLEN1 32
+#define ENCODER_STATE_PKGLEN2 40
 /* then all the packet payload follows */
-#define STATE_DATA 100
+#define ENCODER_STATE_DATA 100
+/* then a CRC16 checksum, no own state */
 /* and that's it. */
-#define STATE_FINISH 200
+#define ENCODER_STATE_FINISH 200
 
 /* return value that flags end of data */
 #define TRANSMIT_STOP 255
 
 static volatile uint8_t *tx_data_ptr;
 
-static int get_bit_freq() {
+static int16_t get_bit_freq() {
     static uint16_t data;
-    static uint8_t state = STATE_NULL;
+    static uint8_t state = ENCODER_STATE_NULL;
+    static uint16_t crc;
 
-    if(state < STATE_PREAMBLE_FLATTER) {
-        /* in STATE_NULL */
-        state++;
-        return 0;
-    } else if(state < STATE_PREAMBLE_ONE) {
-        /* in STATE_PREAMBLE_FLATTER */
-        state++;
-        return (state & 1) ? FSK_FREQ : -FSK_FREQ;
-    } else if(state < STATE_PREAMBLE_ZERO) {
-        /* in STATE_PREAMBLE_ONE */
-        state++;
-        return FSK_FREQ;
-    } else if(state < STATE_PKGLEN) {
-        /* in STATE_PREAMBLE_ZERO */
-        state++;
-        return -FSK_FREQ;
-    } else if(state == STATE_PKGLEN) {
-        data = tx_len[0];
-        state = STATE_DATA + 9;
-    } else if(state == STATE_DATA) {
-        if((tx_len[0]--) == 0) {
-            state = STATE_FINISH+2;
-            return 0;
-        }
-        data = *(tx_data_ptr++);
-        state = STATE_DATA + 9;
-    } else if(state > STATE_FINISH) {
-        state--;
-        return 0;
-    } else if(state == STATE_FINISH) {
-        state = STATE_NULL;
-        return TRANSMIT_STOP;
+    switch(state) {
+        case ENCODER_STATE_NULL:
+            data = 0xF0F0;
+            break;
+        case ENCODER_STATE_PREAMBLE_MAGIC:
+            data = BFSK_MAGIC;
+            break;
+        case ENCODER_STATE_PKGLEN1:
+            data = tx_len[0] << 8;
+            break;
+        case ENCODER_STATE_PKGLEN2:
+            data = tx_len[0] << 8;
+            state = ENCODER_STATE_DATA - 8;
+            crc = CRC16_START;
+            break;
+        case ENCODER_STATE_DATA:
+            if((tx_len[0]--) > 0) {
+                data = *(tx_data_ptr++);
+                crc16(data, &crc);
+                data <<= 8;
+                state = ENCODER_STATE_DATA - 8;
+            } else {
+                data = crc;
+                state = ENCODER_STATE_FINISH - 18;
+            }
+            break;
+        case ENCODER_STATE_FINISH:
+            state = ENCODER_STATE_NULL;
+            return TRANSMIT_STOP;
     }
-    state--;
+    int16_t freq = (data & 0x8000) ? FSK_FREQ : -FSK_FREQ;
+    state++;
     data <<= 1;
-    return (data & 0x200) ? FSK_FREQ : -FSK_FREQ;
+    return freq;
 }
 
 static const uint8_t sgpio_planes[] = { 11, 5, 10, 2, 9, 4, 8, 0 };
@@ -704,8 +753,7 @@ static void transmit_bfsk() {
     sample_rate_frac_set(txsamplerate * 2, 1);
     baseband_filter_bandwidth_set(txbandwidth);
     set_rf_params();
-    *m0_ack = ACK_RF_SETUP;
-    send_interrupt();
+    send_interrupt(ACK_RF_SETUP);
 
     tx_data_ptr = tx_data;
 
@@ -740,8 +788,7 @@ static void transmit_bfsk() {
              * the SGPIO stops asking for data
              */
             if(mode != MODE_TRANSMIT_BFSK) {
-                *m0_ack = ACK_TX_ABORTED;
-                goto stop;
+                return send_interrupt(ACK_TX_ABORTED);
             }
         };
         SGPIO_CLR_STATUS_1 = (1 << SGPIO_SLICE_A);
@@ -775,10 +822,8 @@ static void transmit_bfsk() {
             SGPIO_REG_SS(sgpio_planes[n]) = v;
         }
     }
-    mode = MODE_STANDBY;
-    *m0_ack = ACK_TX_DONE;
-stop:
-    send_interrupt();
+    switch_to_mode(MODE_STANDBY);
+    send_interrupt(ACK_TX_DONE);
 }
 
 int main(void) {
@@ -787,19 +832,16 @@ int main(void) {
     vector_table.irq[NVIC_M4CORE_IRQ] = m4core_ipc_isr;
     nvic_set_priority(NVIC_M4CORE_IRQ, 0);
     nvic_enable_irq(NVIC_M4CORE_IRQ);
+
+    send_interrupt(ACK_COMMAND_DONE); /* we use this to signal that we're up and running */
+
     while(1) {
         if(mode & MODE_RECEIVE) {
             receive();
         } else if(mode == MODE_TRANSMIT_BFSK) {
             transmit_bfsk();
         } else if(mode == MODE_OFF || mode == MODE_STANDBY) {
-            sgpio_cpld_stream_disable();
-            rf_path_set_direction(RF_PATH_DIRECTION_OFF);
-            if(mode == MODE_OFF) {
-                rf_off();
-                *m0_ack = ACK_SWITCHED_OFF;
-                send_interrupt();
-            }
+            // TODO: race condition here: interrupt might happen in just this moment.
             __asm__("dsb \n wfe");
         }
     }

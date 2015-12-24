@@ -28,7 +28,7 @@ static void receive() {
     static int16_t rxbuf[256];
     int rx = rflib_get_data(rxbuf, 256);
     if(rx > 0) {
-        if(vcom_connected()) vcom_write((uint8_t*)rxbuf, rx*2);
+        if(vcom_connected()) vcom_write((uint8_t*)rxbuf, rx);
     }
 }
 
