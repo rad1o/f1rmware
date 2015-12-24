@@ -45,7 +45,7 @@ extern "C"
 
 /* MSC Disk Image Definitions */
 /* Mass Storage Memory Layout */
-#define BUFFER_BASE               0x20004000
+#define BUFFER_BASE               0x2000C000
 #define MSC_MEM_DISK_SIZE               ((uint32_t) FLASHFS_LENGTH)
 #define MSC_MEM_DISK_BLOCK_SIZE         512
 #define MSC_MEM_DISK_BLOCK_COUNT        (MSC_MEM_DISK_SIZE / MSC_MEM_DISK_BLOCK_SIZE)

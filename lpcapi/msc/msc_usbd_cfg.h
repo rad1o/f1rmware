@@ -87,7 +87,7 @@ extern "C"
    a 4KB aligned memory. Hence the mem_base value passed to USB stack init should
    be 4KB aligned. The following manifest constants are used to define this memory.
  */
-#define USB_STACK_MEM_BASE      0x20000000
+#define USB_STACK_MEM_BASE      0x20008000
 #define USB_STACK_MEM_SIZE      0x00002000
 
 /* USB descriptor arrays defined *_desc.c file */
