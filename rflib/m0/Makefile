@@ -1,7 +1,7 @@
 # derived primarily from Makefiles in libopencm3
 BINARY = m0
 SRC = m0.c cossin1024.c \
-	hackrf_core.c max2837.c max2871.c max5864.c rf_path.c sgpio.c si5351c.c streaming.c tuning.c
+	hackrf_core.c max2837.c max2871.c max5864.c rf_path.c sgpio.c si5351c.c tuning.c
 
 LDSCRIPT ?= ../../ld/m0.ld
 
@@ -17,7 +17,8 @@ TOOLCHAIN_DIR := $(shell dirname `which $(CC)`)/../$(PREFIX)
 
 CFLAGS += -std=gnu99 -Os -g2 -Wall -Wextra -I$(LIBOPENCM3)/include \
 	-mthumb -DTHUMB -mcpu=cortex-m0 -flto -ffunction-sections -fdata-sections \
-	-DLPC43XX -DLPC43XX_M0 -DCORE_M0 -D__CORTEX_M=0 -DRAD1O -I.
+	-DLPC43XX -DLPC43XX_M0 -DCORE_M0 -D__CORTEX_M=0 -DRAD1O \
+	-I. -I../.. -I../../portalib -I../../rfapp -I../../hackrf/firmware/common
 
 LDFLAGS += -mcpu=cortex-m0 -mthumb -DTHUMB \
 		-L../../ld \
