@@ -65,7 +65,7 @@
     Wait For Interrupt is a hint instruction that suspends execution
     until one of a number of events occurs.
  */
-#define __WFI                             __wfi
+//#define __WFI                             __wfi
 
 
 /** \brief  Wait For Event
@@ -328,15 +328,15 @@ __attribute__( ( always_inline ) ) __STATIC_INLINE void __NOP(void)
 }
 
 
-/** \brief  Wait For Interrupt
-
-    Wait For Interrupt is a hint instruction that suspends execution
-    until one of a number of events occurs.
- */
-__attribute__( ( always_inline ) ) __STATIC_INLINE void __WFI(void)
-{
-  __ASM volatile ("wfi");
-}
+///** \brief  Wait For Interrupt
+//
+//    Wait For Interrupt is a hint instruction that suspends execution
+//    until one of a number of events occurs.
+// */
+//__attribute__( ( always_inline ) ) __STATIC_INLINE void __WFI(void)
+//{
+//  __ASM volatile ("wfi");
+//}
 
 
 /** \brief  Wait For Event
@@ -659,13 +659,13 @@ __attribute__( ( always_inline ) ) __STATIC_INLINE void __CLREX(void)
     \param [in]  value  Value to count the leading zeros
     \return             number of leading zeros in value
  */
-__attribute__( ( always_inline ) ) __STATIC_INLINE uint8_t __CLZ(uint32_t value)
-{
-   uint32_t result;
-
-  __ASM volatile ("clz %0, %1" : "=r" (result) : "r" (value) );
-  return(result);
-}
+//__attribute__( ( always_inline ) ) __STATIC_INLINE uint8_t __CLZ(uint32_t value)
+//{
+//   uint32_t result;
+//
+//  __ASM volatile ("clz %0, %1" : "=r" (result) : "r" (value) );
+//  return(result);
+//}
 
 #endif /* (__CORTEX_M >= 0x03) */
 

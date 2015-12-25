@@ -215,6 +215,7 @@
     \li to specify the access to peripheral variables.
     \li for automatic generation of peripheral register debug information.
 */
+#ifndef __I
 #ifdef __cplusplus
   #define   __I     volatile             /*!< Defines 'read only' permissions                 */
 #else
@@ -222,7 +223,7 @@
 #endif
 #define     __O     volatile             /*!< Defines 'write only' permissions                */
 #define     __IO    volatile             /*!< Defines 'read / write' permissions              */
-
+#endif
 /*@} end of group Cortex_M4 */
 
 
@@ -470,6 +471,7 @@ typedef struct
 #define SCB_SCR_SEVONPEND_Msk              (1UL << SCB_SCR_SEVONPEND_Pos)                 /*!< SCB SCR: SEVONPEND Mask */
 
 #define SCB_SCR_SLEEPDEEP_Pos               2                                             /*!< SCB SCR: SLEEPDEEP Position */
+#undef SCB_SCR_SLEEPDEEP_Msk
 #define SCB_SCR_SLEEPDEEP_Msk              (1UL << SCB_SCR_SLEEPDEEP_Pos)                 /*!< SCB SCR: SLEEPDEEP Mask */
 
 #define SCB_SCR_SLEEPONEXIT_Pos             1                                             /*!< SCB SCR: SLEEPONEXIT Position */
@@ -502,6 +504,7 @@ typedef struct
 #define SCB_SHCSR_BUSFAULTENA_Msk          (1UL << SCB_SHCSR_BUSFAULTENA_Pos)             /*!< SCB SHCSR: BUSFAULTENA Mask */
 
 #define SCB_SHCSR_MEMFAULTENA_Pos          16                                             /*!< SCB SHCSR: MEMFAULTENA Position */
+#undef SCB_SHCSR_MEMFAULTENA_Msk
 #define SCB_SHCSR_MEMFAULTENA_Msk          (1UL << SCB_SHCSR_MEMFAULTENA_Pos)             /*!< SCB SHCSR: MEMFAULTENA Mask */
 
 #define SCB_SHCSR_SVCALLPENDED_Pos         15                                             /*!< SCB SHCSR: SVCALLPENDED Position */
@@ -1105,6 +1108,7 @@ typedef struct
 #define MPU_CTRL_HFNMIENA_Msk              (1UL << MPU_CTRL_HFNMIENA_Pos)                 /*!< MPU CTRL: HFNMIENA Mask */
 
 #define MPU_CTRL_ENABLE_Pos                 0                                             /*!< MPU CTRL: ENABLE Position */
+#undef MPU_CTRL_ENABLE_Msk
 #define MPU_CTRL_ENABLE_Msk                (1UL << MPU_CTRL_ENABLE_Pos)                   /*!< MPU CTRL: ENABLE Mask */
 
 /* MPU Region Number Register */
@@ -1125,27 +1129,35 @@ typedef struct
 #define MPU_RASR_ATTRS_Pos                 16                                             /*!< MPU RASR: MPU Region Attribute field Position */
 #define MPU_RASR_ATTRS_Msk                 (0xFFFFUL << MPU_RASR_ATTRS_Pos)               /*!< MPU RASR: MPU Region Attribute field Mask */
 
+#undef MPU_RASR_XN_Pos
 #define MPU_RASR_XN_Pos                    28                                             /*!< MPU RASR: ATTRS.XN Position */
 #define MPU_RASR_XN_Msk                    (1UL << MPU_RASR_XN_Pos)                       /*!< MPU RASR: ATTRS.XN Mask */
 
+#undef MPU_RASR_AP_Pos
 #define MPU_RASR_AP_Pos                    24                                             /*!< MPU RASR: ATTRS.AP Position */
 #define MPU_RASR_AP_Msk                    (0x7UL << MPU_RASR_AP_Pos)                     /*!< MPU RASR: ATTRS.AP Mask */
 
+#undef MPU_RASR_TEX_Pos
 #define MPU_RASR_TEX_Pos                   19                                             /*!< MPU RASR: ATTRS.TEX Position */
 #define MPU_RASR_TEX_Msk                   (0x7UL << MPU_RASR_TEX_Pos)                    /*!< MPU RASR: ATTRS.TEX Mask */
 
+#undef MPU_RASR_S_Pos
 #define MPU_RASR_S_Pos                     18                                             /*!< MPU RASR: ATTRS.S Position */
 #define MPU_RASR_S_Msk                     (1UL << MPU_RASR_S_Pos)                        /*!< MPU RASR: ATTRS.S Mask */
 
+#undef MPU_RASR_C_Pos
 #define MPU_RASR_C_Pos                     17                                             /*!< MPU RASR: ATTRS.C Position */
 #define MPU_RASR_C_Msk                     (1UL << MPU_RASR_C_Pos)                        /*!< MPU RASR: ATTRS.C Mask */
 
+#undef MPU_RASR_B_Pos
 #define MPU_RASR_B_Pos                     16                                             /*!< MPU RASR: ATTRS.B Position */
 #define MPU_RASR_B_Msk                     (1UL << MPU_RASR_B_Pos)                        /*!< MPU RASR: ATTRS.B Mask */
 
+#undef MPU_RASR_SRD_Pos
 #define MPU_RASR_SRD_Pos                    8                                             /*!< MPU RASR: Sub-Region Disable Position */
 #define MPU_RASR_SRD_Msk                   (0xFFUL << MPU_RASR_SRD_Pos)                   /*!< MPU RASR: Sub-Region Disable Mask */
 
+#undef MPU_RASR_SIZE_Pos
 #define MPU_RASR_SIZE_Pos                   1                                             /*!< MPU RASR: Region Size Field Position */
 #define MPU_RASR_SIZE_Msk                  (0x1FUL << MPU_RASR_SIZE_Pos)                  /*!< MPU RASR: Region Size Field Mask */
 
@@ -1313,6 +1325,7 @@ typedef struct
 #define CoreDebug_DHCSR_C_HALT_Msk         (1UL << CoreDebug_DHCSR_C_HALT_Pos)            /*!< CoreDebug DHCSR: C_HALT Mask */
 
 #define CoreDebug_DHCSR_C_DEBUGEN_Pos       0                                             /*!< CoreDebug DHCSR: C_DEBUGEN Position */
+#undef CoreDebug_DHCSR_C_DEBUGEN_Msk
 #define CoreDebug_DHCSR_C_DEBUGEN_Msk      (1UL << CoreDebug_DHCSR_C_DEBUGEN_Pos)         /*!< CoreDebug DHCSR: C_DEBUGEN Mask */
 
 /* Debug Core Register Selector Register */
@@ -1324,6 +1337,7 @@ typedef struct
 
 /* Debug Exception and Monitor Control Register */
 #define CoreDebug_DEMCR_TRCENA_Pos         24                                             /*!< CoreDebug DEMCR: TRCENA Position */
+#undef CoreDebug_DEMCR_TRCENA_Msk
 #define CoreDebug_DEMCR_TRCENA_Msk         (1UL << CoreDebug_DEMCR_TRCENA_Pos)            /*!< CoreDebug DEMCR: TRCENA Mask */
 
 #define CoreDebug_DEMCR_MON_REQ_Pos        19                                             /*!< CoreDebug DEMCR: MON_REQ Position */
@@ -1382,16 +1396,21 @@ typedef struct
 //rad1o:off #define SCB_BASE            (SCS_BASE +  0x0D00UL)                    /*!< System Control Block Base Address  */
 
 #define SCnSCB              ((SCnSCB_Type    *)     SCS_BASE      )   /*!< System control Register not in SCB */
+#undef SCB
 #define SCB                 ((SCB_Type       *)     SCB_BASE      )   /*!< SCB configuration struct           */
+#undef SysTick
 #define SysTick             ((SysTick_Type   *)     SysTick_BASE  )   /*!< SysTick configuration struct       */
 #define NVIC                ((NVIC_Type      *)     NVIC_BASE     )   /*!< NVIC configuration struct          */
+#undef ITM
 #define ITM                 ((ITM_Type       *)     ITM_BASE      )   /*!< ITM configuration struct           */
 #define DWT                 ((DWT_Type       *)     DWT_BASE      )   /*!< DWT configuration struct           */
 #define TPI                 ((TPI_Type       *)     TPI_BASE      )   /*!< TPI configuration struct           */
+#undef CoreDebug
 #define CoreDebug           ((CoreDebug_Type *)     CoreDebug_BASE)   /*!< Core Debug configuration struct    */
 
 #if (__MPU_PRESENT == 1)
   #define MPU_BASE          (SCS_BASE +  0x0D90UL)                    /*!< Memory Protection Unit             */
+#undef MPU
   #define MPU               ((MPU_Type       *)     MPU_BASE      )   /*!< Memory Protection Unit             */
 #endif
 
@@ -1460,6 +1479,7 @@ __STATIC_INLINE uint32_t NVIC_GetPriorityGrouping(void)
 }
 
 
+#if 0
 /** \brief  Enable External Interrupt
 
     The function enables a device-specific interrupt in the NVIC interrupt controller.
@@ -1483,7 +1503,7 @@ __STATIC_INLINE void NVIC_DisableIRQ(IRQn_Type IRQn)
 {
   NVIC->ICER[((uint32_t)(IRQn) >> 5)] = (1 << ((uint32_t)(IRQn) & 0x1F)); /* disable interrupt */
 }
-
+#endif
 
 /** \brief  Get Pending Interrupt
 
@@ -1512,7 +1532,7 @@ __STATIC_INLINE void NVIC_SetPendingIRQ(IRQn_Type IRQn)
   NVIC->ISPR[((uint32_t)(IRQn) >> 5)] = (1 << ((uint32_t)(IRQn) & 0x1F)); /* set interrupt pending */
 }
 
-
+#if 0
 /** \brief  Clear Pending Interrupt
 
     The function clears the pending bit of an external interrupt.
@@ -1523,7 +1543,7 @@ __STATIC_INLINE void NVIC_ClearPendingIRQ(IRQn_Type IRQn)
 {
   NVIC->ICPR[((uint32_t)(IRQn) >> 5)] = (1 << ((uint32_t)(IRQn) & 0x1F)); /* Clear pending interrupt */
 }
-
+#endif
 
 /** \brief  Get Active Interrupt
 
@@ -1659,6 +1679,7 @@ __STATIC_INLINE void NVIC_SystemReset(void)
   @{
  */
 
+#if 0
 #if (__Vendor_SysTickConfig == 0)
 
 /** \brief  System Tick Configuration
@@ -1689,6 +1710,7 @@ __STATIC_INLINE uint32_t SysTick_Config(uint32_t ticks)
   return (0);                                                  /* Function successful */
 }
 
+#endif
 #endif
 
 /*@} end of CMSIS_Core_SysTickFunctions */

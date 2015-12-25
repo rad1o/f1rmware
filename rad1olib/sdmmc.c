@@ -3,6 +3,7 @@
 #include <libopencm3/lpc43xx/cgu.h>
 #include <rad1olib/pins.h>
 #include <r0ketlib/idle.h>
+#include <libopencmsis/core_cm3.h>
 #include <lpcapi/chip.h>
 
 static volatile int32_t sdio_wait_exit = 0;
