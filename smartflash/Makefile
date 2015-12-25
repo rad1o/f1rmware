@@ -17,7 +17,7 @@ FILEORDER= \
 		rfapp.b1n \
     musicapp.b1n \
 		ccccmaze.b1n \
-		l0ungel1cht.b1n \
+		l0unge.b1n \
     testapp.b1n
 
 
@@ -32,7 +32,7 @@ gather:
 	cp ../ccccmaze/ccccmaze.b1n $(fsdir)/
 	cp ../ccccmaze/story/*.csm $(fsdir)/
 	cp ../rfapp/rfapp.b1n $(fsdir)/
-	cp ../l0ungel1cht/l0ungel1cht.b1n $(fsdir)/
+	cp ../l0unge/l0unge.b1n $(fsdir)/
 	cp ../hackrfapp/hkrf-app.b1n $(fsdir)/
 	-cp ../l0dables/*.c1d $(fsdir)/
 	for a in ../assets/*.led ; do ../tools/convertleds.py -o ${fsdir} $$a || exit ;done
@@ -61,7 +61,7 @@ build:
 	cd ../testapp && make testapp.b1n
 	cd ../musicapp && make musicapp.b1n
 	cd ../rfapp && make rfapp.b1n
-	cd ../l0ungel1cht && make l0ungel1cht.b1n
+	cd ../l0unge && make l0unge.b1n
 	cd ../ccccmaze && make ccccmaze.b1n
 	cd ../bootloader && make boot.b1n
 	cd ../flashapp && make flashapp.dfu
