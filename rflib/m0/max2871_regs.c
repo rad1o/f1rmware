@@ -1,0 +1,1 @@
+../../hackrf/firmware/common/max2871_regs.c
