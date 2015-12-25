@@ -892,6 +892,9 @@ void l0ungel1cht() {
     static uint8_t nickCol = 0xFF;
     uint8_t led_bright = 4;
 
+    //Testmode
+    static uint8_t test[128];
+
     getInputWaitRelease();
 
     memset(pattern, 0, sizeof(pattern));
@@ -909,11 +912,38 @@ void l0ungel1cht() {
 
     while(1) {
        //MENU
-        switch (getInputRaw()) {
-            case BTN_ENTER:
-                goto stop;
-        }
-
+       switch (getInputRaw()) {
+           case BTN_UP:
+               if(led_bright > 1) led_bright--;
+               else if (led_bright == 0) led_bright = 16;
+               break;
+           case BTN_DOWN:
+               if(led_bright < 16) led_bright++;
+               else if(led_bright == 16) led_bright = 0;
+               break;
+           case BTN_RIGHT:
+           ///TEST
+               /*test[0]=0x11;
+               test[1]=0x3;
+               test[2]=0xFF;
+               test[3]=0x00;
+               test[4]=0x80;
+               senddata(test, 5);*/
+               break;
+           case BTN_LEFT:
+           ///TEST
+               /*test[0]=0x11;
+               test[1]=0x3;
+               test[2]=0x00;
+               test[3]=0xFF;
+               test[4]=0x80;
+               senddata(test, 5);*/
+               break;
+           case BTN_ENTER:
+               break;
+       }
+       getInputWaitRelease();
+       //END MENU
         if(rx_pkg_flag) {
             rx_pkg_flag = false;
             if(rx_pkg_len > 2 && rx_pkg[1] == rx_pkg_len - 2) {
