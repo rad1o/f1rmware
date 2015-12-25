@@ -90,12 +90,7 @@ int main(void) {
 	generated_init();
 
 	while(1){
-//		if(getInput()){
-			//handleMenu(&menu_main);
-			//getInputWaitRelease();
       l0ungel1cht();
-//		};
-//		fancyNickname();
 	};
 	return 0;
 }

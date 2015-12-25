@@ -1,4 +1,4 @@
-APP=l0ungel1cht
+APP=l0unge
 
 # our code
 OBJS =
@@ -42,12 +42,9 @@ OBJS += ../lpcapi/cdc/cdc_vcom.o
 OBJS += ../rad1olib/light_ws2812_cortex.o
 OBJS += ../rad1olib/battery.o
 OBJS += ../rad1olib/draw.o
-
-# CPLD
-OBJS += ../hackrf/firmware/common/xapp058/micro.o
-OBJS += ../hackrf/firmware/common/xapp058/ports.o
-OBJS += ../hackrf/firmware/common/xapp058/lenval.o
-OBJS += ../hackrf/firmware/common/cpld_jtag.o
+# RFLIB
+OBJS += ../rflib/rflib_m0.o
+OBJS += ../rflib/m0_bin.o
 
 SRCS = $(wildcard *.c)
 SOBJS = $(foreach mod,$(SRCS),$(subst .c,.o,$(mod)))
@@ -55,34 +52,8 @@ SOBJS = $(foreach mod,$(SRCS),$(subst .c,.o,$(mod)))
 OBJS += $(SOBJS)
 
 CFLAGS=-Wno-unused-variable -DRAD1O -DLPC43XX_M4
-OBJS += ../hackrf/firmware/common/w25q80bv.o
-OBJS += ../hackrf/firmware/common/max2871.o
-
-OBJS += ../l0dables/jumptable.o
-
-CFLAGS+=-I../portalib
 CFLAGS+=-I../hackrf/firmware/common
-OBJS += ../portalib/portapack.o
-OBJS += ../portalib/rx_am.o
-OBJS += ../portalib/rx_fm_broadcast.o
-OBJS += ../portalib/rx_fm_narrowband.o
-OBJS += ../portalib/decimate.o
-OBJS += ../portalib/demodulate.o
-OBJS += ../portalib/fxpt_atan2.o
-OBJS += ../portalib/filters.o
-OBJS += ../portalib/portapack_state.o
-OBJS += ../portalib/specan.o
-OBJS += ../portalib/fft.o
-OBJS += ../hackrf/firmware/common/sgpio_dma.o
-OBJS += ../hackrf/firmware/common/gpdma.o
-OBJS += ../hackrf/firmware/common/tuning.o
-OBJS += ../hackrf/firmware/common/max2837.o
-OBJS += ../hackrf/firmware/common/rf_path.o
-OBJS += ../hackrf/firmware/common/max5864.o
-OBJS += ../hackrf/firmware/common/hackrf_core.o
-OBJS += ../hackrf/firmware/common/sgpio.o
-OBJS += ../hackrf/firmware/common/streaming.o
-LIBS += -lm
+
 
 LDSCRIPT=../ld/app.ld
 RPATH=..
