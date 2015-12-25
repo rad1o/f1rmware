@@ -5,11 +5,13 @@ travis:
 	$(MAKE) -C smartflash test
 
 subdirs:
+	$(MAKE) -C rflib
 	$(MAKE) -C campapp
 	$(MAKE) -C ccccmaze
 	$(MAKE) -C testapp
 	$(MAKE) -C musicapp
 	$(MAKE) -C rfapp
+	$(MAKE) -C l0ungel1cht
 	$(MAKE) -C hackrfapp
 	$(MAKE) -C bootloader
 	$(MAKE) -C flashapp
@@ -35,11 +37,13 @@ hackrf/firmware/hackrf_usb/build/hackrf_usb.bin:
 hackrf: hackrf/Readme.md hackrf/firmware/hackrf_usb/build/hackrf_usb.bin
 
 clean:
+	$(MAKE) -C rflib clean
 	$(MAKE) -C campapp clean
 	$(MAKE) -C ccccmaze clean
 	$(MAKE) -C testapp clean
 	$(MAKE) -C musicapp clean
 	$(MAKE) -C rfapp clean
+	$(MAKE) -C l0ungel1cht clean
 	$(MAKE) -C bootloader clean
 	$(MAKE) -C flashapp clean
 	$(MAKE) -C l0dables clean
