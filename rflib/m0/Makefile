@@ -1,7 +1,7 @@
 # derived primarily from Makefiles in libopencm3
 BINARY = m0
 SRC = m0.c cossin1024.c \
-	hackrf_core.c max2837.c max2871.c max5864.c rf_path.c sgpio.c si5351c.c streaming.c tuning.c
+	hackrf_core.c max2837.c max2871.c max5864.c rf_path.c sgpio.c si5351c.c tuning.c
 
 LDSCRIPT ?= ../../ld/m0.ld
 
