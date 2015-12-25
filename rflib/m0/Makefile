@@ -17,7 +17,8 @@ TOOLCHAIN_DIR := $(shell dirname `which $(CC)`)/../$(PREFIX)
 
 CFLAGS += -std=gnu99 -Os -g2 -Wall -Wextra -I$(LIBOPENCM3)/include \
 	-mthumb -DTHUMB -mcpu=cortex-m0 -flto -ffunction-sections -fdata-sections \
-	-DLPC43XX -DLPC43XX_M0 -DCORE_M0 -D__CORTEX_M=0 -DRAD1O -I.
+	-DLPC43XX -DLPC43XX_M0 -DCORE_M0 -D__CORTEX_M=0 -DRAD1O \
+	-I. -I../.. -I../../portalib -I../../rfapp -I../../hackrf/firmware/common
 
 LDFLAGS += -mcpu=cortex-m0 -mthumb -DTHUMB \
 		-L../../ld \
