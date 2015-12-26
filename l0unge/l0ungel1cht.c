@@ -259,15 +259,25 @@ void l0ungel1cht() {
 
     uart_init(UART0_NUM, UART_DATABIT_8, UART_STOPBIT_1, UART_PARITY_NONE, 111, 0, 1);
 
+    bool button_action = false;
+
     bool running = true;
     while(running) {
         //MENU
         switch (getInputRaw()) {
             case BTN_UP:
-                if(led_divider > 0) led_divider--;
+                if(!button_action)
+                {
+                    if(led_divider > 0) led_divider--;
+                    button_action = true;
+                }
                 break;
             case BTN_DOWN:
-                if(led_divider < 8) led_divider++;
+                if(!button_action)
+                {
+                    if(led_divider < 8) led_divider++;
+                    button_action = true;
+                }
                 break;
             case BTN_RIGHT:
                 // Nothing to do here
@@ -279,8 +289,10 @@ void l0ungel1cht() {
                 // Not needed when running as app
                 //running = false;
                 break;
+            default:
+                button_action = false;
+                break;
         }
-        getInputWaitRelease();
         //END MENU
 
         // Poll for BFSK packets
