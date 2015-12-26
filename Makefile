@@ -37,7 +37,6 @@ hackrf/firmware/hackrf_usb/build/hackrf_usb.bin:
 hackrf: hackrf/Readme.md hackrf/firmware/hackrf_usb/build/hackrf_usb.bin
 
 clean:
-	$(MAKE) -C rflib clean
 	$(MAKE) -C campapp clean
 	$(MAKE) -C ccccmaze clean
 	$(MAKE) -C testapp clean
