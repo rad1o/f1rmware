@@ -11,6 +11,7 @@
 #include <r0ketlib/keyin.h>
 #include <r0ketlib/menu.h>
 #include <r0ketlib/config.h>
+#include <r0ketlib/config.h>
 
 #include <rad1olib/pins.h>
 #include <rad1olib/systick.h>
@@ -54,12 +55,6 @@ void sys_tick_handler(void){
 	generated_tick();
 };
 
-void init_nick(void){
-	readTextFile("nick.cfg",GLOBAL(nickname),MAXNICK);
-	readTextFile("font.cfg",GLOBAL(nickfont),FLEN);
-	readTextFile("l0nick.cfg",GLOBAL(nickl0),FLEN);
-}
-
 int main(void) {
 	cpuClockInit(); /* CPU Clock is now 104 MHz */
 	systickInit();
@@ -75,8 +70,6 @@ int main(void) {
 	SETUPgout(LED2);
 	SETUPgout(LED3);
 	SETUPgout(LED4);
-	SETUPpin(UART0_TXD);
-	SETUPpin(UART0_RXD);
 
 	inputInit();
 	lcdInit();
@@ -84,7 +77,6 @@ int main(void) {
 	lcdFill(0xff);
 	readConfig();
 	batteryInit();
-  init_nick();
 
 	generated_init();
 
