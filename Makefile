@@ -10,7 +10,8 @@ subdirs:
 	$(MAKE) -C testapp
 	$(MAKE) -C musicapp
 	$(MAKE) -C rfapp
-	$(MAKE) -C rflib
+	$(MAKE) -C rflib	
+	$(MAKE) -C l0unge
 	$(MAKE) -C hackrfapp
 	$(MAKE) -C bootloader
 	$(MAKE) -C flashapp
@@ -41,7 +42,8 @@ clean:
 	$(MAKE) -C testapp clean
 	$(MAKE) -C musicapp clean
 	$(MAKE) -C rfapp clean
-	$(MAKE) -C rflib clean
+	$(MAKE) -C rflib clean	
+	$(MAKE) -C l0unge clean
 	$(MAKE) -C bootloader clean
 	$(MAKE) -C flashapp clean
 	$(MAKE) -C l0dables clean
