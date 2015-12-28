@@ -252,6 +252,10 @@ void rflib_init() {
     }
 }
 
+void rflib_standby() {
+    send_cmd(CMD_SET_MODE, MODE_STANDBY, 0, 0, true);
+}
+
 void rflib_shutdown() {
     send_cmd(CMD_SET_MODE, MODE_OFF, 0, 0, true);
     nvic_disable_irq(NVIC_M0CORE_IRQ);
