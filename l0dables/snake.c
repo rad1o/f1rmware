@@ -14,6 +14,7 @@
 #include <r0ketlib/print.h>
 #include <r0ketlib/keyin.h>
 #include <r0ketlib/select.h>
+#include <rad1olib/systick.h>
 
 #include "invfont.c"
 
@@ -35,6 +36,9 @@
 #define UP 3
 #define DOWN 1
 
+//define how long you have to hold down the button to quit
+#define QUIT_DELAY 1000
+
 struct pos_s {
     int x,y;
 };
@@ -48,7 +52,7 @@ static void reset();
 static void next_level();
 static void render_level();
 static void draw_block();
-static void handle_input();
+static int handle_input();
 static void death_anim();
 static struct pos_s getFood(void);
 static int hitWall();
@@ -78,7 +82,9 @@ void ram(void)
 
     while (1) {
         if(!(++c % snake.speed)) {
-            handle_input();
+            if (handle_input()) { //handle_input returns 1 to quit
+                break;
+            }
 
             pos = (snake.t_start+1) % MAX_SNAKE_LEN;
             snake.tail[pos].x = snake.tail[snake.t_start].x;
@@ -245,9 +251,10 @@ static void render_level()
     DoString(MAX_X-44,1,highscore_string);
 }
 
-static void handle_input()
+static int handle_input()
 {
     int key = getInputRaw(), dir_old = snake.dir;
+    static int quitWhen = 0;
 
     if (key&BTN_UP && dir_old != 1)
         snake.dir = 3;
@@ -257,6 +264,16 @@ static void handle_input()
         snake.dir = 2;
     else if (key&BTN_RIGHT && dir_old !=2)
         snake.dir = 0;
+    else if (key&BTN_ENTER) {
+        if (quitWhen == 0) {
+            quitWhen = _timectr + QUIT_DELAY/SYSTICKSPEED;
+        } else if (_timectr > quitWhen) {
+            return 1; //indicate program should quit
+        }
+        return 0;
+    }
+    quitWhen = 0;
+    return 0; // program should continue running
 }
 
 static int hitWall()
