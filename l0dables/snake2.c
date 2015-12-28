@@ -145,6 +145,15 @@ tryagain:
             goto tryagain;
     }
 
+    // make sure new food is in playing field
+    // Quick and dirty, but it works.
+    if ((res.x*SNAKE_DIM <= MIN_X) ||
+        (res.x*SNAKE_DIM >= MAX_X) ||
+        (res.y*SNAKE_DIM <= MIN_Y) ||
+        (res.y*SNAKE_DIM >= MAX_Y)) {
+            goto tryagain;
+    }
+
     return res;
 }
 
