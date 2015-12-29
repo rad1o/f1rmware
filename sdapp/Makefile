@@ -30,6 +30,7 @@ OBJS += ../r0ketlib/random.o
 OBJS += ../r0ketlib/image.o
 OBJS += ../r0ketlib/mesh.o
 OBJS += ../r0ketlib/night.o
+OBJS += ../hackrf/firmware/common/w25q80bv.o
 OBJS += ../lpcapi/msc/msc_desc.o
 OBJS += ../lpcapi/msc/msc_main.o
 #OBJS += ../lpcapi/msc/msc_ram.o
@@ -43,10 +44,6 @@ OBJS += ../rad1olib/battery.o
 OBJS += ../rad1olib/draw.o
 OBJS += ../rad1olib/colorspace.o
 
-OBJS += ../rad1olib/sdmmc.o
-OBJS += ../lpcapi/clock_18xx_43xx.o
-OBJS += ../lpcapi/sdif_18xx_43xx.o
-OBJS += ../lpcapi/sdmmc_18xx_43xx.o
 
 SRCS = $(wildcard *.c)
 SOBJS = $(foreach mod,$(SRCS),$(subst .c,.o,$(mod)))
@@ -54,7 +51,12 @@ SOBJS = $(foreach mod,$(SRCS),$(subst .c,.o,$(mod)))
 OBJS += $(SOBJS)
 
 CFLAGS=-Wno-unused-variable -DRAD1O -DLPC43XX_M4 -DCORE_M4 -I.
-OBJS += ../hackrf/firmware/common/w25q80bv.o
+
+CFLAGS+=-DCFG_HAVE_SD
+OBJS += ../rad1olib/sdmmc.o
+OBJS += ../lpcapi/clock_18xx_43xx.o
+OBJS += ../lpcapi/sdif_18xx_43xx.o
+OBJS += ../lpcapi/sdmmc_18xx_43xx.o
 
 CFLAGS+=-I../hackrf/firmware/common
 LIBS += -lm
