@@ -10,6 +10,16 @@
 #include "diskio.h"		/* FatFs lower layer API */
 #include <rad1olib/spi-flash.h>
 
+#ifdef CFG_HAVE_SD
+#ifndef CORE_M4
+#define CORE_M4
+#endif
+#include <rad1olib/sdmmc.h>
+#include <lpcapi/sdif_18xx_43xx.h>
+#include <lpcapi/sdmmc_18xx_43xx.h>
+#include <lpcapi/chip_lpc43xx.h>
+#endif // CFG_HAVE_SD
+
 /* Definitions of physical drive number for each drive */
 #define FLASH	0	/* Example: Map ATA harddisk to physical drive 0 */
 #define SD		1	/* Example: Map MMC/SD card to physical drive 1 */
@@ -23,7 +33,7 @@ DSTATUS disk_status (
 )
 {
 	DSTATUS stat;
-	int result;
+	int __attribute__ ((unused)) result;
 
 #ifdef CFG_HAVE_SD
 	switch (pdrv) {
@@ -33,9 +43,9 @@ DSTATUS disk_status (
 		return RES_OK;
 #ifdef CFG_HAVE_SD
 	case SD :
-		result = MMC_disk_status();
-		// translate the reslut code here
-		return stat;
+		result = Chip_SDMMC_GetState(LPC_SDMMC);
+		//TODO: translate the reslut code here
+		return RES_OK;
 	}
 #endif
 	return STA_NOINIT;
@@ -63,11 +73,12 @@ DSTATUS disk_initialize (
 
 #ifdef CFG_HAVE_SD
 	case SD :
-		result = MMC_disk_initialize();
+        sdmmc_setup();
+        uint32_t res = sdmmc_acquire();
 
 		// translate the reslut code here
 
-		return stat;
+		return (res == 1) ? RES_OK : RES_ERROR;
 	}
 #endif
 	return STA_NOINIT;
@@ -98,13 +109,10 @@ DRESULT disk_read (
 
 #ifdef CFG_HAVE_SD
 	case SD :
-		// translate the arguments here
+		result = Chip_SDMMC_ReadBlocks(LPC_SDMMC, buff, sector, count);
 
-		result = MMC_disk_read(buff, sector, count);
-
-		// translate the reslut code here
-
-		return res;
+		return (result == count*512) ? RES_OK : RES_ERROR;
+    }
 #endif
 
 	return RES_PARERR;
@@ -137,13 +145,9 @@ DRESULT disk_write (
 
 #ifdef CFG_HAVE_SD
 	case SD :
-		// translate the arguments here
+		result = Chip_SDMMC_WriteBlocks(LPC_SDMMC, (uint8_t*) buff, sector, count);
 
-		result = MMC_disk_write(buff, sector, count);
-
-		// translate the reslut code here
-
-		return res;
+		return (result == count*512) ? RES_OK : RES_ERROR;
 	}
 #endif
 
