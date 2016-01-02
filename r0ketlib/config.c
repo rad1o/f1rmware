@@ -35,6 +35,7 @@ struct CDESC the_config[]= {
     {"nickbg",           255,   0, 255, 1, CFG_TYPE_DEVEL},
     {"vdd_fix",          0,     0, 1,   0, 0},
     {"rgbleds",          0,     0, 1,   0, 0},
+    {"rgbleds_amp",      8,     0, 16,  0, 0},
     { NULL,              0,     0, 0  , 0, 0},
 };
 

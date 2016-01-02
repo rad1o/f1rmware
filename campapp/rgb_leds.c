@@ -6,6 +6,7 @@
 #include <r0ketlib/fs_util.h>
 #include <r0ketlib/keyin.h>
 #include <string.h>
+#include <math.h>
 #include <campapp/rad1oconfig.h>
 
 #define MAX_LED_FRAMES 50
@@ -40,7 +41,35 @@ void tick_rgbLeds(void) {
 	if(GLOBAL(rgbleds)) {
 		if(frames > 0) {
 			if(ctr == 0) {
-				ws2812_sendarray(&leds[framectr*3*8+2], 3*8);
+				unsigned char amplified[3*8];
+
+				// determine amplifier level based on the config
+				signed char amplvl = GLOBAL(rgbleds_amp) - 8;
+				if (amplvl > 0) {
+					amplvl = round(sqrt(pow(2,amplvl+1)));
+				} else if (amplvl < 0) {
+					amplvl = -round(sqrt(pow(2,-amplvl+1)));
+				} else {
+					amplvl = 1;
+				}
+
+				// iterate through every value in the frame (3 channels * 8 LEDs)
+				for (int i=0; i<3*8; i++) {
+					// copy original value
+					unsigned char origval = leds[(framectr*3*8+2)+i];
+					// set the amplified value
+					if (amplvl >= 0) {
+						amplified[i] = origval * amplvl;
+						if (amplvl != 0 && amplified[i] / amplvl != origval) {
+							// overflow!
+							amplified[i] = 255;
+						}
+					} else {
+						amplified[i] = origval / -amplvl;
+					}
+				}
+
+				ws2812_sendarray(&amplified[0], 3*8);
 				framectr++;
 				if(framectr >= frames)
 					framectr = 0;
