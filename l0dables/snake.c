@@ -23,10 +23,10 @@
 #define SNAKE_DIM (3)
 #define MIN_SPEED (25)
 #define MAX_SPEED (3)
-#define MIN_X 2
-#define MAX_X (RESX-3)
-#define MIN_Y 8
-#define MAX_Y (RESY-2)
+#define MIN_X 3
+#define MAX_X (RESX-5)
+#define MIN_Y 12
+#define MAX_Y (RESY-5)
 #define SIZE_X ((MAX_X-MIN_X)/SNAKE_DIM)
 #define SIZE_Y ((MAX_Y-MIN_Y)/SNAKE_DIM)
 
@@ -130,8 +130,8 @@ static struct pos_s getFood(void)
     struct pos_s res;
 
 tryagain:
-    res.x = (getRandom() % (SIZE_X-1)) + 1;
-    res.y = (getRandom() % (SIZE_Y-3)) + 3;
+    res.x = (getRandom() % (SIZE_X+1));
+    res.y = (getRandom() % (SIZE_Y+1));
 
     for(i=0; i<snake.len; i++) {
         pos = (snake.t_start < i) ? (MAX_SNAKE_LEN - (i-snake.t_start)) : (snake.t_start-i);
@@ -148,14 +148,14 @@ static void reset()
 
     // setup the screen
     lcdClear();
-    for (i=MIN_X; i<MAX_X; i++) {
-        lcdSetPixel(i,MIN_Y,0b000101011);
-        lcdSetPixel(i,MAX_Y,0b000101011);
+    for (i=MIN_X-2; i<MAX_X+2; i++) {
+        lcdSetPixel(i,MIN_Y-2,0b000101011);
+        lcdSetPixel(i,MAX_Y+2,0b000101011);
     }
 
-    for (i=MIN_Y; i<MAX_Y; i++) {
-        lcdSetPixel(MIN_X,i,0b000101011);
-        lcdSetPixel(MAX_X,i,0b000101011);
+    for (i=MIN_Y-2; i<MAX_Y+2; i++) {
+        lcdSetPixel(MIN_X-2,i,0b000101011);
+        lcdSetPixel(MAX_X+2,i,0b000101011);
     }
 
     snake.speed = MIN_SPEED;
@@ -165,8 +165,6 @@ static void reset()
 
     points = 0;
 
-    food = getFood();
-
     // create snake in the middle of the field
     snake.tail[0].x = SIZE_X/2;
     snake.tail[0].y = SIZE_Y/2;
@@ -174,6 +172,8 @@ static void reset()
     snake.tail[1].y = SIZE_Y/2;
     snake.tail[2].x = SIZE_X/2 +2;
     snake.tail[2].y = SIZE_Y/2;
+
+    food = getFood();
 
     // print initail tail
     draw_block(snake.tail[0].x, snake.tail[0].y, 0b00011000);
@@ -187,7 +187,9 @@ static void reset()
 static void draw_block(int x, int y, int set)
 {
     x *= SNAKE_DIM;
+    x += MIN_X;
     y *= SNAKE_DIM;
+    y += MIN_Y;
 
     lcdSetPixel(x  , y,   set);
     lcdSetPixel(x+1, y,   set);
@@ -237,9 +239,9 @@ static void render_level()
         // Dark Green
         setTextColor(0xff,0b00011000);
     }
-    DoString(0,0,points_string);
+    DoString(1,1,points_string);
     setTextColor(0xff,0b00000011);
-    DoString(MAX_X-44,0,highscore_string);
+    DoString(MAX_X-44,1,highscore_string);
 }
 
 static void handle_input()
@@ -258,11 +260,10 @@ static void handle_input()
 
 static int hitWall()
 {
-    return ( (snake.tail[snake.t_start].x*3 <= MIN_X)
-             || (snake.tail[snake.t_start].x*3 >= MAX_X)
-             || (snake.tail[snake.t_start].y*3 <= MIN_Y)
-             || (snake.tail[snake.t_start].y*3 >= MAX_Y) ) ?
-           1 : 0;
+    return ( (snake.tail[snake.t_start].x < 0)
+             || (snake.tail[snake.t_start].x > SIZE_X)
+             || (snake.tail[snake.t_start].y < 0)
+             || (snake.tail[snake.t_start].y > SIZE_Y) );
 
 }
 
