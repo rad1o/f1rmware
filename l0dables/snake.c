@@ -109,6 +109,7 @@ void ram(void)
                 death_anim();
                 if (showHighscore())
                     break;
+                highscore = highscore_get();
                 reset();
             } else if (hitFood())
                 next_level();
