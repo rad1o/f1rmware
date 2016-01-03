@@ -205,11 +205,19 @@ static void reset()
     for (i=MIN_X-2; i<MAX_X+2; i++) {
         lcdSetPixel(i,MIN_Y-2,0b000101011);
         lcdSetPixel(i,MAX_Y+2,0b000101011);
+        if (gametype != SNAKE_WRAPPING) {
+            lcdSetPixel(i,MIN_Y-1,0b000101011);
+            lcdSetPixel(i,MAX_Y+1,0b000101011);
+        }
     }
 
     for (i=MIN_Y-2; i<MAX_Y+2; i++) {
         lcdSetPixel(MIN_X-2,i,0b000101011);
         lcdSetPixel(MAX_X+2,i,0b000101011);
+        if (gametype != SNAKE_WRAPPING) {
+            lcdSetPixel(MIN_X-1,i,0b000101011);
+            lcdSetPixel(MAX_X+1,i,0b000101011);
+        }
     }
 
     snake.speed = MIN_SPEED;
