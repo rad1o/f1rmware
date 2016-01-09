@@ -7,15 +7,16 @@
 #include <r0ketlib/keyin.h>
 #include <string.h>
 #include <math.h>
+#include <stdint.h>
 #include <campapp/rad1oconfig.h>
 
 #define MAX_LED_FRAMES 50
 #define BUF_SIZE 3*8*MAX_LED_FRAMES+2
 
-unsigned char leds[BUF_SIZE];
-unsigned int frames = 0;
-unsigned int ctr = 0;
-unsigned int framectr = 0;
+uint8_t leds[BUF_SIZE];
+uint8_t frames = 0;
+uint16_t ctr = 0;
+uint8_t framectr = 0;
 
 void readRgbLedFile(void) {
 	int size = getFileSize(GLOBAL(ledfile));
@@ -41,10 +42,10 @@ void tick_rgbLeds(void) {
 	if(GLOBAL(rgbleds)) {
 		if(frames > 0) {
 			if(ctr == 0) {
-				unsigned char amplified[3*8];
+				uint8_t amplified[3*8];
 
 				// determine amplifier level based on the config
-				signed char amplvl = GLOBAL(rgbleds_amp) - 8;
+				int8_t amplvl = GLOBAL(rgbleds_amp) - 8;
 				if (amplvl > 0) {
 					amplvl = round(sqrt(pow(2,amplvl+1)));
 				} else if (amplvl < 0) {
@@ -54,9 +55,9 @@ void tick_rgbLeds(void) {
 				}
 
 				// iterate through every value in the frame (3 channels * 8 LEDs)
-				for (int i=0; i<3*8; i++) {
+				for (int8_t i=0; i<3*8; i++) {
 					// copy original value
-					unsigned char origval = leds[(framectr*3*8+2)+i];
+					uint8_t origval = leds[(framectr*3*8+2)+i];
 					// set the amplified value
 					if (amplvl >= 0) {
 						amplified[i] = origval * amplvl;
