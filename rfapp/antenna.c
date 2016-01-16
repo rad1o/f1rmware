@@ -12,7 +12,7 @@
 double frequency = FREQSTART;
 
 //speed of light
-const double SPPEDOFLIGHT = 299792458;
+const double SPEEDOFLIGHT = 299792458;
 
 
 //# MENU antenna
@@ -32,7 +32,7 @@ void antenna_main()
 	lcdNl();
 	lcdPrintln("Antenna Length");
 
-	float meter = SPPEDOFLIGHT/frequency;
+	float meter = SPEEDOFLIGHT/frequency;
 
 	lcdNl();
 	lcdPrint(" ");
