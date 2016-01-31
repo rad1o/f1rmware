@@ -52,7 +52,7 @@ volatile uint32_t low_trigger = 0;
 volatile uint32_t high_trigger = 0;
 
 
-// Two bytes per sample 
+// Two bytes per sample
 #define PRE_BUFFER_LEN   (TX_SAMPLES_LEN * 2)
 int8_t pre_buffer[PRE_BUFFER_LEN];
 
@@ -108,7 +108,7 @@ static void rf_init() {
 	max2837_set_vga_gain(62);	/* 2dB increments, up to 62dB */
     max2837_set_txvga_gain(47);
 
-	systick_set_reload(0xfffff); 
+	systick_set_reload(0xfffff);
 	systick_set_clocksource(1);
 	systick_counter_enable();
 
@@ -159,7 +159,7 @@ static void pwrsckt_init()
 
 }
 
-static void txtest_stop()
+static void pwrsckt_stop()
 {
     //nvic_disable_irq(NVIC_DMA_IRQ);
 	//sgpio_dma_stop();
@@ -357,6 +357,65 @@ void switch_socket(uint32_t address, uint32_t socket, bool on)
     }
 }
 
+#define M_ADDR 0
+#define M_SOCKET 1
+#define M_DIV 2
+#define M_DWIM 3
+#define M_EXIT 4
+#define MENUITEMS 4
+int mline=3;
+int addr=0x1f;
+int socket=3;
+int div = 8;
+
+static void pwrsckt_status() {
+
+    lcdClear();
+    lcdPrintln("Power Socket");
+    lcdPrintln("------------");
+
+    lcdPrint("  Addr:   ");
+    lcdPrint(IntToStr(addr,2,F_HEX|F_LONG|F_ZEROS));
+    lcdNl();
+
+    lcdPrint("  Socket: ");
+    switch (socket){
+        case 0:
+            lcdPrint("A");
+            break;
+        case 1:
+            lcdPrint("B");
+            break;
+        case 2:
+            lcdPrint("C");
+            break;
+        case 3:
+            lcdPrint("D");
+            break;
+        case 4:
+            lcdPrint("E");
+            break;
+    };
+    lcdPrint("  (");
+    lcdPrint(IntToStr(socket,1,0));
+    lcdPrint("  )");
+    lcdNl();
+
+    lcdPrint("  div:    ");
+    lcdPrint(IntToStr(div,4,F_ZEROS));
+    lcdNl();
+
+
+    lcdPrintln("");
+    lcdPrintln("  ON/OFF");
+    lcdPrintln("");
+    lcdPrintln("  Exit");
+
+    lcdSetCrsr(0,8*(mline+2+(mline>2)+(mline>3)));
+    lcdPrint(">");
+    lcdDisplay();
+};
+
 //# MENU pwrsckt
 void pwrsckt()
 {
@@ -365,42 +424,76 @@ void pwrsckt()
 	ssp1_set_mode_max2837();
 	set_freq(freq);
 
-    int div = 8;
 
     //gnerate_signal(div);
     off(tx_buffer, TX_BUFFER_LEN);
+    pwrsckt_status();
+    gnerate_signal(div);
 
 	while(1)
 	{
 		//getInputWaitRepeat does not seem to work?
-		switch(getInputRaw())
+        pwrsckt_status();
+		switch(getInputWaitRepeat())
 		{
 			case BTN_UP:
-                div--;
-                gnerate_signal(div);
-                while(getInputRaw()==BTN_UP)
-                    ;
+                mline--;
+                if (mline<0)
+                    mline=3;
 				break;
 			case BTN_DOWN:
-                div++;
-                gnerate_signal(div);
-                while(getInputRaw()==BTN_DOWN)
-                    ;
+                mline++;
+                if (mline>MENUITEMS)
+                    mline=0;
 				break;
 			case BTN_LEFT:
-                    while(getInputRaw()==BTN_LEFT) {
-                        switch_socket(0x0A, 3, 1);
-                    }
+                    switch (mline){
+                        case M_ADDR:
+                            addr--;
+                            if(addr<0)
+                                addr=0x1f;
+                            break;
+                        case M_SOCKET:
+                            socket--;
+                            if(socket<0)
+                                socket=4;
+                            break;
+                        case M_DIV:
+                            div--;
+                            gnerate_signal(div);
+                        case M_DWIM:
+                            switch_socket(addr, socket, 0);
+                            break;
+                        case M_EXIT:
+                            break;
+                    };
                     getInputWaitRelease();
 				break;
 			case BTN_RIGHT:
-                    while(getInputRaw()==BTN_RIGHT) {
-                        switch_socket(0x0A, 3, 0);
-                    }
+                    switch (mline){
+                        case M_ADDR:
+                            addr++;
+                            if(addr>0x1f)
+                                addr=0;
+                            break;
+                        case M_SOCKET:
+                            socket++;
+                            if(socket>4)
+                                socket=0;
+                            break;
+                        case M_DIV:
+                            div++;
+                            gnerate_signal(div);
+                        case M_DWIM:
+                            switch_socket(addr, socket, 1);
+                            break;
+                        case M_EXIT:
+                            pwrsckt_stop();
+                            return;
+                    };
                     getInputWaitRelease();
 				break;
 			case BTN_ENTER:
-				txtest_stop();
 				return;
 		}
 	}
