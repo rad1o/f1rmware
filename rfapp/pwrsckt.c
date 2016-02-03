@@ -171,62 +171,6 @@ static void pwrsckt_stop()
 	systick_set_reload(12e6/SYSTICKSPEED/1000);
 }
 
-void gnerate_signal(float div)
-{
-    int i;
-
-#if 0
-    // Example carrier
-    for(i=0; i<TX_BUFFER_LEN * 2; i+=2) {
-        int8_t i1 = cos(((float)i)/div*M_PI) * 127.;
-        int8_t q1 = sin(((float)i)/div*M_PI) * 127.;
-
-        int8_t i2 = cos(((float)i + 1.)/div*M_PI) * 127.;
-        int8_t q2 = sin(((float)i + 1.)/div*M_PI) * 127.;
-
-        tx_buffer[i/2] = (((uint8_t)q2) << 24) | (((uint8_t)i2)<<16) | (((uint8_t)q1)<<8) | (uint8_t)i1;
-    }
-#endif
-
-
-#if 1
-    // Carrier at some frequency
-    for(i=0; i<PRE_BUFFER_LEN; i+=4) {
-        pre_buffer[i] = cos(((float)i/2)/div*M_PI) * 127.;
-        pre_buffer[i+1] = sin(((float)i/2)/div*M_PI) * 127.;
-
-        pre_buffer[i+2] = cos(((float)i/2 + 1.)/div*M_PI) * 127.;
-        pre_buffer[i+3] = sin(((float)i/2 + 1.)/div*M_PI) * 127.;
-    }
-#else
-    for(i=0; i<PRE_BUFFER_LEN; i+=4) {
-        pre_buffer[i] = 127.;
-        pre_buffer[i+1] = 0;
-
-        pre_buffer[i+2] = 127.;
-        pre_buffer[i+3] = 0;
-    }
-#endif
-
-}
-
-void rescale(int16_t adc)
-{
-    int8_t *pre_pointer = pre_buffer;
-    adc = 128;
-
-    for(int i=0; i<TX_BUFFER_LEN; i++) {
-        int8_t i0 = ((*pre_pointer++) * adc) / 128;
-        int8_t q0 = ((*pre_pointer++) * adc) / 128;
-
-        int8_t i1 = ((*pre_pointer++) * adc) / 128;
-        int8_t q1 = ((*pre_pointer++) * adc) / 128;
-
-        tx_buffer[i] = (((uint8_t)q1) << 24) | (((uint8_t)i1)<<16) | (((uint8_t)q0)<<8) | (uint8_t)i0;
-    }
-
-}
-
 int8_t *rf_getBuffer(uint32_t *len)
 {
     int8_t *buf = NULL;
@@ -359,14 +303,12 @@ void switch_socket(uint32_t address, uint32_t socket, bool on)
 
 #define M_ADDR 0
 #define M_SOCKET 1
-#define M_DIV 2
-#define M_DWIM 3
-#define M_EXIT 4
-#define MENUITEMS 4
+#define M_DWIM 2
+#define M_EXIT 3
+#define MENUITEMS 3
 int mline=3;
 int addr=0x1f;
 int socket=3;
-int div = 8;
 
 static void pwrsckt_status() {
 
@@ -374,11 +316,21 @@ static void pwrsckt_status() {
     lcdPrintln("Power Socket");
     lcdPrintln("------------");
 
-    lcdPrint("  Addr:   ");
+    lcdPrint("  Addr: ");
+    int j=16;
+    while(j>0){
+        if(addr&j)
+            lcdPrint("1");
+        else
+            lcdPrint("0");
+        j/=2;
+    };
+    lcdPrint(" (");
     lcdPrint(IntToStr(addr,2,F_HEX|F_LONG|F_ZEROS));
+    lcdPrint(")");
     lcdNl();
 
-    lcdPrint("  Socket: ");
+    lcdPrint("  Sock:   ");
     switch (socket){
         case 0:
             lcdPrint("A");
@@ -396,22 +348,17 @@ static void pwrsckt_status() {
             lcdPrint("E");
             break;
     };
-    lcdPrint("  (");
+    lcdPrint("    (");
     lcdPrint(IntToStr(socket,1,0));
-    lcdPrint("  )");
+    lcdPrint(")");
     lcdNl();
-
-    lcdPrint("  div:    ");
-    lcdPrint(IntToStr(div,4,F_ZEROS));
-    lcdNl();
-
 
     lcdPrintln("");
     lcdPrintln("  ON/OFF");
     lcdPrintln("");
     lcdPrintln("  Exit");
 
-    lcdSetCrsr(0,8*(mline+2+(mline>2)+(mline>3)));
+    lcdSetCrsr(0,8*(mline+2+(mline>M_SOCKET)+(mline>M_DWIM)));
     lcdPrint(">");
     lcdDisplay();
 };
@@ -424,11 +371,8 @@ void pwrsckt()
 	ssp1_set_mode_max2837();
 	set_freq(freq);
 
-
-    //gnerate_signal(div);
     off(tx_buffer, TX_BUFFER_LEN);
     pwrsckt_status();
-    gnerate_signal(div);
 
 	while(1)
 	{
@@ -458,11 +402,10 @@ void pwrsckt()
                             if(socket<0)
                                 socket=4;
                             break;
-                        case M_DIV:
-                            div--;
-                            gnerate_signal(div);
                         case M_DWIM:
-                            switch_socket(addr, socket, 0);
+                            while(getInputRaw()==BTN_LEFT) {
+                                switch_socket(addr, socket, 0);
+                            };
                             break;
                         case M_EXIT:
                             break;
@@ -481,11 +424,10 @@ void pwrsckt()
                             if(socket>4)
                                 socket=0;
                             break;
-                        case M_DIV:
-                            div++;
-                            gnerate_signal(div);
                         case M_DWIM:
-                            switch_socket(addr, socket, 1);
+                            while(getInputRaw()==BTN_RIGHT) {
+                                switch_socket(addr, socket, 1);
+                            }
                             break;
                         case M_EXIT:
                             pwrsckt_stop();
