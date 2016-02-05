@@ -23,7 +23,7 @@
     * Arch: `sudo pacman -S arm-none-eabi-gcc arm-none-eabi-newlib arm-none-eabi-binutils`
     * FreeBSD: Theory: `sudo pkg install arm-none-eabi-gcc492 arm-none-eabi-binutils` / `portmaster devel/arm-none-eabi-gcc492 devel/arm-none-eabi-binutils`; practice: `kldload linux` & see _Manual installation_
     * Fedora: `sudo dnf install arm-none-eabi-newlib arm-none-eabi-gcc-cs-c++.x86_64 gcc-c++-arm-linux-gnu.x86_64`
-    ** note: [https://bugzilla.redhat.com/show_bug.cgi?id=1248294](RHBZ #1248294] you will need to rebuild arm-none-eabi-newlib as described by the reporter. Or just use [https://blog.pcfe.net/packages/arm-none-eabi-newlib-2.2.0_1-4.fc24.noarch.rpm](my build).
+       * note: [RHBZ #1248294](https://bugzilla.redhat.com/show_bug.cgi?id=1248294) you will need to rebuild arm-none-eabi-newlib as described by the reporter. Or just use [https://blog.pcfe.net/packages/arm-none-eabi-newlib-2.2.0_1-4.fc24.noarch.rpm](my build).
 * python-yaml (http://pyyaml.org/)
     * Debian/Ubuntu: `sudo apt-get install python-yaml`
     * Arch: `sudo pacman -S python-yaml`
