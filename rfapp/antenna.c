@@ -38,6 +38,14 @@ void antenna_main()
 	lcdPrint(" ");
 	lcdPrint(IntToStr(meter * 1000, 4, F_LONG ));
 	lcdPrint(" mm");
+	lcdNl();
+	lcdPrint(" ");
+	lcdPrint(IntToStr(meter * 1000 / 2, 4, F_LONG ));
+	lcdPrint(" mm");
+	lcdNl();
+	lcdPrint(" ");
+	lcdPrint(IntToStr(meter * 1000 / 4, 4, F_LONG ));
+	lcdPrint(" mm");
 
 	lcdDisplay();
 
