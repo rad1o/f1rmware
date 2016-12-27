@@ -20,6 +20,10 @@
           sudo apt-get update
           ```
       `sudo apt-get install gcc-arm-none-eabi libnewlib-arm-none-eabi`
+        * Ubuntu 16.04 and newer just need
+
+      `sudo apt-get install gcc-arm-none-eabi libnewlib-arm-none-eabi`
+
     * Arch: `sudo pacman -S arm-none-eabi-gcc arm-none-eabi-newlib arm-none-eabi-binutils`
     * FreeBSD: Theory: `sudo pkg install arm-none-eabi-gcc492 arm-none-eabi-binutils` / `portmaster devel/arm-none-eabi-gcc492 devel/arm-none-eabi-binutils`; practice: `kldload linux` & see _Manual installation_
     * Fedora: `sudo dnf install arm-none-eabi-newlib arm-none-eabi-gcc-cs-c++.x86_64 gcc-c++-arm-linux-gnu.x86_64`
@@ -66,6 +70,9 @@
 * cmake (optional, if you want to build the hackrf firmware)
     * `sudo apt-get install cmake`
     * Fedora: `sudo dnf install cmake`
+
+* mtools (optional, if you want to use smartflash)
+    * `sudo apt-get install mtools`
 
 If you use [Nix or NixOS](https://nixos.org/), you can do `nix-shell --pure .` to enter a shell with all required dependencies.
 
