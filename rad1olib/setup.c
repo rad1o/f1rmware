@@ -23,6 +23,8 @@
 
 #include <rad1olib/setup.h>
 #include <rad1olib/systick.h>
+#include "i2c_bus.h"
+#include "i2c_lpc.h"
 #include <libopencm3/lpc43xx/i2c.h>
 #include <libopencm3/lpc43xx/cgu.h>
 #include <libopencm3/lpc43xx/gpio.h>
@@ -32,6 +34,26 @@
 #include <common/si5351c.h>
 
 #define WAIT_CPU_CLOCK_INIT_DELAY   (10000)
+
+static i2c_bus_t i2c0 = {
+	.obj = (void*)I2C0_BASE,
+	.start = i2c_lpc_start,
+	.stop = i2c_lpc_stop,
+	.transfer = i2c_lpc_transfer,
+};
+
+static const i2c_lpc_config_t i2c_config_si5351c_slow_clock = {
+	.duty_cycle_count = 15,
+};
+
+static const i2c_lpc_config_t i2c_config_si5351c_fast_clock = {
+	.duty_cycle_count = 255,
+};
+
+static si5351c_driver_t clock_gen = {
+	.bus = &i2c0,
+	.i2c_address = 0x60,
+};
 
 uint8_t _cpu_speed=0;
 
@@ -162,33 +184,33 @@ void hackrf_clock_init(void)
 }
 
 void si5351_init(void){
-	i2c0_init(255); 
+	i2c_bus_start(clock_gen.bus, &i2c_config_si5351c_slow_clock);
 
-	si5351c_disable_all_outputs();
-	si5351c_disable_oeb_pin_control();
-	si5351c_power_down_all_clocks();
-	si5351c_set_crystal_configuration();
-	si5351c_enable_xo_and_ms_fanout();
-	si5351c_configure_pll_sources();
-	si5351c_configure_pll_multisynth();
+	si5351c_disable_all_outputs(&clock_gen);
+	si5351c_disable_oeb_pin_control(&clock_gen);
+	si5351c_power_down_all_clocks(&clock_gen);
+	si5351c_set_crystal_configuration(&clock_gen);
+	si5351c_enable_xo_and_ms_fanout(&clock_gen);
+	si5351c_configure_pll_sources(&clock_gen);
+	si5351c_configure_pll_multisynth(&clock_gen);
 
 	/* MS3/CLK3 is the source for the external clock output. */
-	si5351c_configure_multisynth(3, 80*128-512, 0, 1, 0); /* 800/80 = 10MHz */
+	si5351c_configure_multisynth(&clock_gen, 3, 80*128-512, 0, 1, 0); /* 800/80 = 10MHz */
 
 	/* MS5/CLK5 is the source for the RFFC5071 mixer. */
-	si5351c_configure_multisynth(5, 20*128-512, 0, 1, 0); /* 800/20 = 40MHz */
+	si5351c_configure_multisynth(&clock_gen, 5, 20*128-512, 0, 1, 0); /* 800/20 = 40MHz */
 
 	/* MS4/CLK4 is the source for the MAX2837 clock input. */
-	si5351c_configure_multisynth(4, 20*128-512, 0, 1, 0); /* 800/20 = 40MHz */
+	si5351c_configure_multisynth(&clock_gen, 4, 20*128-512, 0, 1, 0); /* 800/20 = 40MHz */
 
 	/* MS6/CLK6 is unused. */
 	/* MS7/CLK7 is the source for the LPC43xx microcontroller. */
 	uint8_t ms7data[] = { 90, 255, 20, 0 };
-	si5351c_write(ms7data, sizeof(ms7data));
+	si5351c_write(&clock_gen, ms7data, sizeof(ms7data));
 
-	si5351c_set_clock_source(PLL_SOURCE_XTAL);
+	si5351c_set_clock_source(&clock_gen, PLL_SOURCE_XTAL);
 	// soft reset
 	uint8_t resetdata[] = { 177, 0xac };
-	si5351c_write(resetdata, sizeof(resetdata));
-	si5351c_enable_clock_outputs();
+	si5351c_write(&clock_gen, resetdata, sizeof(resetdata));
+	si5351c_enable_clock_outputs(&clock_gen);
 };
