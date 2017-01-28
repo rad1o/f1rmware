@@ -17,6 +17,8 @@
 #include <hackrf/firmware/common/cpld_jtag.h>
 #include <hackrf/firmware/common/usb_queue.h>
 
+#include "gpio_lpc.h"
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -25,6 +27,23 @@
 uint8_t cpld_xsvf_buffer[BLOCK];
 FIL file;
 int bytes;
+
+static struct gpio_t gpio_cpld_tdo			= GPIO(5, 18);
+static struct gpio_t gpio_cpld_tck			= GPIO(3,  0);
+static struct gpio_t gpio_cpld_tms			= GPIO(3,  4);
+static struct gpio_t gpio_cpld_tdi			= GPIO(3,  1);
+
+static jtag_gpio_t jtag_gpio_cpld = {
+	.gpio_tms = &gpio_cpld_tms,
+	.gpio_tck = &gpio_cpld_tck,
+	.gpio_tdi = &gpio_cpld_tdi,
+	.gpio_tdo = &gpio_cpld_tdo,
+};
+
+static jtag_t jtag_cpld = {
+	.gpio = &jtag_gpio_cpld,
+};
+
 
 static void refill_cpld_buffer_fs(void) {
     FRESULT res;
@@ -74,7 +93,7 @@ void cpld_menu(){
 	};
 	refill_cpld_buffer_fs();
 
-	error = cpld_jtag_program(sizeof(cpld_xsvf_buffer),
+	error = cpld_jtag_program(&jtag_cpld, sizeof(cpld_xsvf_buffer),
 				  cpld_xsvf_buffer,
 				  refill_cpld_buffer_fs);
 	if(error){

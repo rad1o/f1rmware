@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include "hackrf_core.h"
 #include "feldtest.h"
 
 #define FUNC (SCU_GPIO_NOPULL)

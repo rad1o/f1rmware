@@ -3,9 +3,9 @@ getInput
 getInputRaw
 getInputWait
 getInputWaitRelease
-gpio_clear
-gpio_set
-gpio_toggle
+cm3_gpio_clear
+cm3_gpio_set
+cm3_gpio_toggle
 IntToStr
 lcdDisplay
 lcdNl

@@ -429,30 +429,30 @@ void sgpio_isr_tx() {
 static bool transmitting = false;
 
 static void transmit(bool enable) {
-    baseband_streaming_disable();
+    baseband_streaming_disable(&sgpio_config);
     if(enable) {
         my_adc_start(ADC0,ADC_CR_CH7);
         vector_table.irq[NVIC_SGPIO_IRQ] = sgpio_isr_tx;
         freq_offset = TX_FREQOFFSET;
         my_set_frequency(frequency);
-        rf_path_set_direction(RF_PATH_DIRECTION_TX);
+        rf_path_set_direction(&rf_path, RF_PATH_DIRECTION_TX);
         sample_rate_frac_set(TX_SAMPLERATE * 2, 1);
         baseband_filter_bandwidth_set(TX_BANDWIDTH);
-        sgpio_cpld_stream_rx_set_decimation(TX_DECIMATION);
+        sgpio_cpld_stream_rx_set_decimation(&sgpio_config, TX_DECIMATION);
         dac_set(0);
         OFF(MIC_AMP_DIS); // enable amp
     } else {
         vector_table.irq[NVIC_SGPIO_IRQ] = sgpio_isr_rx;
         freq_offset = FREQOFFSET;
         my_set_frequency(frequency);
-        rf_path_set_direction(RF_PATH_DIRECTION_RX);
+        rf_path_set_direction(&rf_path, RF_PATH_DIRECTION_RX);
         sample_rate_frac_set(SAMPLERATE * 2, 1);
         baseband_filter_bandwidth_set(BANDWIDTH);
-        sgpio_cpld_stream_rx_set_decimation(DECIMATION);
+        sgpio_cpld_stream_rx_set_decimation(&sgpio_config, DECIMATION);
         ON(MIC_AMP_DIS); // disable amp
     }
     transmitting = enable;
-    baseband_streaming_enable();
+    baseband_streaming_enable(&sgpio_config);
 }
 
 static int32_t txvga_gain_db = 20;
@@ -465,11 +465,11 @@ static int32_t vga_gain_db = 20;
 /* set amps */
 static void set_rf_params() {
     ssp1_set_mode_max2837(); // need to reset this since display driver will hassle with SSP1
-    rf_path_set_lna(lna_enable ? 1 : 0);
-    max2837_set_lna_gain(lna_gain_db);     /* 8dB increments */
-    max2837_set_vga_gain(vga_gain_db);     /* 2dB increments, up to 62dB */
+    rf_path_set_lna(&rf_path, lna_enable ? 1 : 0);
+    max2837_set_lna_gain(&max2837, lna_gain_db);     /* 8dB increments */
+    max2837_set_vga_gain(&max2837, vga_gain_db);     /* 2dB increments, up to 62dB */
 #ifdef TRANSMIT
-    max2837_set_txvga_gain(txvga_gain_db); /* 1dB increments, up to 47dB */
+    max2837_set_txvga_gain(&max2837, txvga_gain_db); /* 1dB increments, up to 47dB */
 #endif
 }
 
@@ -480,16 +480,18 @@ static void rfinit() {
     scu_pinmux(SCU_PINMUX_CPLD_TCK, SCU_GPIO_NOPULL | SCU_CONF_FUNCTION0);
     scu_pinmux(SCU_PINMUX_CPLD_TMS, SCU_GPIO_NOPULL | SCU_CONF_FUNCTION0);
     scu_pinmux(SCU_PINMUX_CPLD_TDI, SCU_GPIO_NOPULL | SCU_CONF_FUNCTION0);
-    GPIO_DIR(PORT_CPLD_TDO) &= ~PIN_CPLD_TDO;
-    GPIO_DIR(PORT_CPLD_TCK) &= ~PIN_CPLD_TCK;
-    GPIO_DIR(PORT_CPLD_TMS) &= ~PIN_CPLD_TMS;
-    GPIO_DIR(PORT_CPLD_TDI) &= ~PIN_CPLD_TDI;
+
+    gpio_input(jtag_cpld.gpio->gpio_tdo);
+    gpio_input(jtag_cpld.gpio->gpio_tck);
+    gpio_input(jtag_cpld.gpio->gpio_tms);
+    gpio_input(jtag_cpld.gpio->gpio_tdi);
+
     /* Disable unused clock outputs. They generate noise. */
     scu_pinmux(CLK0, SCU_CLK_IN | SCU_CONF_FUNCTION7);
     scu_pinmux(CLK2, SCU_CLK_IN | SCU_CONF_FUNCTION7);
 
     hackrf_clock_init();
-    rf_path_pin_setup();
+    rf_path_pin_setup(&rf_path);
 
     /* Configure external clock in */
     scu_pinmux(SCU_PINMUX_GP_CLKIN, SCU_CLK_IN | SCU_CONF_FUNCTION1);
@@ -498,7 +500,7 @@ static void rfinit() {
     scu_pinmux(CLK0, SCU_CLK_IN | SCU_CONF_FUNCTION7);
     scu_pinmux(CLK2, SCU_CLK_IN | SCU_CONF_FUNCTION7);
 
-    sgpio_configure_pin_functions();
+    sgpio_configure_pin_functions(&sgpio_config);
 
     ON(EN_VDD);
     ON(EN_1V8);
@@ -512,19 +514,19 @@ static void rfinit() {
     // set up SGPIO ISR
     vector_table.irq[NVIC_SGPIO_IRQ] = sgpio_isr_rx;
 
-    ssp1_init();
+    //ssp1_init();
 
-    rf_path_init();
+    rf_path_init(&rf_path);
     set_rf_params();
-    rf_path_set_direction(RF_PATH_DIRECTION_RX);
+    rf_path_set_direction(&rf_path, RF_PATH_DIRECTION_RX);
 
     my_set_frequency(frequency);
 
     sample_rate_frac_set(SAMPLERATE * 2, 1);
     baseband_filter_bandwidth_set(BANDWIDTH);
-    sgpio_cpld_stream_rx_set_decimation(DECIMATION);
+    sgpio_cpld_stream_rx_set_decimation(&sgpio_config, DECIMATION);
 
-    baseband_streaming_enable();
+    baseband_streaming_enable(&sgpio_config);
 }
 
 //static int menuitem = 0;
@@ -702,7 +704,7 @@ void wfm_menu() {
         status();
     }
 stop:
-    baseband_streaming_disable();
+    baseband_streaming_disable(&sgpio_config);
     dac_set(0);
     OFF(EN_1V8);
     OFF(EN_VDD);

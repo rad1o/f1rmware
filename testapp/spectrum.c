@@ -90,10 +90,10 @@ void spectrum_init()
 	dac_init(false);
 	cpu_clock_set(204); // WARP SPEED! :-)
 	hackrf_clock_init();
-	rf_path_pin_setup();
+	rf_path_pin_setup(&rf_path);
 	/* Configure external clock in */
 	scu_pinmux(SCU_PINMUX_GP_CLKIN, SCU_CLK_IN | SCU_CONF_FUNCTION1);
-	sgpio_configure_pin_functions();
+	sgpio_configure_pin_functions(&sgpio_config);
 	ON(EN_VDD);
 	ON(EN_1V8);
 	OFF(MIC_AMP_DIS);
@@ -117,8 +117,8 @@ void spectrum_init()
 void spectrum_stop()
 {
 //	nvic_disable_irq(NVIC_DMA_IRQ);
-	sgpio_dma_stop();
-	sgpio_cpld_stream_disable();
+	sgpio_dma_stop(&sgpio_config);
+	sgpio_cpld_stream_disable(&sgpio_config);
 	OFF(EN_VDD);
 	OFF(EN_1V8);
 	ON(MIC_AMP_DIS);

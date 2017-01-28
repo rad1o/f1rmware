@@ -16,6 +16,8 @@
 #include <hackrf/firmware/hackrf_usb/usb_api_cpld.h>
 
 #include <hackrf/firmware/common/cpld_jtag.h>
+#include <hackrf/firmware/common/gpio_lpc.h>
+#include <hackrf/firmware/common/hackrf_core.h>
 
 #include <lpcapi/msc/msc_main.h>
 #include "msc/msc_disk.h"
@@ -66,7 +68,7 @@ void cpld_flash(){
 
 	refill_cpld_buffer_fs();
 
-	error = cpld_jtag_program(sizeof(cpld_xsvf_buffer),
+	error = cpld_jtag_program(&jtag_cpld, sizeof(cpld_xsvf_buffer),
 				  cpld_xsvf_buffer,
 				  refill_cpld_buffer_fs);
 	if(error){

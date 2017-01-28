@@ -57,10 +57,10 @@
 #define SETUPgout(args...) scu_pinmux(_PIN(args),SCU_CONF_EPUN_DIS_PULLUP|SCU_CONF_EZI_EN_IN_BUFFER|_FUNC(args)); GPIO_DIR(_GPORT(args)) |= _GPIN(args); WRAP( _VAL(args) ) (_GPIO(args));
 #define SETUPpin(args...)  scu_pinmux(_PIN(args),_FUNC(args))
 
-#define TOGGLE(x) gpio_toggle(_GPIO(x))
-#define OFF(x...) gpio_clear(_GPIO(x))
-#define ON(x...)  gpio_set(_GPIO(x))
-#define GET(x...) gpio_get(_GPIO(x))
+#define TOGGLE(x) cm3_gpio_toggle(_GPIO(x))
+#define OFF(x...) cm3_gpio_clear(_GPIO(x))
+#define ON(x...)  cm3_gpio_set(_GPIO(x))
+#define GET(x...) cm3_gpio_get(_GPIO(x))
 
 #define EN_VDD      P5_0,  SCU_CONF_FUNCTION0, GPIO2, GPIOPIN9,  clear        // RF Power
 #define EN_1V8      P6_10, SCU_CONF_FUNCTION0, GPIO3, GPIOPIN6,  clear        // CPLD Power
@@ -106,9 +106,9 @@ static void rflib_set_frequency(const int64_t new_frequency, const int32_t offse
 /* set amps */
 static void set_rf_params() {
     ssp1_set_mode_max2837(); // need to reset this since display driver will hassle with SSP1
-    max2837_set_lna_gain(lna_gain_db);     /* 8dB increments */
-    max2837_set_vga_gain(vga_gain_db);     /* 2dB increments, up to 62dB */
-    max2837_set_txvga_gain(txvga_gain_db); /* 1dB increments, up to 47dB */
+    max2837_set_lna_gain(&max2837, lna_gain_db);     /* 8dB increments */
+    max2837_set_vga_gain(&max2837, vga_gain_db);     /* 2dB increments, up to 62dB */
+    max2837_set_txvga_gain(&max2837, txvga_gain_db); /* 1dB increments, up to 47dB */
 }
 
 /* send an interrupt to the other core(s) */
@@ -138,33 +138,33 @@ static void hackrf_clock_init(void)
 static void si5351_init(void){
 	i2c0_init(255); 
 
-	si5351c_disable_all_outputs();
-	si5351c_disable_oeb_pin_control();
-	si5351c_power_down_all_clocks();
-	si5351c_set_crystal_configuration();
-	si5351c_enable_xo_and_ms_fanout();
-	si5351c_configure_pll_sources();
-	si5351c_configure_pll_multisynth();
+	si5351c_disable_all_outputs(&clock_gen);
+	si5351c_disable_oeb_pin_control(&clock_gen);
+	si5351c_power_down_all_clocks(&clock_gen);
+	si5351c_set_crystal_configuration(&clock_gen);
+	si5351c_enable_xo_and_ms_fanout(&clock_gen);
+	si5351c_configure_pll_sources(&clock_gen);
+	si5351c_configure_pll_multisynth(&clock_gen);
 
 	/* MS3/CLK3 is the source for the external clock output. */
-	si5351c_configure_multisynth(3, 80*128-512, 0, 1, 0); /* 800/80 = 10MHz */
+	si5351c_configure_multisynth(&clock_gen, 3, 80*128-512, 0, 1, 0); /* 800/80 = 10MHz */
 
 	/* MS5/CLK5 is the source for the RFFC5071 mixer. */
-	si5351c_configure_multisynth(5, 20*128-512, 0, 1, 0); /* 800/20 = 40MHz */
+	si5351c_configure_multisynth(&clock_gen, 5, 20*128-512, 0, 1, 0); /* 800/20 = 40MHz */
 
 	/* MS4/CLK4 is the source for the MAX2837 clock input. */
-	si5351c_configure_multisynth(4, 20*128-512, 0, 1, 0); /* 800/20 = 40MHz */
+	si5351c_configure_multisynth(&clock_gen, 4, 20*128-512, 0, 1, 0); /* 800/20 = 40MHz */
 
 	/* MS6/CLK6 is unused. */
 	/* MS7/CLK7 is the source for the LPC43xx microcontroller. */
 	uint8_t ms7data[] = { 90, 255, 20, 0 };
-	si5351c_write(ms7data, sizeof(ms7data));
+	si5351c_write(&clock_gen, ms7data, sizeof(ms7data));
 
-	si5351c_set_clock_source(PLL_SOURCE_XTAL);
+	si5351c_set_clock_source(&clock_gen, PLL_SOURCE_XTAL);
 	// soft reset
 	uint8_t resetdata[] = { 177, 0xac };
-	si5351c_write(resetdata, sizeof(resetdata));
-	si5351c_enable_clock_outputs();
+	si5351c_write(&clock_gen, resetdata, sizeof(resetdata));
+	si5351c_enable_clock_outputs(&clock_gen);
 };
 
 /* portapack_init plus a bunch of stuff from here and there, cleaned up */
@@ -174,13 +174,14 @@ static void rf_init() {
     scu_pinmux(SCU_PINMUX_CPLD_TCK, SCU_GPIO_NOPULL | SCU_CONF_FUNCTION0);
     scu_pinmux(SCU_PINMUX_CPLD_TMS, SCU_GPIO_NOPULL | SCU_CONF_FUNCTION0);
     scu_pinmux(SCU_PINMUX_CPLD_TDI, SCU_GPIO_NOPULL | SCU_CONF_FUNCTION0);
-    GPIO_DIR(PORT_CPLD_TDO) &= ~PIN_CPLD_TDO;
-    GPIO_DIR(PORT_CPLD_TCK) &= ~PIN_CPLD_TCK;
-    GPIO_DIR(PORT_CPLD_TMS) &= ~PIN_CPLD_TMS;
-    GPIO_DIR(PORT_CPLD_TDI) &= ~PIN_CPLD_TDI;
+
+    gpio_input(jtag_cpld.gpio->gpio_tdo);
+    gpio_input(jtag_cpld.gpio->gpio_tck);
+    gpio_input(jtag_cpld.gpio->gpio_tms);
+    gpio_input(jtag_cpld.gpio->gpio_tdi);
 
     hackrf_clock_init();
-    rf_path_pin_setup();
+    rf_path_pin_setup(&rf_path);
 
     /* Configure external clock in */
     scu_pinmux(SCU_PINMUX_GP_CLKIN, SCU_CLK_IN | SCU_CONF_FUNCTION1);
@@ -189,7 +190,7 @@ static void rf_init() {
     scu_pinmux(CLK0, SCU_CLK_IN | SCU_CONF_FUNCTION7);
     scu_pinmux(CLK2, SCU_CLK_IN | SCU_CONF_FUNCTION7);
 
-    sgpio_configure_pin_functions();
+    sgpio_configure_pin_functions(&sgpio_config);
 
     ON(EN_VDD);
     ON(EN_1V8);
@@ -202,9 +203,9 @@ static void rf_init() {
 
     cpu_clock_pll1_max_speed();
 
-    ssp1_init();
+    //ssp1_init();
 
-    rf_path_init();
+    rf_path_init(&rf_path);
 }
 
 static void rf_off() {
@@ -215,12 +216,12 @@ static void rf_off() {
 static void switch_to_mode(uint32_t new_mode) {
     switch(new_mode) {
         case MODE_STANDBY:
-            sgpio_cpld_stream_disable();
-            rf_path_set_direction(RF_PATH_DIRECTION_OFF);
+            sgpio_cpld_stream_disable(&sgpio_config);
+            rf_path_set_direction(&rf_path, RF_PATH_DIRECTION_OFF);
             break;
         case MODE_OFF:
-            sgpio_cpld_stream_disable();
-            rf_path_set_direction(RF_PATH_DIRECTION_OFF);
+            sgpio_cpld_stream_disable(&sgpio_config);
+            rf_path_set_direction(&rf_path, RF_PATH_DIRECTION_OFF);
             rf_off();
             break;
         default:
@@ -543,15 +544,15 @@ typedef union {
  * of constant entry/exit.
  */
 static void receive() {
-    sgpio_cpld_stream_disable();
+    sgpio_cpld_stream_disable(&sgpio_config);
 
-    rf_path_set_direction(RF_PATH_DIRECTION_RX);
-    rf_path_set_lna(rxlna_enable);
+    rf_path_set_direction(&rf_path, RF_PATH_DIRECTION_RX);
+    rf_path_set_lna(&rf_path, rxlna_enable);
 
     rflib_set_frequency(frequency, -(rxsamplerate>>2));
     sample_rate_frac_set(rxsamplerate * rxdecimation * 2, 1);
     baseband_filter_bandwidth_set(rxbandwidth);
-    sgpio_cpld_stream_rx_set_decimation(rxdecimation);
+    sgpio_cpld_stream_rx_set_decimation(&sgpio_config, rxdecimation);
     set_rf_params();
     /* send interrupt now in order to allow the M4 code that has
      * put us into receive mode to wait until the RF setup is done
@@ -579,7 +580,7 @@ static void receive() {
         outfunc = rxbfsk;
     }
 
-    sgpio_cpld_stream_enable();
+    sgpio_cpld_stream_enable(&sgpio_config);
     while(1) {
         sgpio_val_t v7;
         int16_t t6i, t6q, t7i, t7q;
@@ -744,10 +745,10 @@ static int16_t get_bit_freq() {
 
 static const uint8_t sgpio_planes[] = { 11, 5, 10, 2, 9, 4, 8, 0 };
 static void transmit_bfsk() {
-    sgpio_cpld_stream_disable();
+    sgpio_cpld_stream_disable(&sgpio_config);
 
-    rf_path_set_direction(RF_PATH_DIRECTION_TX);
-    rf_path_set_lna(txlna_enable);
+    rf_path_set_direction(&rf_path, RF_PATH_DIRECTION_TX);
+    rf_path_set_lna(&rf_path, txlna_enable);
 
     rflib_set_frequency(frequency, -(txsamplerate>>6));
     sample_rate_frac_set(txsamplerate * 2, 1);
@@ -779,7 +780,7 @@ static void transmit_bfsk() {
      */
     uint16_t round = 0;
 
-    sgpio_cpld_stream_enable();
+    sgpio_cpld_stream_enable(&sgpio_config);
 
     while(1) {
         /* wait for flag that data is to be put into registers */

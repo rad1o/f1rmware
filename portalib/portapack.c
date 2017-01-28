@@ -24,6 +24,7 @@
 #include <libopencm3/cm3/vector.h>
 #include <libopencm3/cm3/systick.h>
 #include <libopencm3/lpc43xx/m4/nvic.h>
+#include <libopencm3/lpc43xx/gpio.h>
 
 #include <hackrf_core.h>
 #include <rf_path.h>
@@ -247,7 +248,7 @@ void set_rx_mode(const size_t new_receiver_configuration_index) {
 //	i2s_mute();
 
 	sgpio_dma_stop();
-	sgpio_cpld_stream_disable();
+	sgpio_cpld_stream_disable(&sgpio_config);
 
 	/* TODO: Ensure receiver_state_buffer is large enough for new mode, or start using
 	 * heap to allocate necessary memory.
@@ -262,13 +263,13 @@ void set_rx_mode(const size_t new_receiver_configuration_index) {
 
 	sample_rate_set(receiver_configuration->sample_rate);
 	baseband_filter_bandwidth_set(receiver_configuration->baseband_bandwidth);
-	sgpio_cpld_stream_rx_set_decimation(receiver_configuration->baseband_decimation);
+	sgpio_cpld_stream_rx_set_decimation(&sgpio_config, receiver_configuration->baseband_decimation);
 
 	receiver_configuration->init(receiver_state_buffer);
 	receiver_baseband_handler = receiver_configuration->baseband_handler;
 
 	sgpio_dma_rx_start(&lli_rx[0]);
-	sgpio_cpld_stream_enable();
+	sgpio_cpld_stream_enable(&sgpio_config);
 
 //	if( receiver_configuration->enable_audio ) {
 //		i2s_unmute();
@@ -312,15 +313,15 @@ void portapack_init() {
 
 //	portapack_i2s_init();
 
-	sgpio_set_slice_mode(false);
+	sgpio_set_slice_mode(&sgpio_config, false);
 
-	ssp1_init();
-	rf_path_init();
-	rf_path_set_direction(RF_PATH_DIRECTION_RX);
+	//ssp1_init();
+	rf_path_init(&rf_path);
+	rf_path_set_direction(&rf_path, RF_PATH_DIRECTION_RX);
 
-	rf_path_set_lna((device_state->lna_gain_db >= 14) ? 1 : 0);
-	max2837_set_lna_gain(device_state->if_gain_db);	/* 8dB increments */
-	max2837_set_vga_gain(device_state->bb_gain_db);	/* 2dB increments, up to 62dB */
+	rf_path_set_lna(&rf_path, (device_state->lna_gain_db >= 14) ? 1 : 0);
+	max2837_set_lna_gain(&max2837, device_state->if_gain_db);	/* 8dB increments */
+	max2837_set_vga_gain(&max2837, device_state->bb_gain_db);	/* 2dB increments, up to 62dB */
 
 //	m0_configure_for_spifi();
 //	m0_run();
@@ -374,7 +375,7 @@ void dma_isr() {
 	 * -> CPLD decimation by 4
 	 * -> 3.072MHz complex<int8>[2048] == 666.667 usec/block == 136000 cycles/sec
 	 */
-    gpio_set(GPIO2,GPIOPIN8);
+	cm3_gpio_set(GPIO2,GPIOPIN8);
 	if( receiver_baseband_handler ) {
 		baseband_timestamps_t timestamps;
 		timestamps.start = timestamps.decimate_end = timestamps.channel_filter_end = timestamps.demodulate_end = baseband_timestamp();
@@ -392,7 +393,7 @@ void dma_isr() {
 		const float cycles_per_baseband_block = (2048.0f / decimated_sampling_rate) * 200000000.0f;
 		device_state->dsp_metrics.duration_all_millipercent = (float)device_state->dsp_metrics.duration_all / cycles_per_baseband_block * 100000.0f;
 	}
-    gpio_clear(GPIO2,GPIOPIN8);
+	cm3_gpio_clear(GPIO2,GPIOPIN8);
 
 	/* Acknowledge interrupt at end. If acknowledged at the beginning of the
 	 * ISR, a long-running baseband handler could make the baseband processing

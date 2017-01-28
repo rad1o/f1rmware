@@ -210,13 +210,13 @@ void telegraph_init(void)
 
 	i2c0_init(15);
 
-	si5351c_disable_all_outputs();
-	si5351c_disable_oeb_pin_control();
-	si5351c_power_down_all_clocks();
-	si5351c_set_crystal_configuration();
-	si5351c_enable_xo_and_ms_fanout();
-	si5351c_configure_pll_sources();
-	si5351c_configure_pll_multisynth();
+	si5351c_disable_all_outputs(&clock_gen);
+	si5351c_disable_oeb_pin_control(&clock_gen);
+	si5351c_power_down_all_clocks(&clock_gen);
+	si5351c_set_crystal_configuration(&clock_gen);
+	si5351c_enable_xo_and_ms_fanout(&clock_gen);
+	si5351c_configure_pll_sources(&clock_gen);
+	si5351c_configure_pll_multisynth(&clock_gen);
 
 	/*
 	 * rad1o clocks:
@@ -231,13 +231,13 @@ void telegraph_init(void)
 	 */
 
 	/* MS3/CLK3 is the source for the external clock output. */
-	si5351c_configure_multisynth(3, 80*128-512, 0, 1, 0); /* 800/80 = 10MHz */
+	si5351c_configure_multisynth(&clock_gen, 3, 80*128-512, 0, 1, 0); /* 800/80 = 10MHz */
 
 	/* MS4/CLK4 is the source for the MAX2837 clock input. */
-	si5351c_configure_multisynth(4, 20*128-512, 0, 1, 0); /* 800/20 = 40MHz */
+	si5351c_configure_multisynth(&clock_gen, 4, 20*128-512, 0, 1, 0); /* 800/20 = 40MHz */
 
 	/* MS5/CLK5 is the source for the RFFC5071 mixer. */
-	si5351c_configure_multisynth(5, 16*128-512, 0, 1, 0); /* 800/16 = 50MHz */
+	si5351c_configure_multisynth(&clock_gen, 5, 16*128-512, 0, 1, 0); /* 800/16 = 50MHz */
 
 	/* MS6/CLK6 is unused. */
 
@@ -246,11 +246,11 @@ void telegraph_init(void)
 	/* Set to 10 MHz, the common rate between Jellybean and Jawbreaker. */
 	sample_rate_set(10000000);
 
-	si5351c_set_clock_source(PLL_SOURCE_XTAL);
+	si5351c_set_clock_source(&clock_gen, PLL_SOURCE_XTAL);
 	// soft reset
 	uint8_t resetdata[] = { 177, 0xac };
-	si5351c_write(resetdata, sizeof(resetdata));
-	si5351c_enable_clock_outputs();
+	si5351c_write(&clock_gen, resetdata, sizeof(resetdata));
+	si5351c_enable_clock_outputs(&clock_gen);
 
 	//FIXME disable I2C
 	/* Kick I2C0 down to 400kHz when we switch over to APB1 clock = 204MHz */
@@ -335,13 +335,13 @@ void change_freq(uint32_t freq) {
    //set_freq(freq64);
    /*
    baseband_streaming_disable();
-   rf_path_set_direction(RF_PATH_DIRECTION_TX);
-   si5351c_activate_best_clock_source();
+   rf_path_set_direction(&rf_path, RF_PATH_DIRECTION_TX);
+   si5351c_activate_best_clock_source(&clock_gen);
    baseband_streaming_enable();
    */
-   max2837_set_frequency(g_freq);
-   max2837_start();
-   max2837_tx();
+   max2837_set_frequency(&max2837, g_freq);
+   max2837_start(&max2837);
+   max2837_tx(&max2837);
 }
 
 /*
@@ -352,7 +352,7 @@ void change_freq(uint32_t freq) {
 
 void telegraph_init_rx(void)
 {
-  ssp1_init();
+  //ssp1_init();
 
   /* Set sample rate and frac.
    * Found in hackrf_transfer.c
@@ -371,20 +371,20 @@ void telegraph_init_rx(void)
   /*
   baseband_streaming_disable();
   */
-  rf_path_set_direction(RF_PATH_DIRECTION_RX);
-  max2837_stop();
-  si5351c_activate_best_clock_source();
+  rf_path_set_direction(&rf_path, RF_PATH_DIRECTION_RX);
+  max2837_stop(&max2837);
+  si5351c_activate_best_clock_source(&clock_gen);
   /*
   baseband_streaming_enable();
   */
   // Enable amplification (TX)
-  rf_path_set_lna(1);
+  rf_path_set_lna(&rf_path, 1);
   // Enable antenna
-  rf_path_set_antenna(1);
+  rf_path_set_antenna(&rf_path, 1);
 
   /* Enable streaming. */
-  sgpio_cpld_stream_enable();
-  sgpio_set_slice_mode(false);
+  sgpio_cpld_stream_enable(&sgpio_config);
+  sgpio_set_slice_mode(&sgpio_config, false);
 }
 
 /*
@@ -393,7 +393,7 @@ void telegraph_init_rx(void)
 
 void telegraph_init_tx(void)
 {
-  ssp1_init();
+  //ssp1_init();
 
   /* Set sample rate and frac.
    * Found in hackrf_transfer.c
@@ -411,18 +411,18 @@ void telegraph_init_tx(void)
    * Called by hackrf_start_tx().
    */
 
-  rf_path_set_direction(RF_PATH_DIRECTION_TX);
-  max2837_stop();
-  si5351c_activate_best_clock_source();
+  rf_path_set_direction(&rf_path, RF_PATH_DIRECTION_TX);
+  max2837_stop(&max2837);
+  si5351c_activate_best_clock_source(&clock_gen);
 
   // Enable amplification (TX)
-  rf_path_set_lna(1);
+  rf_path_set_lna(&rf_path, 1);
   // Enable antenna
-  rf_path_set_antenna(1);
+  rf_path_set_antenna(&rf_path, 1);
 
   /* Disable streaming. */
-  sgpio_cpld_stream_disable();
-  sgpio_set_slice_mode(false);
+  sgpio_cpld_stream_disable(&sgpio_config);
+  sgpio_set_slice_mode(&sgpio_config, false);
 
 }
 
@@ -446,7 +446,7 @@ void main_ui(void) {
     delay(1000000);
     cpu_clock_init();
 
-    rf_path_init();
+    rf_path_init(&rf_path);
 
     /* RAD1O_LED setup (debug :) */
     SETUPgout(RAD1O_LED4);
@@ -463,16 +463,16 @@ void main_ui(void) {
     dac_init(false);
 
     /* Found in hackrf_usb: main. */
-    ssp1_init();
+    //ssp1_init();
 
     lcdInit();
     render_display();
 
-    max2837_stop();
+    max2837_stop(&max2837);
     telegraph_init_rx();
-    max2837_start();
-    max2837_set_vga_gain(3);
-    max2837_rx();
+    max2837_start(&max2837);
+    max2837_set_vga_gain(&max2837, 3);
+    max2837_rx(&max2837);
 
     while(true) {
 
@@ -484,7 +484,7 @@ void main_ui(void) {
           switch(g_bpressed) {
             case BTN_RIGHT:
               {
-                max2837_stop();
+                max2837_stop(&max2837);
 
                 if (g_channel < 9)
                     g_channel++;
@@ -503,23 +503,23 @@ void main_ui(void) {
                 } else {
                   telegraph_init_tx();
                 }
-                ssp1_init();
+                //ssp1_init();
                 ssp1_set_mode_max2837();
-                max2837_set_frequency(g_freq);
+                max2837_set_frequency(&max2837, g_freq);
 
                 if (g_current_mode == TELEGRAPH_RX_MODE) {
-                  max2837_start();
-                  max2837_rx();
+                  max2837_start(&max2837);
+                  max2837_rx(&max2837);
                 } else {
-                  max2837_start();
-                  max2837_tx();
+                  max2837_start(&max2837);
+                  max2837_tx(&max2837);
                 }
               }
               break;
 
             case BTN_LEFT:
               {
-                max2837_stop();
+                max2837_stop(&max2837);
 
                 if (g_channel > 0)
                     g_channel--;
@@ -537,16 +537,16 @@ void main_ui(void) {
                 } else {
                   telegraph_init_tx();
                 }
-                ssp1_init();
+                //ssp1_init();
                 ssp1_set_mode_max2837();
-                max2837_set_frequency(g_freq);
+                max2837_set_frequency(&max2837, g_freq);
 
                 if (g_current_mode == TELEGRAPH_RX_MODE) {
-                  max2837_start();
-                  max2837_rx();
+                  max2837_start(&max2837);
+                  max2837_rx(&max2837);
                 } else {
-                  max2837_start();
-                  max2837_tx();
+                  max2837_start(&max2837);
+                  max2837_tx(&max2837);
                 }
               }
               break;
@@ -591,18 +591,18 @@ void main_ui(void) {
           {
             if (g_current_mode == TELEGRAPH_RX_MODE) {
               /* We were in RX mode, switch to TX mode. */
-              max2837_stop();
+              max2837_stop(&max2837);
               telegraph_init_tx();
               g_current_mode = TELEGRAPH_TX_MODE;
             }
 
             /* Send the tone. */
-            max2837_start();
-            max2837_tx();
+            max2837_start(&max2837);
+            max2837_tx(&max2837);
             dac_set(8.0*g_volume);
             delay(5000);
             dac_set(0.0*g_volume);
-            max2837_stop();
+            max2837_stop(&max2837);
             delay(5000);
           }
           break;
@@ -611,11 +611,11 @@ void main_ui(void) {
           {
             if (g_current_mode == TELEGRAPH_TX_MODE) {
               /* We were in TX mode, switch to RX mode. */
-              max2837_stop();
+              max2837_stop(&max2837);
               telegraph_init_rx();
-              max2837_start();
-              max2837_set_vga_gain(3);
-              max2837_rx();
+              max2837_start(&max2837);
+              max2837_set_vga_gain(&max2837, 3);
+              max2837_rx(&max2837);
               g_current_mode = TELEGRAPH_RX_MODE;
             }
 

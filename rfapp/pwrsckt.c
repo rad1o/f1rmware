@@ -99,14 +99,14 @@ static void rf_init() {
 	
 	//sgpio_set_slice_mode(false);
 
-	ssp1_init();
-	rf_path_init();
-	rf_path_set_direction(RF_PATH_DIRECTION_TX);
+	//ssp1_init();
+	rf_path_init(&rf_path);
+	rf_path_set_direction(&rf_path, RF_PATH_DIRECTION_TX);
 
-	rf_path_set_lna(1);
-	max2837_set_lna_gain(62);	/* 8dB increments */
-	max2837_set_vga_gain(62);	/* 2dB increments, up to 62dB */
-    max2837_set_txvga_gain(47);
+	rf_path_set_lna(&rf_path, 1);
+	max2837_set_lna_gain(&max2837, 62);	/* 8dB increments */
+	max2837_set_vga_gain(&max2837, 62);	/* 2dB increments, up to 62dB */
+	max2837_set_txvga_gain(&max2837, 47);
 
 	systick_set_reload(0xfffff);
 	systick_set_clocksource(1);
@@ -138,10 +138,10 @@ static void pwrsckt_init()
 	dac_init(false);
 	cpu_clock_set(204); // WARP SPEED! :-)
 	hackrf_clock_init();
-	rf_path_pin_setup();
+	rf_path_pin_setup(&rf_path);
 	/* Configure external clock in */
 	//scu_pinmux(SCU_PINMUX_GP_CLKIN, SCU_CLK_IN | SCU_CONF_FUNCTION1);
-	sgpio_configure_pin_functions();
+	sgpio_configure_pin_functions(&sgpio_config);
 	ON(EN_VDD);
 	ON(EN_1V8);
 	OFF(MIC_AMP_DIS); // Enable audio amp
@@ -151,7 +151,7 @@ static void pwrsckt_init()
 	si5351_init();
 	rf_init(); //portapack_init();
 	sample_rate_set(8000000);
-    baseband_streaming_enable();
+	baseband_streaming_enable(&sgpio_config);
 
 	// defaults:
 
@@ -163,7 +163,7 @@ static void pwrsckt_stop()
 {
     //nvic_disable_irq(NVIC_DMA_IRQ);
 	//sgpio_dma_stop();
-	sgpio_cpld_stream_disable();
+	sgpio_cpld_stream_disable(&sgpio_config);
 	OFF(EN_VDD);
 	OFF(EN_1V8);
 	ON(MIC_AMP_DIS);

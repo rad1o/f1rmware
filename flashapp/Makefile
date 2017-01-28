@@ -36,6 +36,8 @@ OBJS += ../hackrf/firmware/common/xapp058/micro.o
 OBJS += ../hackrf/firmware/common/xapp058/ports.o
 OBJS += ../hackrf/firmware/common/xapp058/lenval.o
 OBJS += ../hackrf/firmware/common/cpld_jtag.o
+OBJS += ../hackrf/firmware/common/gpio_lpc.o
+OBJS += ../hackrf/firmware/common/hackrf_core.o
 
 OBJS += main.o
 

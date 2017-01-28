@@ -8,7 +8,7 @@
 #define _GPIO(pin, func, gport, gpin, ...) gport,gpin
 #define _VAL(pin, func, gport, gpin, val, ...) val
 
-#define PASTER(x) gpio_ ## x
+#define PASTER(x) cm3_gpio_ ## x
 #define WRAP(x) PASTER(x)
 
 #define SETUPadc(args...)  scu_pinmux(_PIN(args),SCU_CONF_EPUN_DIS_PULLUP|_FUNC(args)); GPIO_DIR(_GPORT(args)) &= ~ _GPIN(args); SCU_ENAIO0|=SCU_ENAIO_ADCx_6;
@@ -16,10 +16,10 @@
 #define SETUPgout(args...) scu_pinmux(_PIN(args),SCU_CONF_EPUN_DIS_PULLUP|SCU_CONF_EZI_EN_IN_BUFFER|_FUNC(args)); GPIO_DIR(_GPORT(args)) |= _GPIN(args); WRAP( _VAL(args) ) (_GPIO(args));
 #define SETUPpin(args...)  scu_pinmux(_PIN(args),_FUNC(args))
 
-#define TOGGLE(x) gpio_toggle(_GPIO(x))
-#define OFF(x...) gpio_clear(_GPIO(x))
-#define ON(x...)  gpio_set(_GPIO(x))
-#define GET(x...) gpio_get(_GPIO(x))
+#define TOGGLE(x) cm3_gpio_toggle(_GPIO(x))
+#define OFF(x...) cm3_gpio_clear(_GPIO(x))
+#define ON(x...)  cm3_gpio_set(_GPIO(x))
+#define GET(x...) cm3_gpio_get(_GPIO(x))
 
 
 // Pull: SCU_GPIO_NOPULL, SCU_GPIO_PDN, SCU_GPIO_PUP

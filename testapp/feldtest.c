@@ -9,6 +9,7 @@
 #include <rad1olib/setup.h>
 #include <hackrf/firmware/common/mixer.h>
 #include <hackrf/firmware/common/si5351c.h>
+#include <hackrf/firmware/common/hackrf_core.h>
 
 //# MENU feldtest
 void feld_menu(){
@@ -151,9 +152,9 @@ void feld_menu(){
 				case BTN_RIGHT:
 					tr2=1-tr2;
 					if (tr2){
-						si5351c_power_down_all_clocks();
+						si5351c_power_down_all_clocks(&clock_gen);
 					}else{
-						si5351c_set_clock_source(PLL_SOURCE_XTAL);
+						si5351c_set_clock_source(&clock_gen, PLL_SOURCE_XTAL);
 					};
 					break;
 				case BTN_ENTER:
@@ -173,18 +174,18 @@ void feld_menu(){
 			switch(getInput()){
 				case BTN_UP:
 					sf+=100;
-					mixer_set_frequency(sf);
+					mixer_set_frequency(&mixer, sf);
 					break;
 				case BTN_DOWN:
 					sf-=100;
-					mixer_set_frequency(sf);
+					mixer_set_frequency(&mixer, sf);
 					break;
 				case BTN_LEFT:
 					tl3=1-tl3;
 					if (tl3){
 						ON(CE_VCO);
-						mixer_setup();
-						mixer_set_frequency(sf);
+						mixer_setup(&mixer);
+						mixer_set_frequency(&mixer, sf);
 					}else{
 						OFF(CE_VCO);
 					};
