@@ -13,6 +13,7 @@ DFUUTIL= dfu-util
 
 INCLUDE_PATHS += -I$(RPATH)/libopencm3/include
 INCLUDE_PATHS += -I$(RPATH)/hackrf/firmware
+INCLUDE_PATHS += -I$(RPATH)/hackrf/firmware/common
 INCLUDE_PATHS += -I$(RPATH)
 
 LFLAGS += -Os -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
