@@ -39,11 +39,11 @@
 #define EN_1V8      P6_10, SCU_CONF_FUNCTION0, GPIO3, GPIOPIN6,  clear        // CPLD Power
 #define MIC_AMP_DIS P9_1,  SCU_CONF_FUNCTION0, GPIO4, GPIOPIN13, set          // MIC Power
 
-#define LED1        P4_1,  SCU_CONF_FUNCTION0, GPIO2, GPIOPIN1,  clear
-#define LED2        P4_2,  SCU_CONF_FUNCTION0, GPIO2, GPIOPIN2,  clear
-#define LED3        P6_12, SCU_CONF_FUNCTION0, GPIO2, GPIOPIN8,  clear
-#define LED4        PB_6,  SCU_CONF_FUNCTION4, GPIO5, GPIOPIN26, clear
-#define RGB_LED     P8_0,  SCU_CONF_FUNCTION0, GPIO4, GPIOPIN0,  clear
+#define RAD1O_LED1        P4_1,  SCU_CONF_FUNCTION0, GPIO2, GPIOPIN1,  clear
+#define RAD1O_LED2        P4_2,  SCU_CONF_FUNCTION0, GPIO2, GPIOPIN2,  clear
+#define RAD1O_LED3        P6_12, SCU_CONF_FUNCTION0, GPIO2, GPIOPIN8,  clear
+#define RAD1O_LED4        PB_6,  SCU_CONF_FUNCTION4, GPIO5, GPIOPIN26, clear
+#define RAD1O_RGB_LED     P8_0,  SCU_CONF_FUNCTION0, GPIO4, GPIOPIN0,  clear
 
 	/* input */
 #define BC_DONE     PD_16, SCU_GPIO_PUP|SCU_CONF_FUNCTION4, GPIO6, GPIOPIN30  // Charge Complete Output (active low)

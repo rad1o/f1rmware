@@ -60,7 +60,6 @@ void cpld_menu(){
 	lcdNl();
 
 	#define WAIT_LOOP_DELAY (6000000)
-	#define ALL_LEDS  (PIN_LED1|PIN_LED2|PIN_LED3)
 	int i;
 	int error;
 	FRESULT res;
@@ -82,8 +81,8 @@ void cpld_menu(){
 	    lcdPrintln("Programming failed!");
 	    lcdPrintln(IntToStr(error,5,0));
 	    lcdDisplay();
-	    /* LED3 (Red) steady on error */
-	    ON(LED3);
+	    /* RAD1O_LED3 (Red) steady on error */
+	    ON(RAD1O_LED3);
 	    while (1);
 	};
 
@@ -92,10 +91,10 @@ void cpld_menu(){
 	lcdDisplay();
 
 	for (res=0;res<10;res++){
-	    /* blink LED1, LED2, and LED3 on success */
-	    TOGGLE(LED1);
-	    TOGGLE(LED2);
-	    TOGGLE(LED3);
+	    /* blink RAD1O_LED1, RAD1O_LED2, and RAD1O_LED3 on success */
+	    TOGGLE(RAD1O_LED1);
+	    TOGGLE(RAD1O_LED2);
+	    TOGGLE(RAD1O_LED3);
 	    for (i = 0; i < WAIT_LOOP_DELAY; i++)  /* Wait a bit. */
 		__asm__("nop");
 	};

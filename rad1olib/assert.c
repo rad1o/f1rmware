@@ -5,9 +5,9 @@
 #include <libopencm3/lpc43xx/gpio.h>
 
 void assert_die(void){
-	SETUPgout(LED4);
+	SETUPgout(RAD1O_LED4);
 	while(1){
-		TOGGLE(LED4);
+		TOGGLE(RAD1O_LED4);
 		delayNop(3000000);
 	};
 };

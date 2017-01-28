@@ -105,10 +105,10 @@ int main(void) {
 	SETUPgout(EN_VDD);
 	SETUPgout(MIXER_EN);
 
-	SETUPgout(LED1);
-	SETUPgout(LED2);
-	SETUPgout(LED3);
-	SETUPgout(LED4);
+	SETUPgout(RAD1O_LED1);
+	SETUPgout(RAD1O_LED2);
+	SETUPgout(RAD1O_LED3);
+	SETUPgout(RAD1O_LED4);
 
 	inputInit();
 	feldInit();
@@ -162,10 +162,10 @@ void doMSC(){
 void doSpeed(){
 	SETUPgout(LCD_BL_EN);
 	SETUPgout(EN_1V8);
-	SETUPgout(LED4);
+	SETUPgout(RAD1O_LED4);
 	int mhz=102;
 	while(1){
-		TOGGLE(LED1);
+		TOGGLE(RAD1O_LED1);
 		lcdClear(0xff);
 		lcdPrint("speed: "); lcdPrint(IntToStr(mhz,3,0));lcdNl();
 		lcdDisplay(); 
@@ -180,7 +180,7 @@ void doSpeed(){
 		PD0_SLEEP0_MODE = 0x003000AA;
 		SCB_SCR|=SCB_SCR_SLEEPDEEP;
 
-		ON(LED1);
+		ON(RAD1O_LED1);
 		CGU_BASE_M4_CLK = (CGU_BASE_M4_CLK_CLK_SEL(CGU_SRC_IRC) | CGU_BASE_M4_CLK_AUTOBLOCK(1));
 		CGU_PLL1_CTRL= CGU_PLL1_CTRL_PD(1);
 		CGU_PLL0USB_CTRL= CGU_PLL1_CTRL_PD(1);
@@ -192,7 +192,7 @@ void doSpeed(){
 
 #define __WFI() __asm__("wfi")
 		while(1){
-			TOGGLE(LED1);
+			TOGGLE(RAD1O_LED1);
 			__WFI();
 		};
 				break;
@@ -203,10 +203,10 @@ void doSpeed(){
 			case BTN_LEFT:
 				while(1){
 					cpu_clock_set(102);
-					TOGGLE(LED1);
+					TOGGLE(RAD1O_LED1);
 					delayNop(1000);
 					cpu_clock_set(12);
-					TOGGLE(LED1);
+					TOGGLE(RAD1O_LED1);
 					delayNop(1000);
 				};
 				break;
@@ -330,7 +330,7 @@ void doFlash(){
 	lcdDisplay();
 
 	while(1){
-		TOGGLE(LED1);
+		TOGGLE(RAD1O_LED1);
 		switch(getInput()){
 			case BTN_UP:
 				/* addr-=sw;
@@ -441,13 +441,13 @@ void doADC(){
 	int32_t vBat=0;
 	int32_t vIn=0;
 	int32_t RSSI=0;
-	int32_t LED=0;
+	int32_t RAD1O_LED=0;
 	int32_t MIC=0;
 	int v;
 	int df=0;
 
-//#define LED4        PB_6, SCU_CONF_FUNCTION4, GPIO5, GPIOPIN26
-	SETUPadc(LED4);
+//#define RAD1O_LED4        PB_6, SCU_CONF_FUNCTION4, GPIO5, GPIOPIN26
+	SETUPadc(RAD1O_LED4);
 
 	while(1){
 		lcdClear(0xff);
@@ -459,7 +459,7 @@ void doADC(){
 		lcdPrint("vBat: "); lcdPrint(IntToStr(vBat,4,F_ZEROS));lcdNl();
 		lcdPrint("vIn:  "); lcdPrint(IntToStr(vIn ,4,F_ZEROS));lcdNl();
 		lcdPrint("RSSI: "); lcdPrint(IntToStr(RSSI ,4,F_ZEROS));lcdNl();
-		lcdPrint("LED:  "); lcdPrint(IntToStr(LED ,4,F_ZEROS));lcdNl();
+		lcdPrint("RAD1O_LED:  "); lcdPrint(IntToStr(RAD1O_LED ,4,F_ZEROS));lcdNl();
 		lcdPrint("Mic:  "); lcdPrint(IntToStr(MIC ,4,F_ZEROS));lcdNl();
 		df++;
 		lcdPrint("df: "); lcdPrint(IntToStr(df,4,F_ZEROS));lcdNl();
@@ -475,7 +475,7 @@ void doADC(){
 		vBat=adc_get_single(ADC0,ADC_CR_CH3)*2*330/1023;
 		vIn=adc_get_single(ADC0,ADC_CR_CH4)*2*330/1023;
 		RSSI=adc_get_single(ADC0,ADC_CR_CH0)*2*330/1023;
-		LED=adc_get_single(ADC0,ADC_CR_CH6)*2*330/1023;
+		RAD1O_LED=adc_get_single(ADC0,ADC_CR_CH6)*2*330/1023;
 		MIC=adc_get_single(ADC0,ADC_CR_CH7)*2*330/1023; 
 
 		switch(getInput()){
@@ -492,7 +492,7 @@ void doADC(){
 				cpu_clock_set(12);
 				break;
 			case BTN_RIGHT:
-				LED=adc_get_single(ADC0,ADC_CR_CH6)*2*330/1023;
+				RAD1O_LED=adc_get_single(ADC0,ADC_CR_CH6)*2*330/1023;
 				MIC=adc_get_single(ADC0,ADC_CR_CH7)*2*330/1023;
 				break;
 			case BTN_ENTER:
@@ -573,7 +573,7 @@ void doFeld(){
 	char tu3=0,td3=0,tl3=0,tr3=0;
 
 	int ctr=0;
-	/* Blink LED1 on the board. */
+	/* Blink RAD1O_LED1 on the board. */
 
 	while (1) 
 	{
@@ -738,9 +738,9 @@ void doFeld(){
 		};
 		if (page>2){page=0;}
 
-		ON(LED1);
+		ON(RAD1O_LED1);
 		delayNop(200000);
-		OFF(LED1);
+		OFF(RAD1O_LED1);
 		delayNop(200000);
 
 		ctr++;

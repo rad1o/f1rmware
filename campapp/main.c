@@ -77,7 +77,7 @@ void night_tick(void){
         if(GLOBAL(chargeled)){
             //char iodir= (GPIO_GPIO1DIR & (1 << (11) ))?1:0;
             if(batteryCharging()) {
-                ON(LED4);
+                ON(RAD1O_LED4);
 #if 0
                 if (iodir == gpioDirection_Input){
                     IOCON_PIO1_11 = 0x0;
@@ -87,7 +87,7 @@ void night_tick(void){
                 }
 #endif
             } else {
-                OFF(LED4);
+                OFF(RAD1O_LED4);
 #if 0
                 if (iodir != gpioDirection_Input){
                     gpioSetValue (RB_LED3, 0);
@@ -102,9 +102,9 @@ void night_tick(void){
         uint32_t battery_voltage = batteryGetVoltage();
         if(battery_voltage < 3600 && battery_voltage > 1000){
             if( (ctr/(50/SYSTICKSPEED))%10 == 1 ) {
-                ON(LED4);
+                ON(RAD1O_LED4);
             } else {
-                OFF(LED4);
+                OFF(RAD1O_LED4);
             }
         };
     };
@@ -130,12 +130,12 @@ int main(void) {
 	SETUPgout(MIXER_EN);
 	SETUPgout(MIC_AMP_DIS);
 
-	SETUPgout(LED1);
-	SETUPgout(LED2);
-	SETUPgout(LED3);
-	SETUPgout(LED4);
+	SETUPgout(RAD1O_LED1);
+	SETUPgout(RAD1O_LED2);
+	SETUPgout(RAD1O_LED3);
+	SETUPgout(RAD1O_LED4);
 
-	SETUPgout(RGB_LED);
+	SETUPgout(RAD1O_RGB_LED);
 
 	inputInit();
 	fsInit(); 

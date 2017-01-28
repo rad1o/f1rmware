@@ -178,7 +178,7 @@ void hackrf_ui_update(void)
 
 void hackrf_ui_init(void)
 {
-    SETUPgout(RGB_LED);
+    SETUPgout(RAD1O_RGB_LED);
     systickInit();
     fsInit();
     lcdInit();

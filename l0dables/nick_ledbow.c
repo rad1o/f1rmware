@@ -37,7 +37,7 @@ void ram(){
 
 	uint8_t color[] = {0, 0, 0};
 	Color col;
-	SETUPgout(RGB_LED);
+	SETUPgout(RAD1O_RGB_LED);
 
 	setExtFont(GLOBAL(nickfont));
 	setTextColor(GLOBAL(nickbg),GLOBAL(nickfg));

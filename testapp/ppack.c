@@ -75,7 +75,7 @@ void ppack_menu() {
 			case BTN_ENTER:
 				return;
 		};
-		TOGGLE(LED2);
+		TOGGLE(RAD1O_LED2);
 		delayms(40);
 		lcdPrint(IntToStr((uintptr_t)s8ram,8,F_HEX));
 		lcdPrint(" ");

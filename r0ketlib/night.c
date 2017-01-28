@@ -24,7 +24,7 @@ void LightCheck(void){
         return;
     }
 
-    SETUPadc(LED4);
+    SETUPadc(RAD1O_LED4);
 
     uint32_t last_light=light;
     // ADC needs some time?
@@ -37,7 +37,7 @@ void LightCheck(void){
     light-=light/SAMPCT;
     light += adc_get_single(ADC0,ADC_CR_CH6);
 
-    SETUPgout(LED4);
+    SETUPgout(RAD1O_LED4);
 
     // disable light sensor until we get reasonable results
     if(sensor_status<2){

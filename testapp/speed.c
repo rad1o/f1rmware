@@ -17,13 +17,13 @@ void tick_speed(){
 	static int ctr=0;
 	if (tickon)
 		if (++ctr%15==1)
-			TOGGLE(LED4);
+			TOGGLE(RAD1O_LED4);
 };
 
 //# MENU speed
 void speed_menu(){
 	getInputWaitRelease();
-	SETUPgout(LED4);
+	SETUPgout(RAD1O_LED4);
 	tickon=1;
 	lcdClear();
 	lcdPrintln("Speed.");
@@ -32,7 +32,7 @@ void speed_menu(){
 	lcdPrintln("left:  12");
 	lcdPrintln("right: 16");
 	lcdDisplay();
-	ON(LED1);
+	ON(RAD1O_LED1);
 
 	while(1){
 		switch(getInput()){
@@ -50,7 +50,7 @@ void speed_menu(){
 				break;
 			case BTN_ENTER:
 				tickon=0;
-				OFF(LED4);
+				OFF(RAD1O_LED4);
 				return;
 		};
 		lcdSetCrsr(0,6*8);

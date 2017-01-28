@@ -1302,7 +1302,7 @@ void modplay(char *fname) {
                 audio_set_volume(vol+1);
             }
         }
-        TOGGLE(LED4);
+        TOGGLE(RAD1O_LED4);
         while(audio_fill() > SAMPLES_SIZE/4);
         synthrender(SAMPLES_SIZE/4);
     }

@@ -54,7 +54,7 @@ void ws1812b_menu(){
 	getInputWaitRelease();
     //cpu_clock_set(17);
     cpu_clock_set(51);
-	SETUPgout(RGB_LED);
+	SETUPgout(RAD1O_RGB_LED);
 
 	while(1){
 		lcdClear(0xff);

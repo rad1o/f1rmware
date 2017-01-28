@@ -27,28 +27,28 @@ void led_menu(){
 			case BTN_UP:
 				adc=0;
 				leds=1-leds;
-				SETUPgout(LED4);
+				SETUPgout(RAD1O_LED4);
 				if(leds){
-					ON(LED1);
-					ON(LED2);
-					ON(LED3);
-					ON(LED4);
+					ON(RAD1O_LED1);
+					ON(RAD1O_LED2);
+					ON(RAD1O_LED3);
+					ON(RAD1O_LED4);
 				}else{
-					OFF(LED1);
-					OFF(LED2);
-					OFF(LED3);
-					OFF(LED4);
+					OFF(RAD1O_LED1);
+					OFF(RAD1O_LED2);
+					OFF(RAD1O_LED3);
+					OFF(RAD1O_LED4);
 				};
 				break;
 			case BTN_DOWN:
 				adc=1;
-				SETUPadc(LED4);
+				SETUPadc(RAD1O_LED4);
 				break;
 			case BTN_ENTER:
-				SETUPgout(LED1);
-				SETUPgout(LED2);
-				SETUPgout(LED3);
-				SETUPgout(LED4);
+				SETUPgout(RAD1O_LED1);
+				SETUPgout(RAD1O_LED2);
+				SETUPgout(RAD1O_LED3);
+				SETUPgout(RAD1O_LED4);
 				return;
 		};
 		if(adc){

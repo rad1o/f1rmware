@@ -448,9 +448,9 @@ void main_ui(void) {
 
     rf_path_init();
 
-    /* LED setup (debug :) */
-    SETUPgout(LED4);
-    OFF(LED4);
+    /* RAD1O_LED setup (debug :) */
+    SETUPgout(RAD1O_LED4);
+    OFF(RAD1O_LED4);
 
     /* Required by the LCD. */
     cpu_clock_set(204);
@@ -640,8 +640,8 @@ void telegraph_main(void) {
     /* Init r0cketlib in order to use the LCD display and the joystick. */
 	systickInit();
 
-	SETUPgout(LED4);
-  OFF(LED4);
+	SETUPgout(RAD1O_LED4);
+  OFF(RAD1O_LED4);
 
 	inputInit();
 	lcdInit();

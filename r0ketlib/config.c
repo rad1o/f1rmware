@@ -59,9 +59,9 @@ void applyConfig(){
         OFF(LCD_BL_EN);
 
 	if(GLOBAL(rgbleds)) {
-		SETUPgout(RGB_LED);
+		SETUPgout(RAD1O_RGB_LED);
 	} else {
-		SETUPgin(RGB_LED);
+		SETUPgin(RAD1O_RGB_LED);
 	}
 
     if(GLOBAL(vdd_fix))

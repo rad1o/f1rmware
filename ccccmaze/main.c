@@ -34,10 +34,10 @@ int main(void) {
 	SETUPgout(MIXER_EN);
 	SETUPgout(MIC_AMP_DIS);
 
-	SETUPgout(LED1);
-	SETUPgout(LED2);
-	SETUPgout(LED3);
-	SETUPgout(LED4);
+	SETUPgout(RAD1O_LED1);
+	SETUPgout(RAD1O_LED2);
+	SETUPgout(RAD1O_LED3);
+	SETUPgout(RAD1O_LED4);
 
 	inputInit();
 	lcdInit();

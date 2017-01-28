@@ -232,9 +232,9 @@ void feld_menu(){
 		};
 		if (page>3){page=0;}
 
-		ON(LED1);
+		ON(RAD1O_LED1);
 		delayNop(200000);
-		OFF(LED1);
+		OFF(RAD1O_LED1);
 		delayNop(200000);
 
 //		ctr++; lcdNl(); lcdPrint(IntToStr(ctr,4,F_HEX)); lcdDisplay();

@@ -20,7 +20,7 @@ void lcd_menu(){
 	lcdClear();
 	lcdPrintln("LCD:");
 	lcdDisplay();
-	ON(LED1);
+	ON(RAD1O_LED1);
 
 	uint16_t x,y;
 	uint8_t rgb=0;

@@ -48,7 +48,7 @@ static volatile int displayMode = DEFAULT_MODE;
 
 void spectrum_callback(uint8_t* buf, int bufLen)
 {
-	TOGGLE(LED2);
+	TOGGLE(RAD1O_LED2);
 	if (displayMode == MODE_SPECTRUM)
 		lcdClear();
 	else if (displayMode == MODE_WATERFALL)

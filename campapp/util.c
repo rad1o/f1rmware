@@ -35,7 +35,7 @@ void tick_alive(void){
 
 	if(foo++>500/SYSTICKSPEED){
 		foo=0;
-        TOGGLE(LED2);
+        TOGGLE(RAD1O_LED2);
 	};
     return;
 }

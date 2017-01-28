@@ -18,7 +18,7 @@ void ram(void){
 
     getInputWaitRelease();
 
-    SETUPgout(RGB_LED);
+    SETUPgout(RAD1O_RGB_LED);
 
     while(1){
         lcdClear(0xff);

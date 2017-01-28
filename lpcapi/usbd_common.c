@@ -44,6 +44,6 @@ ErrorCode_t EP0_patch(USBD_HANDLE_T hUsb, void *data, uint32_t event)
 #include <libopencm3/lpc43xx/gpio.h>
 #include <libopencm3/lpc43xx/scu.h>
 void USB0_IRQHandler(void) {
-	TOGGLE(LED1);
+	TOGGLE(RAD1O_LED1);
 	USBD_API->hw->ISR(g_hUsb);
 }

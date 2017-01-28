@@ -27,17 +27,17 @@ void ram(void){
 		case BTN_ENTER:
 		    return;
 		case BTN_LEFT:
-		    TOGGLE(LED3);
+		    TOGGLE(RAD1O_LED3);
 		    break;
 		case BTN_RIGHT:
-		    TOGGLE(LED3);
+		    TOGGLE(RAD1O_LED3);
 		    delayNop(10000000);
 		    break;
 		case BTN_UP:
-		    ON(LED3);
+		    ON(RAD1O_LED3);
 		    break;
 		case BTN_DOWN:
-		    OFF(LED3);
+		    OFF(RAD1O_LED3);
 		    break;
 	    };
 	}

@@ -32,17 +32,17 @@ void tick_batteryLED(void){
         if(GLOBAL(chargeled)){
             //char iodir= (GPIO_GPIO1DIR & (1 << (11) ))?1:0;
             if(batteryCharging()) {
-                ON(LED4);
+                ON(RAD1O_LED4);
             } else {
-                OFF(LED4);
+                OFF(RAD1O_LED4);
             }
         };
 
         if(batteryGetVoltage()<3600){
             if( (ctr/(50/SYSTICKSPEED))%10 == 1 ) {
-                ON(LED4);
+                ON(RAD1O_LED4);
             } else {
-                OFF(LED4);
+                OFF(RAD1O_LED4);
             }
         };
     };
@@ -66,10 +66,10 @@ int main(void) {
 	SETUPgout(MIXER_EN);
 	SETUPgout(MIC_AMP_DIS);
 
-	SETUPgout(LED1);
-	SETUPgout(LED2);
-	SETUPgout(LED3);
-	SETUPgout(LED4);
+	SETUPgout(RAD1O_LED1);
+	SETUPgout(RAD1O_LED2);
+	SETUPgout(RAD1O_LED3);
+	SETUPgout(RAD1O_LED4);
 
 	inputInit();
 	lcdInit();

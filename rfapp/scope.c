@@ -47,7 +47,7 @@ int acc_max = 8;
 
 void scope_callback(uint8_t* buf, int bufLen)
 {
-	OFF(LED2);
+	OFF(RAD1O_LED2);
 
 	for(int i = 0; i < USE_SAMPLES; i++) // display 128 FFT magnitude points
 	{
@@ -70,7 +70,7 @@ void scope_callback(uint8_t* buf, int bufLen)
           memset(spectrum[spectrum_y], 0, USE_SAMPLES * sizeof(spectrum[0][0]));
         }
 
-        ON(LED2);
+        ON(RAD1O_LED2);
 }
 
 
@@ -253,7 +253,7 @@ void scope_main(void) {
 
 
 	while(1){
-		OFF(LED1);
+		OFF(RAD1O_LED1);
     int key = getInputRaw();
     if (key == BTN_LEFT) {
       current_option--;
@@ -272,6 +272,6 @@ void scope_main(void) {
     options[current_option].draw();
     lcdDisplay();
 
-    ON(LED1);
+    ON(RAD1O_LED1);
 	}
 }
