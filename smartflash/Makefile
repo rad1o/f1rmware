@@ -25,7 +25,8 @@ gather:
 	@echo
 	@echo '### Gathering contents for image'
 	[ ! -d $(fsdir) ] && mkdir $(fsdir) || true
-	cp ../hackrf/firmware/hackrf_usb/build/hackrf_usb.bin $(fsdir)/hackrf.b1n
+	# TODO: strip dfu headers for b1n file
+	cp ../hackrf/firmware/hackrf_usb/build/hackrf_usb.dfu $(fsdir)/hackrf.b1n
 	cp ../testapp/testapp.b1n $(fsdir)/
 	cp ../campapp/camp.b1n $(fsdir)/
 	cp ../musicapp/musicapp.b1n $(fsdir)/

@@ -67,5 +67,5 @@ m0_bin.o: m0_bin.s m0/m0.bin
 	$(CC) $(CFLAGS) $(INCLUDE_PATHS) -o $@ m0_bin.s
 
 clean::
-	$(MAKE) -C m0
+	$(MAKE) -C m0 clean
 	$(RM) main.gen
