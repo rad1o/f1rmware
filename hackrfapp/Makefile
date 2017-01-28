@@ -69,6 +69,15 @@ OBJS += ../hackrf/firmware/common/sgpio.o
 OBJS += ../hackrf/firmware/common/streaming.o
 OBJS += ../hackrf/firmware/common/w25q80bv.o
 OBJS += ../hackrf/firmware/common/max2871.o
+OBJS += ../hackrf/firmware/common/mixer.o
+OBJS += ../hackrf/firmware/common/gpio_lpc.o
+OBJS += ../hackrf/firmware/common/spi_bus.o
+OBJS += ../hackrf/firmware/common/spi_ssp.o
+OBJS += ../hackrf/firmware/common/i2c_bus.o
+OBJS += ../hackrf/firmware/common/i2c_lpc.o
+OBJS += ../hackrf/firmware/common/max2837_target.o
+OBJS += ../hackrf/firmware/common/max5864_target.o
+OBJS += ../hackrf/firmware/common/w25q80bv_target.o
 
 SRCS = $(wildcard *.c)
 SOBJS = $(foreach mod,$(SRCS),$(subst .c,.o,$(mod)))
