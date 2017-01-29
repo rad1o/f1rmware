@@ -117,7 +117,7 @@ dfu:
 
 msc:
 	mcopy -D o -i /dev/$(UDISK) `perl order-files $(fsdir) $(FILEORDER)` ::
-	dd if=/dev/$(UDISK) skip=3071 count=1 bs=512 | dd of=/dev/$(UDISK) seek=3071 count=1 bs=512
+	dd if=/dev/$(UDISK) skip=3071 count=1 bs=512 2>/dev/null| dd of=/dev/$(UDISK) seek=3071 count=1 bs=512 2>/dev/null
 
 sdr:
 	osmocom_fft -s 10000000 -f 432000000 -g 30 --peak-hold
