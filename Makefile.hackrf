@@ -1,0 +1,50 @@
+default: lib hackrf-usb
+
+all: lib hackrf-usb hackrf-tools
+
+force: clean all
+
+ifeq ($(MAKECMDGOALS),rebuild)
+FORCE=FORCE
+rebuild: all
+endif
+
+hackrf/firmware/libopencm3/README:
+	git -C hackrf submodule init
+
+hackrf/firmware/libopencm3/lib/libopencm3_lpc43xx.a: $(FORCE)
+	git -C hackrf submodule update
+	$(MAKE) -C firmware/libopencm3
+
+lib: hackrf/firmware/libopencm3/README hackrf/firmware/libopencm3/lib/libopencm3_lpc43xx.a
+
+FDIR=hackrf/firmware/hackrf_usb/build
+
+hackrf-usb: $(FDIR)/hackrf_usb.dfu
+
+$(FDIR)/hackrf_usb.dfu: $(FDIR) $(FDIR)/Makefile $(FORCE)
+	$(MAKE) -C $(FDIR)
+
+$(FDIR)/Makefile:
+	cd $(FDIR) && cmake -DBOARD=RAD1O ..
+
+$(FDIR):
+	mkdir $(FDIR)
+
+TDIR=hackrf/host/build
+
+$(TDIR):
+	mkdir $(TDIR)
+
+hackrf-tools: $(TDIR) $(TDIR)/hackrf-tools/src/hackrf_info
+
+$(TDIR)/hackrf-tools/src/hackrf_info: $(FORCE)
+	cd $(TDIR) && cmake .. && $(MAKE)
+
+hack-clean:
+	$(RM) -r $(FDIR) $(TDIR)
+
+clean: hack-clean
+	$(MAKE) -C hackrf/firmware/libopencm3 clean
+
+FORCE:

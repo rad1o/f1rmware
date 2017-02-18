@@ -32,7 +32,7 @@ hackrf/Readme.md:
 	git submodule update
 
 hackrf/firmware/hackrf_usb/build/hackrf_usb.dfu:
-	$(MAKE) -C hackrf
+	$(MAKE) -f Makefile.hackrf
 
 hackrf: hackrf/Readme.md hackrf/firmware/hackrf_usb/build/hackrf_usb.dfu
 
@@ -48,5 +48,5 @@ clean:
 	$(MAKE) -C flashapp clean
 	$(MAKE) -C l0dables clean
 	$(MAKE) -C smartflash clean
-	$(MAKE) -C hackrf hack-clean
+	$(MAKE) -f Makefile.hackrf hack-clean
 #	cd libopencm3 && make clean
