@@ -84,6 +84,7 @@ typedef enum {
 
 void portapack_init();
 void portapack_run();
+void portapack_stop();
 
 bool set_frequency(const int64_t new_frequency);
 void set_rx_mode(const size_t new_receiver_configuration_index);

@@ -358,6 +358,11 @@ void portapack_init() {
     */
 }
 
+void portapack_stop() {
+//	nvic_disable_irq(NVIC_DMA_IRQ);
+	sgpio_dma_stop();
+}
+
 #include <libopencm3/include/libopencm3/lpc43xx/gpio.h>
 complex_s8_t * s8ram = (complex_s8_t *)0x20000000;
 complex_s8_t * s8end = (complex_s8_t *)0x20004000;

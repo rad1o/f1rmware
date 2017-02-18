@@ -24,7 +24,6 @@
 #include <common/hackrf_core.h>
 #include <common/rf_path.h>
 #include <common/sgpio.h>
-#include <common/sgpio_dma.h>
 #include <common/tuning.h>
 #include <libopencm3/lpc43xx/dac.h>
 
@@ -116,8 +115,7 @@ void spectrum_init()
 
 void spectrum_stop()
 {
-//	nvic_disable_irq(NVIC_DMA_IRQ);
-	sgpio_dma_stop(&sgpio_config);
+	portapack_stop();
 	sgpio_cpld_stream_disable(&sgpio_config);
 	OFF(EN_VDD);
 	OFF(EN_1V8);

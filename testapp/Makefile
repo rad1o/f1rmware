@@ -59,6 +59,7 @@ OBJS += $(SOBJS)
 CFLAGS=-Wno-unused-variable -DRAD1O -DLPC43XX_M4
 OBJS += ../hackrf/firmware/common/w25q80bv.o
 OBJS += ../hackrf/firmware/common/max2871.o
+OBJS += ../hackrf/firmware/common/max2871_regs.o
 
 OBJS += ../l0dables/jumptable.o
 
@@ -75,7 +76,7 @@ OBJS += ../portalib/filters.o
 OBJS += ../portalib/portapack_state.o
 OBJS += ../portalib/specan.o
 OBJS += ../portalib/fft.o
-OBJS += ../hackrf/firmware/common/sgpio_dma.o
+OBJS += ../portalib/sgpio_dma.o
 OBJS += ../hackrf/firmware/common/gpdma.o
 OBJS += ../hackrf/firmware/common/tuning.o
 OBJS += ../hackrf/firmware/common/max2837.o
