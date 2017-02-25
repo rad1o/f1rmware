@@ -14,7 +14,7 @@ hackrf/firmware/libopencm3/README:
 
 hackrf/firmware/libopencm3/lib/libopencm3_lpc43xx.a: $(FORCE)
 	git -C hackrf submodule update
-	$(MAKE) -C firmware/libopencm3
+	$(MAKE) -C hackrf/firmware/libopencm3
 
 lib: hackrf/firmware/libopencm3/README hackrf/firmware/libopencm3/lib/libopencm3_lpc43xx.a
 
