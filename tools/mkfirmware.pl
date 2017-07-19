@@ -108,13 +108,13 @@ print "}};";
 
 print "";
 print "// Tick & init functions:";
-print qq!inline void generated_tick(void) {!;
+print qq!static inline void generated_tick(void) {!;
 for (sort @ticks){
     print qq!\t$_();!;
 };
 print qq!}!;
 
-print qq!inline void generated_init(void) {!;
+print qq!static inline void generated_init(void) {!;
 for (sort @inits){
     print qq!\t$_();!;
 };
