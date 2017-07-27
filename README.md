@@ -17,3 +17,5 @@ IRC channel: irc://irc.darkfasel.net/#rad1o (Port 6697 oder 9999, TLS-only, IPv6
 [Build instructions](doc/build.md)
 
 [Some notes on toggling LEDs](doc/debugging.md)
+
+travis test
