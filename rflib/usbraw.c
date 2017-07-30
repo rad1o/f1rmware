@@ -44,8 +44,7 @@ void usbraw_menu() {
 
     rflib_init();
     rflib_set_freq(FREQSTART);
-    rflib_set_rxsamplerate(1000000);
-    rflib_set_rxdecimation(2);
+    rflib_set_rxsamplerate(500000);
     rflib_set_rxbandwidth(1750000);
     rflib_raw_receive();
 

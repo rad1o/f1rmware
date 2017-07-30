@@ -53,18 +53,8 @@ void rflib_set_rxlna(const int enable);
 /* enable (1) or disable (0) TX low noise amplifier */
 void rflib_set_txlna(const int enable);
 
-/* set receive sample rate
- * NOTE: in order to avoid division on calculation on the M0 core,
- * this is to be set to the sample rate *after* decimation.
- * So the RF parts are set to rxsamplerate*rxdecimation.
- */
+/* set receive sample rate */
 void rflib_set_rxsamplerate(const int samplerate);
-
-/* set decimation factor that is done in the CPLD.
- * Default is 1, which means that no samples are to be dropped
- * (that is what the CPLD does when we "decimate")
- */
-void rflib_set_rxdecimation(const int decimation);
 
 /* set band filter bandwidth for RX operation */
 void rflib_set_rxbandwidth(const int bandwidth);

@@ -131,10 +131,6 @@ void rflib_set_rxsamplerate(const int samplerate) {
     send_cmd(CMD_SET_RXSAMPLERATE, samplerate, 0, 0, true);
 }
 
-void rflib_set_rxdecimation(const int decimation) {
-    send_cmd(CMD_SET_RXDECIMATION, decimation, 0, 0, true);
-}
-
 void rflib_set_rxbandwidth(const int bandwidth) {
     send_cmd(CMD_SET_RXBANDWIDTH, bandwidth, 0, 0, true);
 }
@@ -168,8 +164,7 @@ static void rxlib_receive_handler() {
 }
 
 void rflib_bfsk_init() {
-    rflib_set_rxsamplerate(1000000);
-    rflib_set_rxdecimation(2);
+    rflib_set_rxsamplerate(500000);
     rflib_set_rxbandwidth(1750000);
     rflib_set_txsamplerate(4000000);
     rflib_set_txbandwidth(1750000);

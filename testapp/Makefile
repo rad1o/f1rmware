@@ -91,6 +91,7 @@ OBJS += ../hackrf/firmware/common/spi_ssp.o
 OBJS += ../hackrf/firmware/common/max5864_target.o
 OBJS += ../hackrf/firmware/common/max2837_target.o
 OBJS += ../hackrf/firmware/common/gpio_lpc.o
+OBJS += ../hackrf/firmware/common/operacake.o
 LIBS += -lm
 
 LDSCRIPT=../ld/app.ld

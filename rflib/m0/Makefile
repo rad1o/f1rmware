@@ -2,7 +2,7 @@
 BINARY = m0
 SRC = m0.c cossin1024.c \
 	hackrf_core.c max2837.c max2871.c max2871_regs.c max5864.c rf_path.c sgpio.c si5351c.c tuning.c gpio_lpc.c mixer.c \
-	max2837_target.c max5864_target.c i2c_bus.c i2c_lpc.c spi_bus.c spi_ssp.c
+	max2837_target.c max5864_target.c i2c_bus.c i2c_lpc.c spi_bus.c spi_ssp.c operacake.c
 
 LDSCRIPT ?= ../../ld/m0.ld
 

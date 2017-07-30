@@ -134,7 +134,6 @@ typedef struct receiver_configuration_t {
 	int64_t tuning_offset;
 	uint32_t sample_rate;
 	uint32_t baseband_bandwidth;
-	uint32_t baseband_decimation;
 	bool enable_audio;
 } receiver_configuration_t;
 
@@ -145,61 +144,54 @@ const receiver_configuration_t receiver_configurations[] = {
 		.tuning_offset = 0,
 		.sample_rate = 20000000,
 		.baseband_bandwidth = 10000000,
-		.baseband_decimation = 1,
 		.enable_audio = false,
 	},
 	[RECEIVER_CONFIGURATION_NBAM] = {
 		.init = rx_am_to_audio_init,
 		.baseband_handler = rx_am_to_audio_baseband_handler,
 		.tuning_offset = -768000,
-		.sample_rate = 12288000,
+		.sample_rate = 3072000,
 		.baseband_bandwidth = 1750000,
-		.baseband_decimation = 4,
 		.enable_audio = true,
 	},
 	[RECEIVER_CONFIGURATION_NBFM] = {
 		.init = rx_fm_narrowband_to_audio_init,
 		.baseband_handler = rx_fm_narrowband_to_audio_baseband_handler,
 		.tuning_offset = -768000,
-		.sample_rate = 12288000,
+		.sample_rate = 3072000,
 		.baseband_bandwidth = 1750000,
-		.baseband_decimation = 4,
 		.enable_audio = true,
 	},
 	[RECEIVER_CONFIGURATION_WBFM] = {
 		.init = rx_fm_broadcast_to_audio_init,
 		.baseband_handler = rx_fm_broadcast_to_audio_baseband_handler,
 		.tuning_offset = -768000,
-		.sample_rate = 12288000,
+		.sample_rate = 3072000,
 		.baseband_bandwidth = 1750000,
-		.baseband_decimation = 4,
 		.enable_audio = true,
 	},
 /*	[RECEIVER_CONFIGURATION_TPMS] = {
 		.init = rx_tpms_ask_init_wrapper,
 		.baseband_handler = rx_tpms_ask_baseband_handler,
 		.tuning_offset = -768000,
-		.sample_rate = 12288000,
+		.sample_rate = 3072000,
 		.baseband_bandwidth = 1750000,
-		.baseband_decimation = 4,
 		.enable_audio = true,
 	},
 	[RECEIVER_CONFIGURATION_TPMS_FSK] = {
 		.init = rx_tpms_fsk_init_wrapper,
 		.baseband_handler = rx_tpms_fsk_baseband_handler,
 		.tuning_offset = -614400,
-		.sample_rate = 9830400,
+		.sample_rate = 2457600,
 		.baseband_bandwidth = 1750000,
-		.baseband_decimation = 4,
 		.enable_audio = true,
 	},
 	[RECEIVER_CONFIGURATION_AIS] = {
 		.init = rx_ais_init_wrapper,
 		.baseband_handler = rx_ais_baseband_handler,
 		.tuning_offset = -614400,
-		.sample_rate = 9830400,
+		.sample_rate = 2457600,
 		.baseband_bandwidth = 1750000,
-		.baseband_decimation = 4,
 		.enable_audio = false,
 	}, */
 };
@@ -263,7 +255,6 @@ void set_rx_mode(const size_t new_receiver_configuration_index) {
 
 	sample_rate_set(receiver_configuration->sample_rate);
 	baseband_filter_bandwidth_set(receiver_configuration->baseband_bandwidth);
-	sgpio_cpld_stream_rx_set_decimation(&sgpio_config, receiver_configuration->baseband_decimation);
 
 	receiver_configuration->init(receiver_state_buffer);
 	receiver_baseband_handler = receiver_configuration->baseband_handler;
@@ -376,10 +367,7 @@ void dma_isr() {
         };
     };
 
-	/* 12.288MHz
-	 * -> CPLD decimation by 4
-	 * -> 3.072MHz complex<int8>[2048] == 666.667 usec/block == 136000 cycles/sec
-	 */
+	/* 3.072MHz complex<int8>[2048] == 666.667 usec/block == 136000 cycles/sec */
 	cm3_gpio_set(GPIO2,GPIOPIN8);
 	if( receiver_baseband_handler ) {
 		baseband_timestamps_t timestamps;
@@ -394,8 +382,7 @@ void dma_isr() {
 		device_state->dsp_metrics.duration_all = systick_difference(timestamps.start, timestamps.audio_end);
 
 		const receiver_configuration_t* const receiver_configuration = get_receiver_configuration();
-		const float decimated_sampling_rate = (float)receiver_configuration->sample_rate / receiver_configuration->baseband_decimation;
-		const float cycles_per_baseband_block = (2048.0f / decimated_sampling_rate) * 200000000.0f;
+		const float cycles_per_baseband_block = (2048.0f / (float)receiver_configuration->sample_rate) * 200000000.0f;
 		device_state->dsp_metrics.duration_all_millipercent = (float)device_state->dsp_metrics.duration_all / cycles_per_baseband_block * 100000.0f;
 	}
 	cm3_gpio_clear(GPIO2,GPIOPIN8);

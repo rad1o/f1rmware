@@ -63,15 +63,13 @@
 
 // receive options
 #define BANDWIDTH  1750000
-#define SAMPLERATE 12288000
-#define DECIMATION 4
-#define FREQOFFSET -(SAMPLERATE/DECIMATION/4)
+#define SAMPLERATE 3072000
+#define FREQOFFSET -(SAMPLERATE/4)
 
 // transmit options
 #define TX_BANDWIDTH  1750000
 #define TX_SAMPLERATE 8000000
 #define TX_FREQOFFSET 0
-#define TX_DECIMATION 1
 
 // default audio output level
 #define AUDIOVOLUME 20
@@ -438,7 +436,6 @@ static void transmit(bool enable) {
         rf_path_set_direction(&rf_path, RF_PATH_DIRECTION_TX);
         sample_rate_frac_set(TX_SAMPLERATE * 2, 1);
         baseband_filter_bandwidth_set(TX_BANDWIDTH);
-        sgpio_cpld_stream_rx_set_decimation(&sgpio_config, TX_DECIMATION);
         dac_set(0);
         OFF(MIC_AMP_DIS); // enable amp
     } else {
@@ -448,7 +445,6 @@ static void transmit(bool enable) {
         rf_path_set_direction(&rf_path, RF_PATH_DIRECTION_RX);
         sample_rate_frac_set(SAMPLERATE * 2, 1);
         baseband_filter_bandwidth_set(BANDWIDTH);
-        sgpio_cpld_stream_rx_set_decimation(&sgpio_config, DECIMATION);
         ON(MIC_AMP_DIS); // disable amp
     }
     transmitting = enable;
@@ -524,7 +520,6 @@ static void rfinit() {
 
     sample_rate_frac_set(SAMPLERATE * 2, 1);
     baseband_filter_bandwidth_set(BANDWIDTH);
-    sgpio_cpld_stream_rx_set_decimation(&sgpio_config, DECIMATION);
 
     baseband_streaming_enable(&sgpio_config);
 }

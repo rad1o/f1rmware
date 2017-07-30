@@ -91,7 +91,6 @@ static int16_t txvga_gain_db = 47;
 
 static uint32_t rxsamplerate = 2000000;
 static uint32_t txsamplerate = 2000000;
-static uint16_t rxdecimation = 1;
 static uint32_t rxbandwidth = 1750000;
 static uint32_t txbandwidth = 1750000;
 
@@ -258,9 +257,6 @@ void m4core_ipc_isr() {
             break;
         case CMD_SET_RXSAMPLERATE:
             rxsamplerate = *m0_arg;
-            break;
-        case CMD_SET_RXDECIMATION:
-            rxdecimation = *m0_arg;
             break;
         case CMD_SET_RXBANDWIDTH:
             rxbandwidth = *m0_arg;
@@ -550,9 +546,8 @@ static void receive() {
     rf_path_set_lna(&rf_path, rxlna_enable);
 
     rflib_set_frequency(frequency, -(rxsamplerate>>2));
-    sample_rate_frac_set(rxsamplerate * rxdecimation * 2, 1);
+    sample_rate_frac_set(rxsamplerate * 2, 1);
     baseband_filter_bandwidth_set(rxbandwidth);
-    sgpio_cpld_stream_rx_set_decimation(&sgpio_config, rxdecimation);
     set_rf_params();
     /* send interrupt now in order to allow the M4 code that has
      * put us into receive mode to wait until the RF setup is done
