@@ -184,7 +184,7 @@ void hackrf_clock_init(void)
 }
 
 void si5351_init(void){
-	i2c_bus_start(clock_gen.bus, &i2c_config_si5351c_slow_clock);
+	i2c_bus_start(clock_gen.bus, &i2c_config_si5351c_fast_clock);
 
 	si5351c_disable_all_outputs(&clock_gen);
 	si5351c_disable_oeb_pin_control(&clock_gen);

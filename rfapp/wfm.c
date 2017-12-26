@@ -471,32 +471,7 @@ static void set_rf_params() {
 
 /* portapack_init plus a bunch of stuff from here and there, cleaned up */
 static void rfinit() {
-    /* Release CPLD JTAG pins */
-    scu_pinmux(SCU_PINMUX_CPLD_TDO, SCU_GPIO_NOPULL | SCU_CONF_FUNCTION4);
-    scu_pinmux(SCU_PINMUX_CPLD_TCK, SCU_GPIO_NOPULL | SCU_CONF_FUNCTION0);
-    scu_pinmux(SCU_PINMUX_CPLD_TMS, SCU_GPIO_NOPULL | SCU_CONF_FUNCTION0);
-    scu_pinmux(SCU_PINMUX_CPLD_TDI, SCU_GPIO_NOPULL | SCU_CONF_FUNCTION0);
-
-    gpio_input(jtag_cpld.gpio->gpio_tdo);
-    gpio_input(jtag_cpld.gpio->gpio_tck);
-    gpio_input(jtag_cpld.gpio->gpio_tms);
-    gpio_input(jtag_cpld.gpio->gpio_tdi);
-
-    /* Disable unused clock outputs. They generate noise. */
-    scu_pinmux(CLK0, SCU_CLK_IN | SCU_CONF_FUNCTION7);
-    scu_pinmux(CLK2, SCU_CLK_IN | SCU_CONF_FUNCTION7);
-
     hackrf_clock_init();
-    rf_path_pin_setup(&rf_path);
-
-    /* Configure external clock in */
-    scu_pinmux(SCU_PINMUX_GP_CLKIN, SCU_CLK_IN | SCU_CONF_FUNCTION1);
-
-    /* Disable unused clock outputs. They generate noise. */
-    scu_pinmux(CLK0, SCU_CLK_IN | SCU_CONF_FUNCTION7);
-    scu_pinmux(CLK2, SCU_CLK_IN | SCU_CONF_FUNCTION7);
-
-    sgpio_configure_pin_functions(&sgpio_config);
 
     ON(EN_VDD);
     ON(EN_1V8);
@@ -509,8 +484,6 @@ static void rfinit() {
     
     // set up SGPIO ISR
     vector_table.irq[NVIC_SGPIO_IRQ] = sgpio_isr_rx;
-
-    //ssp1_init();
 
     rf_path_init(&rf_path);
     set_rf_params();

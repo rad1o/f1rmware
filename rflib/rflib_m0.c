@@ -164,7 +164,7 @@ static void rxlib_receive_handler() {
 }
 
 void rflib_bfsk_init() {
-    rflib_set_rxsamplerate(500000);
+    rflib_set_rxsamplerate(1000000);
     rflib_set_rxbandwidth(1750000);
     rflib_set_txsamplerate(4000000);
     rflib_set_txbandwidth(1750000);

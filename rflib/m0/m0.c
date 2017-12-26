@@ -168,28 +168,9 @@ static void si5351_init(void){
 
 /* portapack_init plus a bunch of stuff from here and there, cleaned up */
 static void rf_init() {
-    /* Release CPLD JTAG pins */
-    scu_pinmux(SCU_PINMUX_CPLD_TDO, SCU_GPIO_NOPULL | SCU_CONF_FUNCTION4);
-    scu_pinmux(SCU_PINMUX_CPLD_TCK, SCU_GPIO_NOPULL | SCU_CONF_FUNCTION0);
-    scu_pinmux(SCU_PINMUX_CPLD_TMS, SCU_GPIO_NOPULL | SCU_CONF_FUNCTION0);
-    scu_pinmux(SCU_PINMUX_CPLD_TDI, SCU_GPIO_NOPULL | SCU_CONF_FUNCTION0);
-
-    gpio_input(jtag_cpld.gpio->gpio_tdo);
-    gpio_input(jtag_cpld.gpio->gpio_tck);
-    gpio_input(jtag_cpld.gpio->gpio_tms);
-    gpio_input(jtag_cpld.gpio->gpio_tdi);
-
+    pin_setup();
+    SCU_SFSI2C0 = SCU_I2C0_NOMINAL;
     hackrf_clock_init();
-    rf_path_pin_setup(&rf_path);
-
-    /* Configure external clock in */
-    scu_pinmux(SCU_PINMUX_GP_CLKIN, SCU_CLK_IN | SCU_CONF_FUNCTION1);
-
-    /* Disable unused clock outputs. They generate noise. */
-    scu_pinmux(CLK0, SCU_CLK_IN | SCU_CONF_FUNCTION7);
-    scu_pinmux(CLK2, SCU_CLK_IN | SCU_CONF_FUNCTION7);
-
-    sgpio_configure_pin_functions(&sgpio_config);
 
     ON(EN_VDD);
     ON(EN_1V8);
@@ -201,8 +182,6 @@ static void rf_init() {
     si5351_init();
 
     cpu_clock_pll1_max_speed();
-
-    //ssp1_init();
 
     rf_path_init(&rf_path);
 }

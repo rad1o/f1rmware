@@ -137,10 +137,7 @@ static void pwrsckt_init()
 	dac_init(false);
 	cpu_clock_set(204); // WARP SPEED! :-)
 	hackrf_clock_init();
-	rf_path_pin_setup(&rf_path);
-	/* Configure external clock in */
-	//scu_pinmux(SCU_PINMUX_GP_CLKIN, SCU_CLK_IN | SCU_CONF_FUNCTION1);
-	sgpio_configure_pin_functions(&sgpio_config);
+
 	ON(EN_VDD);
 	ON(EN_1V8);
 	OFF(MIC_AMP_DIS); // Enable audio amp
