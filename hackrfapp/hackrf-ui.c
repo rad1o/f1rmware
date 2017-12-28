@@ -29,6 +29,7 @@ uint32_t bblna_gain = 0;
 uint32_t bbvga_gain = 0;
 uint32_t bbtxvga_gain = 0;
 bool lna_on = false;
+bool sweeping = false;
 
 #define BLACK       0b00000000
 #define RED         0b11100000
@@ -44,7 +45,7 @@ void sys_tick_handler(void){ /* every SYSTICKSPEED us */
     incTimer();
 };
 
-void draw_frequency(void)
+static void draw_frequency(void)
 {
     char tmp[100];
     uint32_t mhz;
@@ -62,7 +63,7 @@ void draw_frequency(void)
     lcdPrint("MHz");
 }
 
-void draw_tx_rx(void)
+static void draw_tx_rx(void)
 {
     uint8_t bg, fg;
 
@@ -96,6 +97,9 @@ void draw_tx_rx(void)
 
 void hackrf_ui_update(void)
 {
+    if(sweeping) {
+        return;
+    }
     char tmp[100];
     uint32_t mhz;
     uint32_t khz;
@@ -236,3 +240,14 @@ void hackrf_ui_setBBTXVGAGain(const uint32_t gain_db)
     hackrf_ui_update();
 }
 
+void hackrf_ui_startSweepMode(void)
+{
+    sweeping = true;
+    hackrf_ui_update();
+}
+
+void hackrf_ui_stopSweepMode(void)
+{
+    sweeping = false;
+    hackrf_ui_update();
+}
