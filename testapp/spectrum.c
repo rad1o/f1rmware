@@ -1,14 +1,10 @@
 
 #include <rad1olib/setup.h>
-#include <rad1olib/systick.h>
-#include <libopencm3/lpc43xx/m4/nvic.h>
-#include <libopencm3/cm3/systick.h>
 
 #include <r0ketlib/display.h>
 #include <r0ketlib/print.h>
 #include <r0ketlib/itoa.h>
 #include <r0ketlib/keyin.h>
-#include <r0ketlib/intin.h>
 #include <r0ketlib/menu.h>
 #include <r0ketlib/select.h>
 #include <r0ketlib/idle.h>
@@ -20,12 +16,9 @@
 #include <rad1olib/systick.h>
 
 #include <portalib/portapack.h>
-#include <portalib/specan.h>
 #include <common/hackrf_core.h>
 #include <common/rf_path.h>
 #include <common/sgpio.h>
-#include <common/sgpio_dma.h>
-#include <common/tuning.h>
 #include <libopencm3/lpc43xx/dac.h>
 
 #include <portalib/complex.h>
@@ -49,10 +42,6 @@ static volatile int displayMode = DEFAULT_MODE;
 void spectrum_callback(uint8_t* buf, int bufLen)
 {
 	TOGGLE(LED2);
-	if (displayMode == MODE_SPECTRUM)
-		lcdClear();
-	else if (displayMode == MODE_WATERFALL)
-		lcdShift(0,1,0);
 
 	for(int i = 0; i < 128; i++) // display 128 FFT magnitude points
 	{
@@ -61,7 +50,7 @@ void spectrum_callback(uint8_t* buf, int bufLen)
 		if(i < 64) // negative frequencies
 			v = buf[(bufLen/2)+64+i];
 		else // positive frequencies
-			v = buf[i-64];
+			v = buf[i-63];
 
 		// fill display
 		if (displayMode == MODE_SPECTRUM)
@@ -74,14 +63,6 @@ void spectrum_callback(uint8_t* buf, int bufLen)
 			lcdSetPixel(i,RESY-1,v);
 		}
 	}
-
-	// text info
-	lcdSetCrsr(0,0);
-	lcdPrint("f=");
-	lcdPrint(IntToStr(freq/1000000,4,F_LONG));
-	lcdPrintln("MHz                 ");
-	lcdPrintln("-5MHz    0    +5MHz");
-	lcdDisplay();
 }
 
 void spectrum_init()
@@ -98,11 +79,9 @@ void spectrum_init()
 	ON(EN_1V8);
 	OFF(MIC_AMP_DIS);
 	delayms(500); // doesn't work without
-	cpu_clock_set(204); // WARP SPEED! :-)
 	si5351_init();
 	portapack_init();
 
-	set_rx_mode(RECEIVER_CONFIGURATION_SPEC);
 	specan_register_callback(spectrum_callback);
 
 	// defaults:
@@ -131,7 +110,24 @@ void spectrum_stop()
 //# MENU spectrum frequency
 void spectrum_frequency()
 {
-	freq=(int64_t)input_int("freq:",(int)(freq/1000000),50,4000,4)*1000000;
+	freq=(int64_t)input_int("freq:",(int)(freq/1000000),5,4000,4)*1000000;
+}
+
+void display_draw()
+{
+	if (displayMode == MODE_SPECTRUM)
+		lcdClear();
+	else if (displayMode == MODE_WATERFALL)
+		lcdShift(0,1,0);
+
+	// text info
+	lcdSetCrsr(0,0);
+	lcdPrint("f=");
+	lcdPrint(IntToStr(freq/1000000,4,F_LONG));
+	lcdPrintln("MHz                 ");
+	lcdPrintln("-5MHz    0    +5MHz");
+
+	lcdDisplay();
 }
 
 //# MENU spectrum show
@@ -143,6 +139,8 @@ void spectrum_show()
 	set_freq(freq);
 	while(1)
 	{
+		display_draw();
+
 		//getInputWaitRepeat does not seem to work?
 		switch(getInputRaw())
 		{
@@ -167,6 +165,7 @@ void spectrum_show()
                         freq -= FAST_CHANGE_CHANGE;
                         ssp1_set_mode_max2837();
                         set_freq(freq);
+			display_draw();
                         delayms(10);
                     }
                 }
@@ -182,6 +181,7 @@ void spectrum_show()
                         freq += FAST_CHANGE_CHANGE;
                         ssp1_set_mode_max2837();
                         set_freq(freq);
+			display_draw();
                         delayms(10);
                     }
                 }
