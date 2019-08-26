@@ -2,7 +2,7 @@ with import <nixpkgs> {}; {
   env = stdenv.mkDerivation {
     name = "rad1o-f1rmware-env";
     buildInputs = [
-      stdenvCross
+      gcc-arm-embedded
       python2
       python2Packages.pyyaml
       gcc-arm-embedded
