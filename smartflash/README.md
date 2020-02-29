@@ -27,33 +27,20 @@ A few tools and files need to be installed. The f1rmware and all other files nee
 ### Tools
 
 #### mtools
+ - On debian/ubuntu: `sudo apt-get install mtools`
  - On arch: `pacman -S mtools`
- - On Fedora `sudo dnf install mtools`
+ - On Fedora: `sudo dnf install mtools`
 
 #### udev rule:
  - Copy `90-rad1o-flash.rules` to `/etc/udev/rules.d`
  - reload rules `$ sudo udevadm control --reload`
 
-
 #### perl Curses module
+ - On debian/ubuntu: `sudo apt-get install libcurses-perl`
+ - On arch: ` pacman -S perl-curses`
+ - On Fedora: `sudo dnf install perl-Curses`
 
-#####Debian, Ubuntu, etc.
-```
-apt-get install libcurses-perl
-```
-
-#####arch
-
-```
-pacman -S perl-curses
-```
-
-#####Fedora
-```
-sudo dnf install perl-Curses
-```
-
-#####Directly from CPAN
+##### (or) directly from CPAN
 
 Note: You should probably only do this if there is no package for your distro.
 
