@@ -12,7 +12,7 @@ with import <nixpkgs> {}; {
       dfu-util
       cmake
       libusb
+      cacert
     ];
-    SSL_CERT_FILE="/etc/ssl/certs/ca-bundle.crt";
   };
 }
