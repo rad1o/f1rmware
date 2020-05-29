@@ -1,4 +1,4 @@
-/* BPSK RX/TX
+/* BFSK RX/TX
  *
  * Send/Receive BFSK transmissions using the directional pad
  * (predefined strings) or via USB/CDC (whatever you want)
@@ -44,7 +44,7 @@ static void receive() {
     }
 }
 
-//# MENU BPSK
+//# MENU BFSK
 void bfsk_menu() {
     lcdClear();
     lcdPrintln("ENTER to go back");
