@@ -23,6 +23,7 @@ void lcdShift(int x, int y, int wrap);
 void lcdSetContrast(int c);
 void lcdSetRotation(char doit);
 void lcdRotate(void);
+uint8_t* lcdGetBuffer();
 
 void lcd_select();
 void lcd_deselect();
