@@ -3,6 +3,8 @@ getInput
 getInputRaw
 getInputWait
 getInputWaitRelease
+getInputChange
+inputDebounce
 gpio_clear
 gpio_set
 gpio_toggle

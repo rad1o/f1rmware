@@ -5,6 +5,8 @@
 
 #define FUNC (SCU_GPIO_PDN)
 
+static volatile uint8_t buttonState=BTN_NONE;
+static volatile uint8_t buttonChange=0;
 
 static char isTurned;
 
@@ -83,18 +85,9 @@ uint8_t getInputRaw(void) {
 
 
 uint8_t getInput(void) {
-    uint8_t key = BTN_NONE;
 
-    key=getInputRaw();
-    /* XXX: we should probably debounce the joystick.
-            Any ideas how to do this properly?
-            For now wait for any release.
-     */
-    if(key != BTN_NONE)
-        while(key==getInputRaw())
-            ;
+    return buttonState;
 
-    return key;
 }
 
 
@@ -160,3 +153,22 @@ void getInputWaitRelease(void) {
         work_queue();
     delayms_queue(10); /* Delay a little more to debounce */
 }
+
+uint8_t getInputChange(void){
+    return buttonChange;
+}
+
+//debounce with a vertical counter
+void inputDebounce(void){
+    uint8_t input = getInputRaw();
+    static uint8_t cnt1, cnt0;
+    uint8_t change;
+
+    change = input ^ buttonState;
+    cnt1 = (cnt1 ^ cnt0) & change;
+    cnt0 = (~cnt0) & change;
+    
+    buttonChange = (cnt1 & cnt0);
+    buttonState ^= buttonChange;
+}
+

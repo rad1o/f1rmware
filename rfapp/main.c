@@ -47,6 +47,10 @@ void tick_batteryLED(void){
         };
     };
 
+    //Debounce inputs
+    EVERY(10,0){
+	inputDebounce();
+    };
     return;
 }
 
