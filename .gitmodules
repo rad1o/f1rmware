@@ -5,7 +5,6 @@
 	path = hackrf-old
 	url = https://github.com/rad1o/hackrf.git
 	branch = module
-
-[submodule "hackrf"]
+[submodule "hackrf-upstream"]
 	path = hackrf
 	url = https://github.com/mossmann/hackrf
