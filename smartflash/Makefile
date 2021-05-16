@@ -25,7 +25,7 @@ gather:
 	@echo
 	@echo '### Gathering contents for image'
 	[ ! -d $(fsdir) ] && mkdir $(fsdir) || true
-	cp ../hackrf-old/firmware/hackrf_usb/build/hackrf_usb.bin $(fsdir)/hackrf.b1n
+	cp ../hackrf/firmware/hackrf_usb/build/hackrf_usb_ram.bin $(fsdir)/hackrf.b1n
 	cp ../testapp/testapp.b1n $(fsdir)/
 	cp ../campapp/camp.b1n $(fsdir)/
 	cp ../musicapp/musicapp.b1n $(fsdir)/
@@ -56,8 +56,7 @@ rebuild: build gather
 build:
 	@echo
 	@echo '### Building everything'
-#	cd ../hackrf-old/firmware/hackrf_usb/build && make
-	cd ../hackrf-old && make lib hackrf-usb
+	make -C .. hackrf
 	cd ../campapp && make camp.b1n
 	cd ../testapp && make testapp.b1n
 	cd ../musicapp && make musicapp.b1n

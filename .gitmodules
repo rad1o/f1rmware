@@ -6,3 +6,6 @@
 	url = https://github.com/rad1o/hackrf.git
 	branch = module
 
+[submodule "hackrf"]
+	path = hackrf
+	url = https://github.com/mossmann/hackrf

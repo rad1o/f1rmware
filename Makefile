@@ -31,10 +31,19 @@ hackrf-old/Readme.md:
 	git submodule init
 	git submodule update
 
-hackrf-old/firmware/hackrf_usb/build/hackrf_usb.bin:
-	$(MAKE) -C hackrf-old
+hackrf/Readme.md:
+	git submodule init
+	git submodule update
 
-hackrf: hackrf-old/Readme.md hackrf-old/firmware/hackrf_usb/build/hackrf_usb.bin
+hackrf/firmware/libopencm3/README:
+	cd hackrf && git submodule init && git submodule update
+
+hackrf/firmware/hackrf_usb/build/hackrf_usb_ram.bin: hackrf/firmware/libopencm3/README
+	mkdir -p hackrf/firmware/hackrf_usb/build
+	cmake -B hackrf/firmware/hackrf_usb/build/ -S hackrf/firmware/hackrf_usb/ -DBOARD=RAD1O
+	$(MAKE) -C hackrf/firmware/hackrf_usb/build/
+
+hackrf: hackrf-old/Readme.md hackrf/Readme.md hackrf/firmware/hackrf_usb/build/hackrf_usb_ram.bin
 
 clean:
 	$(MAKE) -C campapp clean
@@ -49,4 +58,5 @@ clean:
 	$(MAKE) -C l0dables clean
 	$(MAKE) -C smartflash clean
 	$(MAKE) -C hackrf-old hack-clean
+	rm -rf  hackrf/firmware/hackrf_usb/build/
 #	cd libopencm3 && make clean
