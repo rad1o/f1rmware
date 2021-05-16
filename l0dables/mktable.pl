@@ -70,8 +70,8 @@ File::Find::find({wanted => \&wanted}, qw(
 		r0ketlib
 		rad1olib
 		libopencm3/include/libopencm3/lpc43xx
-		hackrf/firmware/common
-		hackrf/firmware/hackrf_usb
+		hackrf-old/firmware/common
+		hackrf-old/firmware/hackrf_usb
 	));
 
 print H <<EOF;

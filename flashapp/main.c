@@ -13,9 +13,9 @@
 #include <r0ketlib/print.h>
 #include <r0ketlib/itoa.h>
 
-#include <hackrf/firmware/hackrf_usb/usb_api_cpld.h>
+#include <hackrf-old/firmware/hackrf_usb/usb_api_cpld.h>
 
-#include <hackrf/firmware/common/cpld_jtag.h>
+#include <hackrf-old/firmware/common/cpld_jtag.h>
 
 #include <lpcapi/msc/msc_main.h>
 #include "msc/msc_disk.h"

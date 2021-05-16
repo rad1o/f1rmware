@@ -27,14 +27,14 @@ libopencm3/lib/libopencm3_lpc43xx.a:
 
 lib: libopencm3/README libopencm3/lib/libopencm3_lpc43xx.a
 
-hackrf/Readme.md:
+hackrf-old/Readme.md:
 	git submodule init
 	git submodule update
 
-hackrf/firmware/hackrf_usb/build/hackrf_usb.bin:
-	$(MAKE) -C hackrf
+hackrf-old/firmware/hackrf_usb/build/hackrf_usb.bin:
+	$(MAKE) -C hackrf-old
 
-hackrf: hackrf/Readme.md hackrf/firmware/hackrf_usb/build/hackrf_usb.bin
+hackrf: hackrf-old/Readme.md hackrf-old/firmware/hackrf_usb/build/hackrf_usb.bin
 
 clean:
 	$(MAKE) -C campapp clean
@@ -48,5 +48,5 @@ clean:
 	$(MAKE) -C flashapp clean
 	$(MAKE) -C l0dables clean
 	$(MAKE) -C smartflash clean
-	$(MAKE) -C hackrf hack-clean
+	$(MAKE) -C hackrf-old hack-clean
 #	cd libopencm3 && make clean

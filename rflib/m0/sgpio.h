@@ -1,1 +1,1 @@
-../../hackrf/firmware/common/sgpio.h
+../../hackrf-old/firmware/common/sgpio.h

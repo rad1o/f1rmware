@@ -1,1 +1,1 @@
-../../hackrf/firmware/common/max2837.c
+../../hackrf-old/firmware/common/max2837.c

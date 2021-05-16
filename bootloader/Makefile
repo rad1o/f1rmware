@@ -23,12 +23,12 @@ OBJS += ../lpcapi/usbd_common.o
 OBJS += ../lpcapi/msc/msc_main.o
 OBJS += ../lpcapi/msc/msc_ram.o
 OBJS += ../lpcapi/msc/msc_desc.o
-OBJS += ../hackrf/firmware/common/usb.o
+OBJS += ../hackrf-old/firmware/common/usb.o
 
 CFLAGS=-Wno-unused-variable -DRAD1O -DLPC43XX_M4
-OBJS += ../hackrf/firmware/common/w25q80bv.o
-OBJS += ../hackrf/firmware/common//max2871.o
-#OBJS += ../hackrf/firmware/common//max2871_regs.o
+OBJS += ../hackrf-old/firmware/common/w25q80bv.o
+OBJS += ../hackrf-old/firmware/common//max2871.o
+#OBJS += ../hackrf-old/firmware/common//max2871_regs.o
 
 RPATH=..
 LDSCRIPT=boot.ld

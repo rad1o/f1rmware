@@ -44,7 +44,7 @@
  * @brief	main routine for blinky example
  * @return	Function should not exit.
  */
-#include <hackrf/firmware/common/usb.h>
+#include <hackrf-old/firmware/common/usb.h>
 #include <rad1olib/setup.h>
 
 void CDCenable(void) {

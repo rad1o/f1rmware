@@ -37,38 +37,38 @@ OBJS += ../rad1olib/battery.o
 OBJS += ../rad1olib/draw.o
 
 # Hackrf code
-OBJS += ../hackrf/firmware/hackrf_usb/hackrf_usb.o
-OBJS += ../hackrf/firmware/hackrf_usb/sgpio_isr.o
-OBJS += ../hackrf/firmware/hackrf_usb/usb_api_board_info.o
-OBJS += ../hackrf/firmware/hackrf_usb/usb_api_cpld.o
-OBJS += ../hackrf/firmware/hackrf_usb/usb_api_register.o
-OBJS += ../hackrf/firmware/hackrf_usb/usb_api_spiflash.o
-OBJS += ../hackrf/firmware/hackrf_usb/usb_api_transceiver.o
-OBJS += ../hackrf/firmware/hackrf_usb/usb_bulk_buffer.o
-OBJS += ../hackrf/firmware/hackrf_usb/usb_descriptor.o
-OBJS += ../hackrf/firmware/hackrf_usb/usb_device.o
-OBJS += ../hackrf/firmware/hackrf_usb/usb_endpoint.o
-OBJS += ../hackrf/firmware/common/usb_standard_request.o
-OBJS += ../hackrf/firmware/common/usb_queue.o
-OBJS += ../hackrf/firmware/common/usb_request.o
-OBJS += ../hackrf/firmware/common/usb.o
-OBJS += ../hackrf/firmware/common/rom_iap.o
-OBJS += ../hackrf/firmware/common/xapp058/micro.o
-OBJS += ../hackrf/firmware/common/xapp058/ports.o
-OBJS += ../hackrf/firmware/common/xapp058/lenval.o
-OBJS += ../hackrf/firmware/common/cpld_jtag.o
-OBJS += ../hackrf/firmware/common/si5351c.o
-OBJS += ../hackrf/firmware/common/sgpio_dma.o
-OBJS += ../hackrf/firmware/common/gpdma.o
-OBJS += ../hackrf/firmware/common/tuning.o
-OBJS += ../hackrf/firmware/common/max2837.o
-OBJS += ../hackrf/firmware/common/rf_path.o
-OBJS += ../hackrf/firmware/common/max5864.o
-OBJS += ../hackrf/firmware/common/hackrf_core.o
-OBJS += ../hackrf/firmware/common/sgpio.o
-OBJS += ../hackrf/firmware/common/streaming.o
-OBJS += ../hackrf/firmware/common/w25q80bv.o
-OBJS += ../hackrf/firmware/common/max2871.o
+OBJS += ../hackrf-old/firmware/hackrf_usb/hackrf_usb.o
+OBJS += ../hackrf-old/firmware/hackrf_usb/sgpio_isr.o
+OBJS += ../hackrf-old/firmware/hackrf_usb/usb_api_board_info.o
+OBJS += ../hackrf-old/firmware/hackrf_usb/usb_api_cpld.o
+OBJS += ../hackrf-old/firmware/hackrf_usb/usb_api_register.o
+OBJS += ../hackrf-old/firmware/hackrf_usb/usb_api_spiflash.o
+OBJS += ../hackrf-old/firmware/hackrf_usb/usb_api_transceiver.o
+OBJS += ../hackrf-old/firmware/hackrf_usb/usb_bulk_buffer.o
+OBJS += ../hackrf-old/firmware/hackrf_usb/usb_descriptor.o
+OBJS += ../hackrf-old/firmware/hackrf_usb/usb_device.o
+OBJS += ../hackrf-old/firmware/hackrf_usb/usb_endpoint.o
+OBJS += ../hackrf-old/firmware/common/usb_standard_request.o
+OBJS += ../hackrf-old/firmware/common/usb_queue.o
+OBJS += ../hackrf-old/firmware/common/usb_request.o
+OBJS += ../hackrf-old/firmware/common/usb.o
+OBJS += ../hackrf-old/firmware/common/rom_iap.o
+OBJS += ../hackrf-old/firmware/common/xapp058/micro.o
+OBJS += ../hackrf-old/firmware/common/xapp058/ports.o
+OBJS += ../hackrf-old/firmware/common/xapp058/lenval.o
+OBJS += ../hackrf-old/firmware/common/cpld_jtag.o
+OBJS += ../hackrf-old/firmware/common/si5351c.o
+OBJS += ../hackrf-old/firmware/common/sgpio_dma.o
+OBJS += ../hackrf-old/firmware/common/gpdma.o
+OBJS += ../hackrf-old/firmware/common/tuning.o
+OBJS += ../hackrf-old/firmware/common/max2837.o
+OBJS += ../hackrf-old/firmware/common/rf_path.o
+OBJS += ../hackrf-old/firmware/common/max5864.o
+OBJS += ../hackrf-old/firmware/common/hackrf_core.o
+OBJS += ../hackrf-old/firmware/common/sgpio.o
+OBJS += ../hackrf-old/firmware/common/streaming.o
+OBJS += ../hackrf-old/firmware/common/w25q80bv.o
+OBJS += ../hackrf-old/firmware/common/max2871.o
 
 SRCS = $(wildcard *.c)
 SOBJS = $(foreach mod,$(SRCS),$(subst .c,.o,$(mod)))
@@ -79,7 +79,7 @@ REVISION = $(shell git rev-parse --short HEAD)
 
 CFLAGS=-Wno-unused-variable -DRAD1O -DLPC43XX_M4 -DVERSION_STRING=\"git-$(REVISION)\"
 
-CFLAGS+=-I../hackrf/firmware/common
+CFLAGS+=-I../hackrf-old/firmware/common
 
 LIBS += -lm
 

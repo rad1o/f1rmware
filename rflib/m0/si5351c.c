@@ -1,1 +1,1 @@
-../../hackrf/firmware/common/si5351c.c
+../../hackrf-old/firmware/common/si5351c.c

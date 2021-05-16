@@ -10,12 +10,12 @@
 #include <fatfs/ff.h>
 #include <r0ketlib/fs_util.h>
 
-#include <hackrf/firmware/hackrf_usb/usb_api_cpld.h>
+#include <hackrf-old/firmware/hackrf_usb/usb_api_cpld.h>
 
 #include <libopencm3/lpc43xx/gpio.h>
 
-#include <hackrf/firmware/common/cpld_jtag.h>
-#include <hackrf/firmware/common/usb_queue.h>
+#include <hackrf-old/firmware/common/cpld_jtag.h>
+#include <hackrf-old/firmware/common/usb_queue.h>
 
 #include <stddef.h>
 #include <stdint.h>

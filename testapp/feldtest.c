@@ -7,8 +7,8 @@
 #include <r0ketlib/itoa.h>
 #include <rad1olib/pins.h>
 #include <rad1olib/setup.h>
-#include <hackrf/firmware/common/mixer.h>
-#include <hackrf/firmware/common/si5351c.h>
+#include <hackrf-old/firmware/common/mixer.h>
+#include <hackrf-old/firmware/common/si5351c.h>
 
 //# MENU feldtest
 void feld_menu(){

@@ -17,7 +17,7 @@ OBJS += ../r0ketlib/menu.o
 OBJS += ../rad1olib/spi-flash.o
 OBJS += ../rad1olib/assert.o
 OBJS += ../rad1olib/systick.o
-OBJS += ../hackrf/firmware/common/si5351c.o
+OBJS += ../hackrf-old/firmware/common/si5351c.o
 OBJS += ../fatfs/diskio.o
 OBJS += ../fatfs/ff.o
 OBJS += ../r0ketlib/select.o
@@ -34,7 +34,7 @@ OBJS += ../rad1olib/light_ws2812_cortex.o
 OBJS += ../rad1olib/battery.o
 OBJS += ../rad1olib/draw.o
 
-OBJS += ../hackrf/firmware/common/hackrf_core.o
+OBJS += ../hackrf-old/firmware/common/hackrf_core.o
 
 OBJS += modules/navigate/display.o
 OBJS += modules/navigate/initialize.o
@@ -46,7 +46,7 @@ SOBJS = $(foreach mod,$(SRCS),$(subst .c,.o,$(mod)))
 OBJS += $(SOBJS)
 
 CFLAGS=-Wno-unused-variable -DRAD1O -DLPC43XX_M4
-CFLAGS+=-I../hackrf/firmware/common
+CFLAGS+=-I../hackrf-old/firmware/common
 
 LIBS += -lm
 

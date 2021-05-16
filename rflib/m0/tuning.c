@@ -1,1 +1,1 @@
-../../hackrf/firmware/common/tuning.c
+../../hackrf-old/firmware/common/tuning.c

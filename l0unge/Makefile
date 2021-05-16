@@ -16,7 +16,7 @@ OBJS += ../r0ketlib/menu.o
 OBJS += ../rad1olib/spi-flash.o
 OBJS += ../rad1olib/assert.o
 OBJS += ../rad1olib/systick.o
-OBJS += ../hackrf/firmware/common/si5351c.o
+OBJS += ../hackrf-old/firmware/common/si5351c.o
 OBJS += ../fatfs/diskio.o
 OBJS += ../fatfs/ff.o
 OBJS += ../r0ketlib/select.o
@@ -35,7 +35,7 @@ OBJS += ../lpcapi/msc/msc_desc.o
 OBJS += ../lpcapi/msc/msc_main.o
 OBJS += ../lpcapi/msc/msc_ram.o
 OBJS += ../lpcapi/usbd_common.o # MUST be before hackrf usb.o, because of USB0_IRQ selection
-OBJS += ../hackrf/firmware/common/usb.o
+OBJS += ../hackrf-old/firmware/common/usb.o
 OBJS += ../lpcapi/cdc/cdc_desc.o
 OBJS += ../lpcapi/cdc/cdc_main.o
 OBJS += ../lpcapi/cdc/cdc_vcom.o
@@ -52,7 +52,7 @@ SOBJS = $(foreach mod,$(SRCS),$(subst .c,.o,$(mod)))
 OBJS += $(SOBJS)
 
 CFLAGS=-Wno-unused-variable -DRAD1O -DLPC43XX_M4
-CFLAGS+=-I../hackrf/firmware/common
+CFLAGS+=-I../hackrf-old/firmware/common
 
 
 LDSCRIPT=../ld/app.ld

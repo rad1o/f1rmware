@@ -1,1 +1,1 @@
-../../hackrf/firmware/common/hackrf_core.c
+../../hackrf-old/firmware/common/hackrf_core.c

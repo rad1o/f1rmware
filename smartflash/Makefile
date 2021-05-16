@@ -25,7 +25,7 @@ gather:
 	@echo
 	@echo '### Gathering contents for image'
 	[ ! -d $(fsdir) ] && mkdir $(fsdir) || true
-	cp ../hackrf/firmware/hackrf_usb/build/hackrf_usb.bin $(fsdir)/hackrf.b1n
+	cp ../hackrf-old/firmware/hackrf_usb/build/hackrf_usb.bin $(fsdir)/hackrf.b1n
 	cp ../testapp/testapp.b1n $(fsdir)/
 	cp ../campapp/camp.b1n $(fsdir)/
 	cp ../musicapp/musicapp.b1n $(fsdir)/
@@ -38,7 +38,7 @@ gather:
 	-cp ../l0dables/*.c1d $(fsdir)/
 	for a in ../assets/*.led ; do ../tools/convertleds.py -o ${fsdir} $$a || exit ;done
 	-for a in ../l0dables/*.n1k ; do b=$${a##*/}; cp $$a ${fsdir}/$${b#nick_} ; done
-	cp ../hackrf/firmware/cpld/sgpio_if/default.xsvf $(fsdir)/cpld.xsv
+	cp ../hackrf-old/firmware/cpld/sgpio_if/default.xsvf $(fsdir)/cpld.xsv
 	# Add f0nts, images, l0dables, etc.
 	cp ../files/* $(fsdir)/
 	echo -n "camp.b1n" > $(fsdir)/boot.cfg
@@ -56,8 +56,8 @@ rebuild: build gather
 build:
 	@echo
 	@echo '### Building everything'
-#	cd ../hackrf/firmware/hackrf_usb/build && make
-	cd ../hackrf && make lib hackrf-usb
+#	cd ../hackrf-old/firmware/hackrf_usb/build && make
+	cd ../hackrf-old && make lib hackrf-usb
 	cd ../campapp && make camp.b1n
 	cd ../testapp && make testapp.b1n
 	cd ../musicapp && make musicapp.b1n
