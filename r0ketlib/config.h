@@ -49,6 +49,7 @@ extern char ledfile[];
 #define GLOBALnickbg       (the_config[13].value)
 #define GLOBALvdd_fix      (the_config[14].value)
 #define GLOBALrgbleds      (the_config[15].value)
+#define GLOBALrgbleds_amp   (the_config[16].value)
 
 #define GLOBAL(x) GLOBAL ## x
 
