@@ -59,9 +59,9 @@ with open(filename) as fp:
 
     lines = len(filter(lambda x: x.strip(), contents.splitlines()))
 
-    if lines > 50:
+    if lines > 64:
         sys.stderr.write('ERROR: failed to convert %s\n' % filename)
-        sys.stderr.write('currently only animations with a maximum of 50 frames are supported!\n')
+        sys.stderr.write('currently only animations with a maximum of 64 frames are supported!\n')
         sys.exit(2)
 
     elif lines == 1:

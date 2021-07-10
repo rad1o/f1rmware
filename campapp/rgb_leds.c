@@ -8,7 +8,7 @@
 #include <string.h>
 #include <campapp/rad1oconfig.h>
 
-#define MAX_LED_FRAMES 50
+#define MAX_LED_FRAMES 64
 #define BUF_SIZE 3*8*MAX_LED_FRAMES+2
 
 unsigned char leds[BUF_SIZE];
