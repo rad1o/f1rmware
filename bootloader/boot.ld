@@ -39,7 +39,7 @@ SECTIONS
 		. = ALIGN(0x400);
 		*(.vectors)	/* Vector table */
 		*(.reset)	/* reset hdlr */
-		. = ALIGN(32);  /* XXX: needs to match alignment of .text */
+		. = ALIGN(64);  /* XXX: needs to match alignment of .text */
 	} >shadow
 
 	.stext (NOLOAD) : { /* hack to advance ">ram_local2" to the current offset */
