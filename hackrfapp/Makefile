@@ -83,6 +83,8 @@ CFLAGS+=-I../hackrf-old/firmware/common
 
 LIBS += -lm
 
+LDFLAGS += --specs=rdimon.specs
+
 LDSCRIPT=../ld/app.ld
 RPATH=..
 include ../Makefile.inc
