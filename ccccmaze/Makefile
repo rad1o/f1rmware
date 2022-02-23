@@ -50,6 +50,8 @@ CFLAGS+=-I../hackrf-old/firmware/common
 
 LIBS += -lm
 
+LDFLAGS += --specs=nosys.specs
+
 LDSCRIPT=../ld/app.ld
 RPATH=..
 include ../Makefile.inc
