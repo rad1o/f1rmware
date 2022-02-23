@@ -22,7 +22,7 @@
       `sudo apt-get install gcc-arm-none-eabi libnewlib-arm-none-eabi`
         * Ubuntu 16.04 and newer just need
 
-      `sudo apt-get install gcc-arm-none-eabi libnewlib-arm-none-eabi`
+      `sudo apt-get install gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib`
 
     * Arch: `sudo pacman -S arm-none-eabi-gcc arm-none-eabi-newlib arm-none-eabi-binutils`
     * FreeBSD: Theory: `sudo pkg install arm-none-eabi-gcc492 arm-none-eabi-binutils` / `portmaster devel/arm-none-eabi-gcc492 devel/arm-none-eabi-binutils`; practice: `kldload linux` & see _Manual installation_
