@@ -84,7 +84,7 @@ int selectFileRepeat(char *filename, const char *extension){
                 lcdPrint("*");
             lcdSetCrsrX(14);
             int dot=-1;
-            for(int j=0;files[j];j++)
+            for(int j=0;files[i][j];j++)
                 if(files[i][j]=='.'){
                     files[i][j]=0;
                     dot=j;
