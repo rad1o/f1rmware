@@ -12,7 +12,6 @@ subdirs:
 	$(MAKE) -C rfapp
 	$(MAKE) -C rflib	
 	$(MAKE) -C l0unge
-	$(MAKE) -C hackrfapp
 	$(MAKE) -C bootloader
 	$(MAKE) -C flashapp
 	$(MAKE) -C l0dables
