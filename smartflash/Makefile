@@ -41,7 +41,7 @@ gather:
 	cp ../hackrf-old/firmware/cpld/sgpio_if/default.xsvf $(fsdir)/cpld.xsv
 	# Add f0nts, images, l0dables, etc.
 	cp ../files/* $(fsdir)/
-	echo -n "camp.b1n" > $(fsdir)/boot.cfg
+	echo -n "hackrf.b1n" > $(fsdir)/boot.cfg
 	cp ../flashapp/flashapp.dfu .
 	@echo
 	@echo '### Creating boot header image'
