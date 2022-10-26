@@ -37,8 +37,9 @@ hackrf/Readme.md:
 hackrf/firmware/libopencm3/README:
 	cd hackrf && git submodule init && git submodule update
 
-hackrf/firmware/hackrf_usb/build/hackrf_usb_ram.bin: hackrf/firmware/libopencm3/README
+hackrf/firmware/hackrf_usb/build/hackrf_usb_ram.bin: hackrf/firmware/libopencm3/README hackrf.patch
 	mkdir -p hackrf/firmware/hackrf_usb/build
+	(cd hackrf && patch -N -p1 -r - < ../hackrf.patch; echo "Patching done")
 	cmake -B hackrf/firmware/hackrf_usb/build/ -S hackrf/firmware/hackrf_usb/ -DBOARD=RAD1O
 	$(MAKE) -C hackrf/firmware/hackrf_usb/build/
 
