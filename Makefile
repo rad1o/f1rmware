@@ -10,7 +10,7 @@ subdirs:
 	$(MAKE) -C testapp
 	$(MAKE) -C musicapp
 	$(MAKE) -C rfapp
-	$(MAKE) -C rflib	
+	$(MAKE) -C rflib
 	$(MAKE) -C l0unge
 	$(MAKE) -C bootloader
 	$(MAKE) -C flashapp
@@ -50,7 +50,7 @@ clean:
 	$(MAKE) -C testapp clean
 	$(MAKE) -C musicapp clean
 	$(MAKE) -C rfapp clean
-	$(MAKE) -C rflib clean	
+	$(MAKE) -C rflib clean
 	$(MAKE) -C l0unge clean
 	$(MAKE) -C bootloader clean
 	$(MAKE) -C flashapp clean
@@ -58,4 +58,4 @@ clean:
 	$(MAKE) -C smartflash clean
 	$(MAKE) -C hackrf-old hack-clean
 	rm -rf  hackrf/firmware/hackrf_usb/build/
-#	cd libopencm3 && make clean
+	$(MAKE) -C libopencm3 clean
