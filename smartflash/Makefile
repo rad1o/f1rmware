@@ -26,6 +26,7 @@ gather:
 	@echo '### Gathering contents for image'
 	[ ! -d $(fsdir) ] && mkdir $(fsdir) || true
 	cp ../hackrf/firmware/hackrf_usb/build/hackrf_usb_ram.bin $(fsdir)/hackrf.b1n
+	cp ../hackrf/firmware/hackrf_usb/build/hackrf_usb_ram.bin $(fsdir)/hkrf-app.b1n
 	cp ../testapp/testapp.b1n $(fsdir)/
 	cp ../campapp/camp.b1n $(fsdir)/
 	cp ../musicapp/musicapp.b1n $(fsdir)/
@@ -34,14 +35,13 @@ gather:
 	cp ../rfapp/rfapp.b1n $(fsdir)/
 	cp ../rflib/rflib.b1n $(fsdir)/
 	cp ../l0unge/l0unge.b1n $(fsdir)/
-	cp ../hackrfapp/hkrf-app.b1n $(fsdir)/
 	-cp ../l0dables/*.c1d $(fsdir)/
 	for a in ../assets/*.led ; do ../tools/convertleds.py -o ${fsdir} $$a || exit ;done
 	-for a in ../l0dables/*.n1k ; do b=$${a##*/}; cp $$a ${fsdir}/$${b#nick_} ; done
 	cp ../hackrf-old/firmware/cpld/sgpio_if/default.xsvf $(fsdir)/cpld.xsv
 	# Add f0nts, images, l0dables, etc.
 	cp ../files/* $(fsdir)/
-	echo -n "camp.b1n" > $(fsdir)/boot.cfg
+	echo -n "hackrf.b1n" > $(fsdir)/boot.cfg
 	cp ../flashapp/flashapp.dfu .
 	@echo
 	@echo '### Creating boot header image'
