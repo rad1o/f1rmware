@@ -141,7 +141,11 @@
 / Drive/Volume Configurations
 /---------------------------------------------------------------------------*/
 
+#ifndef CFG_HAVE_SD
 #define _VOLUMES	1
+#else
+#define _VOLUMES	2
+#endif
 /* Number of volumes (logical drives) to be used. */
 
 
