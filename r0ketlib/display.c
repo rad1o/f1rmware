@@ -228,3 +228,8 @@ void lcdShift(int x, int y, int wrap) {
     while(y-->0)
         lcdShiftV(dir, wrap);
 }
+
+uint8_t* lcdGetBuffer(void)
+{
+  return lcdBuffer;
+}

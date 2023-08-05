@@ -63,3 +63,4 @@ getMeshSizes
 getMesh
 readFile
 work_queue
+lcdGetBuffer
