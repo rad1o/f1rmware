@@ -3,6 +3,7 @@
  ********
  *   a snake clone for the r0ket
  *   created by Flori4n (DrivenHoliday) & MascH (CCCHB tent)
+ *   snake II implementation by ElSjaako and OriginalSouth
  ***************************************/
 
 #include <string.h>
@@ -14,6 +15,7 @@
 #include <r0ketlib/print.h>
 #include <r0ketlib/keyin.h>
 #include <r0ketlib/select.h>
+#include <rad1olib/systick.h>
 
 #include "invfont.c"
 
@@ -23,10 +25,10 @@
 #define SNAKE_DIM (3)
 #define MIN_SPEED (25)
 #define MAX_SPEED (3)
-#define MIN_X 2
-#define MAX_X (RESX-3)
-#define MIN_Y 8
-#define MAX_Y (RESY-2)
+#define MIN_X 3
+#define MAX_X (RESX-5)
+#define MIN_Y 12
+#define MAX_Y (RESY-5)
 #define SIZE_X ((MAX_X-MIN_X)/SNAKE_DIM)
 #define SIZE_Y ((MAX_Y-MIN_Y)/SNAKE_DIM)
 
@@ -34,6 +36,14 @@
 #define LEFT 2
 #define UP 3
 #define DOWN 1
+
+//define how long you have to hold down the button to quit
+#define QUIT_DELAY 1000
+
+typedef enum {
+  SNAKE_STANDARD,
+  SNAKE_WRAPPING
+} gametype_e;
 
 struct pos_s {
     int x,y;
@@ -48,7 +58,7 @@ static void reset();
 static void next_level();
 static void render_level();
 static void draw_block();
-static void handle_input();
+static int handle_input();
 static void death_anim();
 static struct pos_s getFood(void);
 static int hitWall();
@@ -57,70 +67,114 @@ static int hitSelf();
 static void renderHighscore();
 static int showHighscore();
 static uint32_t highscore_get();
+static char* highscore_filename();
 
 int points = 0;
 int highscore = 0;
+gametype_e gametype = SNAKE_STANDARD;
 struct snake_s snake = { NULL, 3, 0, MIN_SPEED, 2};
 struct pos_s food;
 
 void ram(void)
 {
-    int c=0, pos=0,del=0;
-
-    struct pos_s tail[MAX_SNAKE_LEN];
-    snake.tail = tail;
-
-    // load the highscore
-    highscore = highscore_get();
-
-    // initially reset everything
-    reset();
-
     while (1) {
-        if(!(++c % snake.speed)) {
-            handle_input();
 
-            pos = (snake.t_start+1) % MAX_SNAKE_LEN;
-            snake.tail[pos].x = snake.tail[snake.t_start].x;
-            snake.tail[pos].y = snake.tail[snake.t_start].y;
+        int c=0, pos=0,del=0;
 
-            if(snake.dir == 0)
-                snake.tail[pos].x++;
-            else if(snake.dir == 1)
-                snake.tail[pos].y++;
-            else if(snake.dir == 2)
-                snake.tail[pos].x--;
-            else if(snake.dir == 3)
-                snake.tail[pos].y--;
+        struct pos_s tail[MAX_SNAKE_LEN];
+        snake.tail = tail;
 
-            snake.t_start = pos;
+        lcdClear();
 
-            if (pos < snake.len) {
-                del = MAX_SNAKE_LEN - (snake.len - pos);
-            } else
-                del = pos - snake.len;
+        setTextColor(0xff,0b11100000);
+        DoString(0,10, "  SNAKE");
 
-            // remove last, add first line
-            draw_block(snake.tail[del].x, snake.tail[del].y, 0xFF);
-            draw_block(snake.tail[pos].x, snake.tail[pos].y, 0b00011000);
+        setTextColor(0xff,0x00);
+        DoString(0,RESY/2-33, "  Choose the");
+        DoString(0,RESY/2-25, "  game type:");
 
-            // check for obstacle hit..
-            if (hitWall() || hitSelf()) {
-                death_anim();
-                if (showHighscore())
-                    break;
-                reset();
-            } else if (hitFood())
-                next_level();
+        setTextColor(0xff,0x00);
+        DoString(0, RESY/2+10, "   LEFT: standard");
+        DoString(0, RESY/2+18, "  RIGHT: wrapping ");
+        DoString(0, RESY/2+26, "   DOWN: quit ");
 
-            lcdDisplay();
+        lcdDisplay();
+
+        int key = getInputRaw();
+
+        while(1) {
+            key = getInputWait();
+            getInputWaitRelease();
+
+            if (key&BTN_DOWN) {
+                return;
+            } else if (key&BTN_LEFT) {
+                gametype = SNAKE_STANDARD;
+                break;
+            } else if (key&BTN_RIGHT) {
+                gametype = SNAKE_WRAPPING;
+                break;
+            }
         }
 
+        // load the highscore
+        highscore = highscore_get();
+
+        // initially reset everything
+        reset();
+
+        while (1) {
+            if(!(++c % snake.speed)) {
+                if (handle_input()) { //handle_input returns 1 to quit
+                    break;
+                }
+
+                pos = (snake.t_start+1) % MAX_SNAKE_LEN;
+                snake.tail[pos].x = snake.tail[snake.t_start].x;
+                snake.tail[pos].y = snake.tail[snake.t_start].y;
+
+                if(snake.dir == 0) {
+                    snake.tail[pos].x++;
+                    if(gametype == SNAKE_WRAPPING && snake.tail[pos].x>SIZE_X) snake.tail[pos].x=0;
+                } else if(snake.dir == 1) {
+                    snake.tail[pos].y++;
+                    if(gametype == SNAKE_WRAPPING && snake.tail[pos].y>SIZE_Y) snake.tail[pos].y=0;
+                } else if(snake.dir == 2) {
+                    snake.tail[pos].x--;
+                    if(gametype == SNAKE_WRAPPING && snake.tail[pos].x<0) snake.tail[pos].x=SIZE_X;
+                } else if(snake.dir == 3) {
+                    snake.tail[pos].y--;
+                    if(gametype == SNAKE_WRAPPING && snake.tail[pos].y<0) snake.tail[pos].y=SIZE_Y;
+                }
+
+                snake.t_start = pos;
+
+                del = pos - snake.len;
+                if (pos < snake.len) del += MAX_SNAKE_LEN;
+
+                // remove last, add first line
+                draw_block(snake.tail[del].x, snake.tail[del].y, 0xFF);
+                draw_block(snake.tail[pos].x, snake.tail[pos].y, 0b00011000);
+
+                // check for obstacle hit..
+                if (hitWall() || hitSelf()) {
+                    death_anim();
+                    if (showHighscore())
+                        break;
+                    highscore = highscore_get();
+                    reset();
+                } else if (hitFood())
+                    next_level();
+
+                lcdDisplay();
+            }
+
 #ifdef SIMULATOR
-        delayms(50);
+            delayms(50);
 #else
-        delayms(3);
+            delayms(3);
 #endif
+        }
     }
 }
 
@@ -130,8 +184,8 @@ static struct pos_s getFood(void)
     struct pos_s res;
 
 tryagain:
-    res.x = (getRandom() % (SIZE_X-1)) + 1;
-    res.y = (getRandom() % (SIZE_Y-3)) + 3;
+    res.x = (getRandom() % (SIZE_X+1));
+    res.y = (getRandom() % (SIZE_Y+1));
 
     for(i=0; i<snake.len; i++) {
         pos = (snake.t_start < i) ? (MAX_SNAKE_LEN - (i-snake.t_start)) : (snake.t_start-i);
@@ -148,14 +202,22 @@ static void reset()
 
     // setup the screen
     lcdClear();
-    for (i=MIN_X; i<MAX_X; i++) {
-        lcdSetPixel(i,MIN_Y,0b000101011);
-        lcdSetPixel(i,MAX_Y,0b000101011);
+    for (i=MIN_X-2; i<MAX_X+2; i++) {
+        lcdSetPixel(i,MIN_Y-2,0b000101011);
+        lcdSetPixel(i,MAX_Y+2,0b000101011);
+        if (gametype != SNAKE_WRAPPING) {
+            lcdSetPixel(i,MIN_Y-1,0b000101011);
+            lcdSetPixel(i,MAX_Y+1,0b000101011);
+        }
     }
 
-    for (i=MIN_Y; i<MAX_Y; i++) {
-        lcdSetPixel(MIN_X,i,0b000101011);
-        lcdSetPixel(MAX_X,i,0b000101011);
+    for (i=MIN_Y-2; i<MAX_Y+2; i++) {
+        lcdSetPixel(MIN_X-2,i,0b000101011);
+        lcdSetPixel(MAX_X+2,i,0b000101011);
+        if (gametype != SNAKE_WRAPPING) {
+            lcdSetPixel(MIN_X-1,i,0b000101011);
+            lcdSetPixel(MAX_X+1,i,0b000101011);
+        }
     }
 
     snake.speed = MIN_SPEED;
@@ -165,8 +227,6 @@ static void reset()
 
     points = 0;
 
-    food = getFood();
-
     // create snake in the middle of the field
     snake.tail[0].x = SIZE_X/2;
     snake.tail[0].y = SIZE_Y/2;
@@ -174,6 +234,8 @@ static void reset()
     snake.tail[1].y = SIZE_Y/2;
     snake.tail[2].x = SIZE_X/2 +2;
     snake.tail[2].y = SIZE_Y/2;
+
+    food = getFood();
 
     // print initail tail
     draw_block(snake.tail[0].x, snake.tail[0].y, 0b00011000);
@@ -187,7 +249,9 @@ static void reset()
 static void draw_block(int x, int y, int set)
 {
     x *= SNAKE_DIM;
+    x += MIN_X;
     y *= SNAKE_DIM;
+    y += MIN_Y;
 
     lcdSetPixel(x  , y,   set);
     lcdSetPixel(x+1, y,   set);
@@ -237,14 +301,15 @@ static void render_level()
         // Dark Green
         setTextColor(0xff,0b00011000);
     }
-    DoString(0,0,points_string);
+    DoString(1,1,points_string);
     setTextColor(0xff,0b00000011);
-    DoString(MAX_X-44,0,highscore_string);
+    DoString(MAX_X-44,1,highscore_string);
 }
 
-static void handle_input()
+static int handle_input()
 {
     int key = getInputRaw(), dir_old = snake.dir;
+    static int quitWhen = 0;
 
     if (key&BTN_UP && dir_old != 1)
         snake.dir = 3;
@@ -254,15 +319,26 @@ static void handle_input()
         snake.dir = 2;
     else if (key&BTN_RIGHT && dir_old !=2)
         snake.dir = 0;
+    else if (key&BTN_ENTER) {
+        if (quitWhen == 0) {
+            quitWhen = _timectr + QUIT_DELAY/SYSTICKSPEED;
+        } else if (_timectr > quitWhen) {
+            return 1; //indicate program should quit
+        }
+        return 0;
+    }
+    quitWhen = 0;
+    return 0; // program should continue running
 }
 
 static int hitWall()
 {
-    return ( (snake.tail[snake.t_start].x*3 <= MIN_X)
-             || (snake.tail[snake.t_start].x*3 >= MAX_X)
-             || (snake.tail[snake.t_start].y*3 <= MIN_Y)
-             || (snake.tail[snake.t_start].y*3 >= MAX_Y) ) ?
-           1 : 0;
+    if (gametype == SNAKE_WRAPPING) return false;
+
+    return ( (snake.tail[snake.t_start].x < 0)
+             || (snake.tail[snake.t_start].x > SIZE_X)
+             || (snake.tail[snake.t_start].y < 0)
+             || (snake.tail[snake.t_start].y > SIZE_Y) );
 
 }
 
@@ -300,9 +376,19 @@ static void death_anim()
 
 }
 
+static char* highscore_filename()
+{
+    switch (gametype) {
+        case SNAKE_WRAPPING:
+            return "snake2.5cr";
+        default:
+            return "snake.5cr";
+    }
+}
+
 static bool highscore_set(uint32_t score)
 {
-    writeFile("snake.5cr", &score , sizeof(uint32_t));
+    writeFile(highscore_filename(), &score , sizeof(uint32_t));
 
     // old r0ket code to get highscore from the world
 #if 0
@@ -323,7 +409,7 @@ static bool highscore_set(uint32_t score)
 static uint32_t highscore_get()
 {
     uint32_t score = 0;
-    readFile("snake.5cr", &score, sizeof(score));
+    readFile(highscore_filename(), &score, sizeof(score));
 
     // old r0ket code to send highscore to the world
 #if 0
@@ -364,9 +450,9 @@ static void renderHighscore()
     setTextColor(0xff,0b00000011);
     DoString(RESX/2-4, RESY/2-2, IntToStr(highscore,6,0));
     setTextColor(0xff,0x00);
-    DoString(0, RESY/2+18, "  UP  to play ");
+    DoString(0, RESY/2+18, "   UP to play");
     DoString(0, RESY/2+26, "RIGHT to reset HI ");
-    DoString(0, RESY/2+34, "DOWN  to quit ");
+    DoString(0, RESY/2+34, " DOWN to quit ");
 
     lcdDisplay();
 }
