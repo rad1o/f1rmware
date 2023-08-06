@@ -12,13 +12,15 @@
 #define BTN_ENTER (1<<4)
 
 void keySetRotation(char doit);
-uint8_t getInputRaw(void);
-uint8_t getInput(void);
+uint8_t getInputRaw(void);			//Returns the raw GPIO values
+uint8_t getInput(void);				//Returns debounced values
 void inputInit(void);
-uint8_t getInputWait(void);
-uint8_t getInputWaitTimeout(int timeout);
-uint8_t getInputWaitRepeat(void);
-void getInputWaitRelease(void);
+uint8_t getInputWait(void);			//Waits for key press
+uint8_t getInputWaitTimeout(int timeout);	//Waits timeout ms for key press
+uint8_t getInputWaitRepeat(void);//Repeats the same key while holding down
+void getInputWaitRelease(void);			//Waits for any key
+uint8_t getInputChange(void);			//Returns 1 for 10ms on an edge
+void inputDebounce(void);	 //Does the actual debounce, runs in system tick
 
 /* XXX: probably should be in central header file */
 #define KEY_DOWN_PIN     (PB_0)
