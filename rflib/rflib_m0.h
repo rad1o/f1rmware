@@ -26,6 +26,9 @@
 /* initialize M0 core for operation */
 void rflib_init();
 
+/* put RF parts into standby mode */
+void rflib_standby();
+
 /* shut down RF parts and put M0 core in halt mode */
 void rflib_shutdown();
 
